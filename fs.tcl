@@ -79,7 +79,11 @@ oo::class create blob::fs {
 
     # names () -> list(uuid)
     method names {} {
-	glob -directory $mybasedir -tails */*
+	set r {}
+	foreach e [glob -nocomplain -directory $mybasedir -tails */*/*] {
+	    lappend r [lindex [file split $e] end]
+	}
+	return $r
     }
 
     # exists: uuid -> boolean
@@ -95,7 +99,9 @@ oo::class create blob::fs {
     # clear () -> ()
     # Remove all known mappings.
     method clear {} {
-	file delete -force {*}[glob -directory $mybasedir *]
+	set dirs [glob -nocomplain -directory $mybasedir *]
+	if {![llength $dirs]} return
+	file delete -force {*}$dirs
 	return
     }
 

@@ -1,0 +1,59 @@
+## -*- tcl -*-
+## (c) 2013 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## Test suite for memory stores, custom parts.
+#
+## The external procedures 'already' and 'badmethod' are used to
+## generate implementation specific error messages. Implementations
+## have to be provided by the invoking implementation-specific
+## testsuite.
+#
+## The external procedures 'new-store' and 'release-store' are used to
+## create and destroy aqn instance of the store under test.
+
+# # ## ### ##### ######## ############# #####################
+
+test blob-memory-1.0 {new, wrong#args, too many} -body {
+    blob::memory new X
+} -returnCodes error -result {wrong # args: should be "blob::memory new"}
+
+test blob-memory-1.1 {create, wrong#args, too many} -body {
+    blob::memory create foo X
+} -returnCodes error -result {wrong # args: should be "blob::memory create foo"}
+
+test blob-memory-1.2 {constructor, create, existing command} -setup {
+    blob::memory create myamem
+} -body {
+    blob::memory create myamem
+} -cleanup {
+    myamem destroy
+} -returnCodes error -result [already myamem]
+
+test blob-memory-1.3 {constructor, create, existing command} -body {
+    blob::memory create set
+} -returnCodes error -result [already set]
+
+test blob-memory-1.4 {constructor, create} -setup {
+    set result {}
+} -body {
+    lappend result [blob::memory create myamem]
+    lappend result [info commands ::myamem]
+    lappend result [myamem size]
+} -cleanup {
+    myamem destroy
+    unset result
+} -result {::myamem ::myamem 0}
+
+test blob-memory-1.5 {constructor, new} -setup {
+    set result {}
+} -body {
+    lappend result [set foo [blob::memory new]]
+    lappend result [info commands ::$foo]
+    lappend result [$foo size]
+} -cleanup {
+    $foo destroy
+    unset result foo
+} -match glob -result {::oo::Obj* ::oo::Obj* 0}
+
+# # ## ### ##### ######## ############# #####################
+return
