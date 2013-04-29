@@ -23,7 +23,7 @@ oo::class create blob::sqlite {
     ## State
 
     variable mytable \
-	sql_extend sql_clear sql_toblob sql_names sql_size
+	sql_extend sql_clear sql_toblob sql_toid sql_names sql_size
     # Name of the database table used for storage.
     # plus the sql commands to access it.
 
@@ -75,7 +75,7 @@ oo::class create blob::sqlite {
 		    BAD UUID $uuid
 	    }
 	    set rid [DB onecolumn $sql_toid]
-	    DB incrblob -readonly $mytable 2 $rid
+	    DB incrblob -readonly $mytable data $rid
 	}
     }
 

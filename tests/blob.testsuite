@@ -16,11 +16,11 @@
 # destroy     | *
 # ------------*----------------
 # add         | *
-# channel     |
+# channel     | *
 # clear       | *
 # exists      | *
 # names       | *
-# retrieve    |
+# retrieve    | *
 # size        | *
 # ------------*----------------
 
@@ -105,6 +105,60 @@ test blob::[who]-add-1.4 {add, different blobs, different uuids} -setup {
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 474c9bc027ee3ef22851a5f8bfd976f08b197386}
+
+# # ## ### ##### ######## ############# #####################
+## channel
+
+test blob::[who]-channel-1.0 {channel, wrong#args, not enough} -setup {
+    new-store
+} -body {
+    myblob channel
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "myblob channel uuid"}
+
+test blob::[who]-channel-1.1 {channel, wrong#args, too many} -setup {
+    new-store
+} -body {
+    myblob channel S X
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "myblob channel uuid"}
+
+test blob::[who]-channel-1.2 {channel, unknown uuid} -setup {
+    new-store
+} -body {
+    myblob channel 0
+} -cleanup {
+    release-store
+} -returnCodes error -result {Expected uuid, got "0"}
+
+test blob::[who]-channel-1.3 {channel, known} -setup {
+    new-store
+    myblob add S
+} -body {
+    set c [myblob channel 02aa629c8b16cd17a44f3a0efec2feed43937642]
+    read $c
+} -cleanup {
+    close $c
+    unset c
+    release-store
+} -result S
+
+test blob::[who]-channel-1.4 {channel, known} -setup {
+    new-store
+    myblob add S
+    myblob add A
+    myblob add R
+    myblob add C
+} -body {
+    set c [myblob channel 06576556d1ad802f247cad11ae748be47b70cd9c]
+    read $c
+} -cleanup {
+    close $c
+    unset c
+    release-store
+} -result R
 
 # # ## ### ##### ######## ############# #####################
 ## clear
