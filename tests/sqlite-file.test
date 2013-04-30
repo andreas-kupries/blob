@@ -26,7 +26,7 @@ proc badmethod {m real} {
 }
 
 # identification to put into names of shared test cases.
-proc who {} { return sqlite }
+proc who {} { return sqlite/file }
 
 # # ## ### ##### ######## ############# #####################
 ## Two testsuites, for the custom (instantiation) and shared APIs.

@@ -23,22 +23,22 @@ oo::class create blob {
     # add: blob --> uuid
     method add {blob} { my APIerror add }
 
-    # retrieve: uuid --> blob
+    # retrieve: uuid --> blob		[validate uuid]
     method retrieve {uuid} { my APIerror retrieve }
 
-    # channel: uuid --> channel
+    # channel: uuid --> channel		[validate uuid]
     method channel {uuid} { my APIerror channel }
 
-    # names: () -> list (uuid)
+    # names: () --> list (uuid)
     method names {}  { my APIerror names }
 
-    # exists: uuid -> boolean
+    # exists: uuid --> boolean
     method exists {uuid} { my APIerror exists }
 
-    # size () -> integer
+    # size: () --> integer
     method size {} { my APIerror size }
 
-    # clear () -> ()
+    # clear: () --> ()
     method clear {} { my APIerror clear }
 
     # # ## ### ##### ######## #############
