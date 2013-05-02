@@ -12,6 +12,8 @@
 
 package require Tcl 8.5
 package require TclOO
+package require sha1 2            ; # tcllib
+package require fileutil          ; # tcllib
 
 # # ## ### ##### ######## ############# #####################
 ## Implementation
@@ -22,6 +24,9 @@ oo::class create blob {
 
     # add: blob --> uuid
     method add {blob} { my APIerror add }
+
+    # put: path --> uuid
+    method put {path} { my APIerror put }
 
     # retrieve: uuid --> blob
     method retrieve {uuid} { my APIerror retrieve }
@@ -42,7 +47,23 @@ oo::class create blob {
     method clear {} { my APIerror clear }
 
     # # ## ### ##### ######## #############
+    ## API. Convenience method to add a file to the store.
+    ## Re-implement for efficiency (link, copy, ...).
+
+    # # ## ### ##### ######## #############
     ## Internal helpers
+
+    method Uuid.blob {blob} {
+	sha1::sha1 -hex $blob
+    }
+
+    method Uuid.path {path} {
+	sha1::sha1 -hex -file $path
+    }
+
+    method Cat {path} {
+	fileutil::cat -translation binary $path
+    }
 
     method Error {text args} {
 	return -code error -errorcode [list BLOB {*}$args] $text

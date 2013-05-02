@@ -9,7 +9,6 @@
 package require Tcl 8.5
 package require TclOO
 package require blob
-package require sha1 2            ; # tcllib
 package require tcl::chan::string ; # tcllib
 
 # # ## ### ##### ######## ############# #####################
@@ -34,9 +33,18 @@ oo::class create blob::memory {
 
     # add: blob --> uuid
     method add {blob} {
-	set uuid [sha1::sha1 -hex $blob]
+	set uuid [my Uuid.blob $blob]
 	if {![dict exists $mystore $uuid]} {
 	    dict set mystore $uuid $blob
+	}
+	return $uuid
+    }
+
+    # put: blob --> uuid
+    method put {path} {
+	set uuid [my Uuid.path $path]
+	if {![dict exists $mystore $uuid]} {
+	    dict set mystore $uuid [my Cat $path]
 	}
 	return $uuid
     }

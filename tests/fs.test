@@ -8,6 +8,7 @@ kt check tcltest 2
 
 kt require support TclOO
 kt require support sha1 2
+kt require support fileutil
 
 kt local   support blob
 kt local   testing blob::fs

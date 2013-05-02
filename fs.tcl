@@ -41,14 +41,31 @@ oo::class create blob::fs {
 
     # add: blob --> uuid
     method add {blob} {
-	set uuid [sha1::sha1 -hex $blob]
-	set path [my P $uuid]
-	if {![file exists $path]} {
-	    file mkdir [file dirname $path]
-	    set c [open $path w]
-	    fconfigure $c -translation binary
-	    puts -nonewline $c $blob
-	    close $c
+	set uuid [my Uuid.blob $blob]
+	set dstpath [my P $uuid]
+	if {![file exists $dstpath]} {
+	    file mkdir [file dirname $dstpath]
+	    fileutil::writeFile -translation binary \
+		$dstpath $blob
+	}
+	return $uuid
+    }
+
+    # put: path --> uuid
+    method put {path} {
+	set uuid    [my Uuid.path $path]
+	set dstpath [my P $uuid]
+	if {![file exists $dstpath]} {
+	    file mkdir [file dirname $dstpath]
+	    if {[catch {
+		# Prefer hard linking, to save on disk space.
+		file link -hard $dstpath $path
+	    }]} {
+		# But copy if that is not possible, because, for
+		# example the platform does not supporting it, cross
+		# disk linkage, etc.
+		file copy $path $dstpath
+	    }
 	}
 	return $uuid
     }

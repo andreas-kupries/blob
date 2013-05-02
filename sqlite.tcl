@@ -45,10 +45,24 @@ oo::class create blob::sqlite {
 
     # add: blob --> uuid
     method add {blob} {
-	set uuid [sha1::sha1 -hex $blob]
+	set uuid [my Uuid.blob $blob]
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size
+		if {[info exists size]} { incr size }
+		DB eval $sql_extend
+	    }
+	}
+	return $uuid
+    }
+
+    # put: path --> uuid
+    method put {path} {
+	set uuid [my Uuid.path $path]
+	DB transaction {
+	    if {![DB exists $sql_toblob]} {
+		variable size
+		set blob [my Cat $path]
 		if {[info exists size]} { incr size }
 		DB eval $sql_extend
 	    }

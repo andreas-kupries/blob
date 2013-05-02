@@ -43,7 +43,7 @@ test blob::[who]-dispatch-1.1 {instance, bad method name} -setup {
 } -cleanup {
     release-store
 } -returnCodes error \
-    -result [badmethod foo {add channel clear destroy exists names retrieve size}]
+    -result [badmethod foo {add channel clear destroy exists names put retrieve size}]
 
 # # ## ### ##### ######## ############# #####################
 ## destructor
@@ -257,6 +257,49 @@ test blob::[who]-names-1.2 {names, some} -setup {
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b}
+
+# # ## ### ##### ######## ############# #####################
+## put
+
+test blob::[who]-put-1.0 {put, wrong#args, not enough} -setup {
+    new-store
+} -body {
+    myblob put
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "myblob put path"}
+
+test blob::[who]-put-1.1 {put, wrong#args, too many} -setup {
+    new-store
+} -body {
+    myblob put S X
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "myblob put path"}
+
+test blob::[who]-put-1.2 {put} -setup {
+    new-store
+} -body {
+    myblob put data/empty
+} -cleanup {
+    release-store
+} -result da39a3ee5e6b4b0d3255bfef95601890afd80709
+
+test blob::[who]-put-1.3 {put, duplicates have same uuid} -setup {
+    new-store
+} -body {
+    list [myblob put data/empty] [myblob put data/empty]
+} -cleanup {
+    release-store
+} -result {da39a3ee5e6b4b0d3255bfef95601890afd80709 da39a3ee5e6b4b0d3255bfef95601890afd80709}
+
+test blob::[who]-put-1.4 {put, different blobs, different uuids} -setup {
+    new-store
+} -body {
+    list [myblob put data/empty] [myblob put data/echo]
+} -cleanup {
+    release-store
+} -result {da39a3ee5e6b4b0d3255bfef95601890afd80709 d929c82d2ee727ccbea9c50c669a71075249899f}
 
 # # ## ### ##### ######## ############# #####################
 ## retrieve
