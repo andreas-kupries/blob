@@ -1,0 +1,28 @@
+
+Classes		Notes		Constructor arguments
+-------		-----		---------------------
+blob		Virtual base	none
+blob::memory	In-memory	none
+blob::sqlite	Database	sqlite database + table name
+blob::fs	Filesystem	directory path
+-------		-----		---------------------
+
+API	Name		Inputs		Results
+---	----		------		-------
+	add		blob	-->	uuid
+	put		path	-->	uuid
+	clear		()	-->	()
+	delete		uuid	-->	()
+---	----		------		-------
+	retrieve	uuid	-->	blob
+	channel		uuid	-->	channel (read-only)
+---	----		------		-------
+	names		()	-->	list (uuid)
+	exists		uuid	-->	boolean
+	size		()	-->	integer
+---	----		------		-------
+    
+TODO:	push, pull, sync
+	With internals APIs for negotiated method of transfer
+	Also ability to run in the background (event loop)
+	And hooks to report on progress.

@@ -21,7 +21,7 @@
 # delete      | *
 # exists      | *
 # names       | *
-# put         |   !!
+# put         | *
 # retrieve    | *
 # size        | *
 # ------------*----------------
