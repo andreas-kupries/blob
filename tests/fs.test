@@ -15,15 +15,13 @@ kt local   testing blob::fs
 
 # # ## ### ##### ######## ############# #####################
 
-# identification to put into names of shared test cases.
-proc who {} { return fs }
+proc test-class {} { return blob::fs }
 
 # # ## ### ##### ######## ############# #####################
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
 kt source support/setup-fs.tcl
-#kt source fs-idgen.tcl
 
 kt source parts/fs.testsuite
 kt source parts/base.testsuite

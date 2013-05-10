@@ -13,41 +13,41 @@
 
 # # ## ### ##### ######## ############# #####################
 
-test blob-memory-1.0 {new, wrong#args, too many} -body {
-    blob::memory new X
-} -returnCodes error -result {wrong # args: should be "blob::memory new"}
+test [test-class]-1.0 {new, wrong#args, too many} -body {
+    [test-class] new X
+} -returnCodes error -result "wrong # args: should be \"[test-class] new\""
 
-test blob-memory-1.1 {create, wrong#args, too many} -body {
-    blob::memory create foo X
-} -returnCodes error -result {wrong # args: should be "blob::memory create foo"}
+test [test-class]-1.1 {create, wrong#args, too many} -body {
+    [test-class] create foo X
+} -returnCodes error -result "wrong # args: should be \"[test-class] create foo\""
 
-test blob-memory-1.2 {constructor, create, existing command} -setup {
-    blob::memory create myamem
+test [test-class]-1.2 {constructor, create, existing command} -setup {
+    [test-class] create test-store
 } -body {
-    blob::memory create myamem
+    [test-class] create test-store
 } -cleanup {
-    myamem destroy
-} -returnCodes error -result [already myamem]
+    test-store destroy
+} -returnCodes error -result [already test-store]
 
-test blob-memory-1.3 {constructor, create, existing command} -body {
-    blob::memory create set
+test [test-class]-1.3 {constructor, create, existing command} -body {
+    [test-class] create set
 } -returnCodes error -result [already set]
 
-test blob-memory-1.4 {constructor, create} -setup {
+test [test-class]-1.4 {constructor, create} -setup {
     set result {}
 } -body {
-    lappend result [blob::memory create myamem]
-    lappend result [info commands ::myamem]
-    lappend result [myamem size]
+    lappend result [[test-class] create test-store]
+    lappend result [info commands ::test-store]
+    lappend result [test-store size]
 } -cleanup {
-    myamem destroy
+    test-store destroy
     unset result
-} -result {::myamem ::myamem 0}
+} -result {::test-store ::test-store 0}
 
-test blob-memory-1.5 {constructor, new} -setup {
+test [test-class]-1.5 {constructor, new} -setup {
     set result {}
 } -body {
-    lappend result [set foo [blob::memory new]]
+    lappend result [set foo [[test-class] new]]
     lappend result [info commands ::$foo]
     lappend result [$foo size]
 } -cleanup {

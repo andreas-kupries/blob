@@ -17,15 +17,13 @@ kt local   testing blob::sqlite
 
 # # ## ### ##### ######## ############# #####################
 
-# identification to put into names of shared test cases.
-proc who {} { return sqlite/memory }
+proc test-class {} { return blob::sqlite/memory }
 
 # # ## ### ##### ######## ############# #####################
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
 kt source support/setup-sqlite-memory.tcl
-#kt source sqlite-idgen.tcl
 
 kt source parts/sqlite.testsuite
 kt source parts/base.testsuite

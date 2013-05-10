@@ -16,15 +16,13 @@ kt local   testing blob::memory
 
 # # ## ### ##### ######## ############# #####################
 
-# identification to put into names of shared test cases.
-proc who {} { return memory }
+proc test-class {} { return blob::memory }
 
 # # ## ### ##### ######## ############# #####################
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
 kt source support/setup-memory.tcl
-#kt source memory-idgen.tcl
 
 kt source parts/memory.testsuite
 kt source parts/base.testsuite

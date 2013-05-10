@@ -27,19 +27,19 @@
 # # ## ### ##### ######## ############# #####################
 ## dispatch
 
-test blob::[who]-dispatch-1.0 {instance, no method} -setup {
+test [test-class]-dispatch-1.0 {instance, no method} -setup {
     new-store
 } -body {
-    myblob
+    test-store
 } -cleanup {
     release-store
 } -returnCodes error \
-    -result {wrong # args: should be "myblob method ?arg ...?"}
+    -result {wrong # args: should be "test-store method ?arg ...?"}
 
-test blob::[who]-dispatch-1.1 {instance, bad method name} -setup {
+test [test-class]-dispatch-1.1 {instance, bad method name} -setup {
     new-store
 } -body {
-    myblob foo
+    test-store foo
 } -cleanup {
     release-store
 } -returnCodes error \
@@ -48,60 +48,60 @@ test blob::[who]-dispatch-1.1 {instance, bad method name} -setup {
 # # ## ### ##### ######## ############# #####################
 ## destructor
 
-test blob::[who]-destroy-1.0 {destroy, wrong#args, too many} -setup {
+test [test-class]-destroy-1.0 {destroy, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob destroy X
+    test-store destroy X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob destroy"}
+} -returnCodes error -result {wrong # args: should be "test-store destroy"}
 
-test blob::[who]-destroy-1.1 {destroy} -setup {
+test [test-class]-destroy-1.1 {destroy} -setup {
     new-store
 } -body {
     release-store
-    info commands ::myblob
+    info commands ::test-store
 } -result {}
 
 # # ## ### ##### ######## ############# #####################
 ## add
 
-test blob::[who]-add-1.0 {add, wrong#args, not enough} -setup {
+test [test-class]-add-1.0 {add, wrong#args, not enough} -setup {
     new-store
 } -body {
-    myblob add
+    test-store add
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob add blob"}
+} -returnCodes error -result {wrong # args: should be "test-store add blob"}
 
-test blob::[who]-add-1.1 {add, wrong#args, too many} -setup {
+test [test-class]-add-1.1 {add, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob add S X
+    test-store add S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob add blob"}
+} -returnCodes error -result {wrong # args: should be "test-store add blob"}
 
-test blob::[who]-add-1.2 {add} -setup {
+test [test-class]-add-1.2 {add} -setup {
     new-store
 } -body {
-    myblob add S
+    test-store add S
 } -cleanup {
     release-store
 } -result 02aa629c8b16cd17a44f3a0efec2feed43937642
 
-test blob::[who]-add-1.3 {add, duplicates have same uuid} -setup {
+test [test-class]-add-1.3 {add, duplicates have same uuid} -setup {
     new-store
 } -body {
-    list [myblob add S] [myblob add S]
+    list [test-store add S] [test-store add S]
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 02aa629c8b16cd17a44f3a0efec2feed43937642}
 
-test blob::[who]-add-1.4 {add, different blobs, different uuids} -setup {
+test [test-class]-add-1.4 {add, different blobs, different uuids} -setup {
     new-store
 } -body {
-    list [myblob add S] [myblob add S2]
+    list [test-store add S] [test-store add S2]
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 474c9bc027ee3ef22851a5f8bfd976f08b197386}
@@ -109,35 +109,35 @@ test blob::[who]-add-1.4 {add, different blobs, different uuids} -setup {
 # # ## ### ##### ######## ############# #####################
 ## channel
 
-test blob::[who]-channel-1.0 {channel, wrong#args, not enough} -setup {
+test [test-class]-channel-1.0 {channel, wrong#args, not enough} -setup {
     new-store
 } -body {
-    myblob channel
+    test-store channel
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob channel uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store channel uuid"}
 
-test blob::[who]-channel-1.1 {channel, wrong#args, too many} -setup {
+test [test-class]-channel-1.1 {channel, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob channel S X
+    test-store channel S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob channel uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store channel uuid"}
 
-test blob::[who]-channel-1.2 {channel, unknown uuid} -setup {
+test [test-class]-channel-1.2 {channel, unknown uuid} -setup {
     new-store
 } -body {
-    myblob channel 0
+    test-store channel 0
 } -cleanup {
     release-store
 } -returnCodes error -result {Expected uuid, got "0"}
 
-test blob::[who]-channel-1.3 {channel, known} -setup {
+test [test-class]-channel-1.3 {channel, known} -setup {
     new-store
-    myblob add S
+    test-store add S
 } -body {
-    set c [myblob channel 02aa629c8b16cd17a44f3a0efec2feed43937642]
+    set c [test-store channel 02aa629c8b16cd17a44f3a0efec2feed43937642]
     read $c
 } -cleanup {
     close $c
@@ -145,14 +145,14 @@ test blob::[who]-channel-1.3 {channel, known} -setup {
     release-store
 } -result S
 
-test blob::[who]-channel-1.4 {channel, known} -setup {
+test [test-class]-channel-1.4 {channel, known} -setup {
     new-store
-    myblob add S
-    myblob add A
-    myblob add R
-    myblob add C
+    test-store add S
+    test-store add A
+    test-store add R
+    test-store add C
 } -body {
-    set c [myblob channel 06576556d1ad802f247cad11ae748be47b70cd9c]
+    set c [test-store channel 06576556d1ad802f247cad11ae748be47b70cd9c]
     read $c
 } -cleanup {
     close $c
@@ -163,30 +163,30 @@ test blob::[who]-channel-1.4 {channel, known} -setup {
 # # ## ### ##### ######## ############# #####################
 ## clear
 
-test blob::[who]-clear-1.0 {clear, wrong#args, too many} -setup {
+test [test-class]-clear-1.0 {clear, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob clear S
+    test-store clear S
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob clear"}
+} -returnCodes error -result {wrong # args: should be "test-store clear"}
 
-test blob::[who]-clear-1.1 {clear, none} -setup {
+test [test-class]-clear-1.1 {clear, none} -setup {
     new-store
 } -body {
-    list [myblob size] [myblob clear] [myblob size]
+    list [test-store size] [test-store clear] [test-store size]
 } -cleanup {
     release-store
 } -result {0 {} 0}
 
-test blob::[who]-clear-1.2 {clear, some} -setup {
+test [test-class]-clear-1.2 {clear, some} -setup {
     new-store
-    myblob add S
-    myblob add A
-    myblob add R
-    myblob add C
+    test-store add S
+    test-store add A
+    test-store add R
+    test-store add C
 } -body {
-    list [myblob size] [myblob clear] [myblob size]
+    list [test-store size] [test-store clear] [test-store size]
 } -cleanup {
     release-store
 } -result {4 {} 0}
@@ -194,35 +194,35 @@ test blob::[who]-clear-1.2 {clear, some} -setup {
 # # ## ### ##### ######## ############# #####################
 ## exists
 
-test blob::[who]-exists-1.0 {exists, wrong#args, not enough} -setup {
+test [test-class]-exists-1.0 {exists, wrong#args, not enough} -setup {
     new-store
 } -body {
-    myblob exists
+    test-store exists
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob exists uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store exists uuid"}
 
-test blob::[who]-exists-1.1 {exists, wrong#args, too many} -setup {
+test [test-class]-exists-1.1 {exists, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob exists S X
+    test-store exists S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob exists uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store exists uuid"}
 
-test blob::[who]-exists-1.2 {exists, no} -setup {
+test [test-class]-exists-1.2 {exists, no} -setup {
     new-store
 } -body {
-    myblob exists S
+    test-store exists S
 } -cleanup {
     release-store
 } -result 0
 
-test blob::[who]-exists-1.3 {exists, yes} -setup {
+test [test-class]-exists-1.3 {exists, yes} -setup {
     new-store
-    myblob add S
+    test-store add S
 } -body {
-    myblob exists 02aa629c8b16cd17a44f3a0efec2feed43937642
+    test-store exists 02aa629c8b16cd17a44f3a0efec2feed43937642
 } -cleanup {
     release-store
 } -result 1
@@ -230,30 +230,30 @@ test blob::[who]-exists-1.3 {exists, yes} -setup {
 # # ## ### ##### ######## ############# #####################
 ## names
 
-test blob::[who]-names-1.0 {names, wrong#args, too many} -setup {
+test [test-class]-names-1.0 {names, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob names S
+    test-store names S
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob names"}
+} -returnCodes error -result {wrong # args: should be "test-store names"}
 
-test blob::[who]-names-1.1 {names, none} -setup {
+test [test-class]-names-1.1 {names, none} -setup {
     new-store
 } -body {
-    myblob names
+    test-store names
 } -cleanup {
     release-store
 } -result {}
 
-test blob::[who]-names-1.2 {names, some} -setup {
+test [test-class]-names-1.2 {names, some} -setup {
     new-store
-    myblob add S
-    myblob add A
-    myblob add R
-    myblob add C
+    test-store add S
+    test-store add A
+    test-store add R
+    test-store add C
 } -body {
-    lsort [myblob names]
+    lsort [test-store names]
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b}
@@ -261,42 +261,42 @@ test blob::[who]-names-1.2 {names, some} -setup {
 # # ## ### ##### ######## ############# #####################
 ## put
 
-test blob::[who]-put-1.0 {put, wrong#args, not enough} -setup {
+test [test-class]-put-1.0 {put, wrong#args, not enough} -setup {
     new-store
 } -body {
-    myblob put
+    test-store put
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob put path"}
+} -returnCodes error -result {wrong # args: should be "test-store put path"}
 
-test blob::[who]-put-1.1 {put, wrong#args, too many} -setup {
+test [test-class]-put-1.1 {put, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob put S X
+    test-store put S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob put path"}
+} -returnCodes error -result {wrong # args: should be "test-store put path"}
 
-test blob::[who]-put-1.2 {put} -setup {
+test [test-class]-put-1.2 {put} -setup {
     new-store
 } -body {
-    myblob put data/empty
+    test-store put data/empty
 } -cleanup {
     release-store
 } -result da39a3ee5e6b4b0d3255bfef95601890afd80709
 
-test blob::[who]-put-1.3 {put, duplicates have same uuid} -setup {
+test [test-class]-put-1.3 {put, duplicates have same uuid} -setup {
     new-store
 } -body {
-    list [myblob put data/empty] [myblob put data/empty]
+    list [test-store put data/empty] [test-store put data/empty]
 } -cleanup {
     release-store
 } -result {da39a3ee5e6b4b0d3255bfef95601890afd80709 da39a3ee5e6b4b0d3255bfef95601890afd80709}
 
-test blob::[who]-put-1.4 {put, different blobs, different uuids} -setup {
+test [test-class]-put-1.4 {put, different blobs, different uuids} -setup {
     new-store
 } -body {
-    list [myblob put data/empty] [myblob put data/echo]
+    list [test-store put data/empty] [test-store put data/echo]
 } -cleanup {
     release-store
 } -result {da39a3ee5e6b4b0d3255bfef95601890afd80709 d929c82d2ee727ccbea9c50c669a71075249899f}
@@ -304,47 +304,47 @@ test blob::[who]-put-1.4 {put, different blobs, different uuids} -setup {
 # # ## ### ##### ######## ############# #####################
 ## retrieve
 
-test blob::[who]-retrieve-1.0 {retrieve, wrong#args, not enough} -setup {
+test [test-class]-retrieve-1.0 {retrieve, wrong#args, not enough} -setup {
     new-store
 } -body {
-    myblob retrieve
+    test-store retrieve
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob retrieve uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store retrieve uuid"}
 
-test blob::[who]-retrieve-1.1 {retrieve, wrong#args, too many} -setup {
+test [test-class]-retrieve-1.1 {retrieve, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob retrieve S X
+    test-store retrieve S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob retrieve uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store retrieve uuid"}
 
-test blob::[who]-retrieve-1.2 {retrieve, unknown uuid} -setup {
+test [test-class]-retrieve-1.2 {retrieve, unknown uuid} -setup {
     new-store
 } -body {
-    myblob retrieve 0
+    test-store retrieve 0
 } -cleanup {
     release-store
 } -returnCodes error -result {Expected uuid, got "0"}
 
-test blob::[who]-retrieve-1.3 {retrieve, known} -setup {
+test [test-class]-retrieve-1.3 {retrieve, known} -setup {
     new-store
-    myblob add S
+    test-store add S
 } -body {
-    myblob retrieve 02aa629c8b16cd17a44f3a0efec2feed43937642
+    test-store retrieve 02aa629c8b16cd17a44f3a0efec2feed43937642
 } -cleanup {
     release-store
 } -result S
 
-test blob::[who]-retrieve-1.4 {retrieve, known} -setup {
+test [test-class]-retrieve-1.4 {retrieve, known} -setup {
     new-store
-    myblob add S
-    myblob add A
-    myblob add R
-    myblob add C
+    test-store add S
+    test-store add A
+    test-store add R
+    test-store add C
 } -body {
-    myblob retrieve 06576556d1ad802f247cad11ae748be47b70cd9c
+    test-store retrieve 06576556d1ad802f247cad11ae748be47b70cd9c
 } -cleanup {
     release-store
 } -result R
@@ -352,29 +352,29 @@ test blob::[who]-retrieve-1.4 {retrieve, known} -setup {
 # # ## ### ##### ######## ############# #####################
 ## size
 
-test blob::[who]-size-1.0 {size, wrong#args, too many} -setup {
+test [test-class]-size-1.0 {size, wrong#args, too many} -setup {
     new-store
 } -body {
-    myblob size X
+    test-store size X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "myblob size"}
+} -returnCodes error -result {wrong # args: should be "test-store size"}
 
-test blob::[who]-size-1.1 {size} -setup {
+test [test-class]-size-1.1 {size} -setup {
     new-store
-    myblob add A
+    test-store add A
 } -body {
-    myblob size
+    test-store size
 } -cleanup {
     release-store
 } -result 1
 
-test blob::[who]-size-1.2 {size} -setup {
+test [test-class]-size-1.2 {size} -setup {
     new-store
-    myblob add A
-    myblob add B
+    test-store add A
+    test-store add B
 } -body {
-    myblob size
+    test-store size
 } -cleanup {
     release-store
 } -result 2

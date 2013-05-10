@@ -4,11 +4,12 @@
 
 proc new-store {} {
     file mkdir _blobfs_
-    return [blob::fs create myblob _blobfs_]
+    [test-class] create test-store _blobfs_
+    return
 }
 
 proc release-store {} {
-    myblob destroy
+    test-store destroy
     file delete -force _blobfs_
     return
 }

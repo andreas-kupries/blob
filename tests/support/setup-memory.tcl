@@ -3,11 +3,12 @@
 # # ## ### ##### ######## ############# #####################
 
 proc new-store {} {
-    return [blob::memory create myblob]
+    [test-class] create test-store
+    return
 }
 
 proc release-store {} {
-    myblob destroy
+    test-store destroy
     return
 }
 
