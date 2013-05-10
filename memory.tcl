@@ -76,6 +76,12 @@ oo::class create blob::memory {
 	return
     }
 
+    # delete: uuid -> ()
+    method delete {uuid} {
+	dict unset mystore $uuid
+	return
+    }
+
     # # ## ### ##### ######## #############
 
     method Validate {uuid} {

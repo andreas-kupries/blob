@@ -122,6 +122,12 @@ oo::class create blob::fs {
 	return
     }
 
+    # delete: uuid -> ()
+    method delete {uuid} {
+	file delete -force [my P $uuid]
+	return
+    }
+
     # # ## ### ##### ######## #############
     ## Internals
 

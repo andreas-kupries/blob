@@ -23,7 +23,8 @@ oo::class create blob::sqlite {
     ## State
 
     variable mytable \
-	sql_extend sql_clear sql_toblob sql_toid sql_names sql_size
+	sql_extend sql_clear sql_delete \
+	sql_toblob sql_toid sql_names sql_size
     # Name of the database table used for storage.
     # plus the sql commands to access it.
 
@@ -129,6 +130,13 @@ oo::class create blob::sqlite {
 	return
     }
 
+    # delete: uuid -> ()
+    method delete {uuid} {
+	DB transaction {
+	    DB eval $sql_delete
+	}
+    }
+
     # # ## ### ##### ######## #############
     ## Internals
 
@@ -152,6 +160,7 @@ oo::class create blob::sqlite {
 	# Generate the custom sql commands.
 	my Def sql_extend   { INSERT          INTO "<<table>>" VALUES (NULL, :uuid, @blob) }
 	my Def sql_clear    { DELETE          FROM "<<table>>" }
+	my Def sql_delete   { DELETE          FROM "<<table>>" WHERE uuid = :uuid }
 	my Def sql_toblob   { SELECT data     FROM "<<table>>" WHERE uuid = :uuid }
 	my Def sql_toid     { SELECT id       FROM "<<table>>" WHERE uuid = :uuid }
 	my Def sql_names    { SELECT uuid     FROM "<<table>>" }

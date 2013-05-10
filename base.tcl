@@ -46,6 +46,9 @@ oo::class create blob {
     # clear: () --> ()
     method clear {} { my APIerror clear }
 
+    # delete: uuid --> ()
+    method delete {} { my APIerror delete }
+
     # # ## ### ##### ######## #############
     ## API. Convenience method to add a file to the store.
     ## Re-implement for efficiency (link, copy, ...).
