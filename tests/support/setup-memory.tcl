@@ -3,13 +3,12 @@
 # # ## ### ##### ######## ############# #####################
 
 proc new-store {} {
-    file mkdir _blobfs_
-    return [blob::fs create myblob _blobfs_]
+    [test-class] create test-store
+    return
 }
 
 proc release-store {} {
-    myblob destroy
-    file delete -force _blobfs_
+    test-store destroy
     return
 }
 

@@ -15,26 +15,16 @@ kt local   testing blob::fs
 
 # # ## ### ##### ######## ############# #####################
 
-proc already {cmd} {
-    return "can't create object \"$cmd\": command already exists with that name"
-}
-
-proc badmethod {m real} {
-    set real [string map {{, or} { or}} [linsert [join $real {, }] end-1 or]]
-    return "unknown method \"$m\": must be $real"
-}
-
-# identification to put into names of shared test cases.
-proc who {} { return fs }
+proc test-class {} { return blob::fs }
 
 # # ## ### ##### ######## ############# #####################
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
-kt source fs-setup.tcl
-#kt source fs-idgen.tcl
+kt source support/common.tcl
+kt source support/setup-fs.tcl
 
-kt source fs.testsuite
-kt source blob.testsuite
+kt source parts/fs.testsuite
+kt source parts/base.testsuite
 
 # # ## ### ##### ######## ############# #####################
 cleanupTests

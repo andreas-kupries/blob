@@ -3,13 +3,14 @@
 # # ## ### ##### ######## ############# #####################
 
 proc new-store {} {
-    sqlite3 mydb :memory:
-    return [blob::sqlite create myblob ::mydb blobs]
+    file mkdir _blobfs_
+    [test-class] create test-store _blobfs_
+    return
 }
 
 proc release-store {} {
-    catch { myblob destroy }
-    catch { mydb     close }
+    test-store destroy
+    file delete -force _blobfs_
     return
 }
 
