@@ -62,7 +62,9 @@ oo::class create blob::memory {
     }
 
     # names () -> list(uuid)
-    method names {} { dict keys $mystore }
+    method names {{pattern *}} {
+	dict keys $mystore $pattern
+    }
 
     # exists: string -> boolean
     method exists {uuid} { dict exists $mystore $uuid }

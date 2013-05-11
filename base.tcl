@@ -14,6 +14,7 @@ package require Tcl 8.5
 package require TclOO
 package require sha1 2            ; # tcllib
 package require fileutil          ; # tcllib
+package require oo::util          ; # tcllib
 
 # # ## ### ##### ######## ############# #####################
 ## Implementation
@@ -34,8 +35,8 @@ oo::class create blob {
     # channel: uuid --> channel		[validate uuid]
     method channel {uuid} { my APIerror channel }
 
-    # names: () --> list (uuid)
-    method names {}  { my APIerror names }
+    # names: ?pattern? --> list (uuid)
+    method names {{pattern *}}  { my APIerror names }
 
     # exists: uuid --> boolean
     method exists {uuid} { my APIerror exists }
@@ -50,8 +51,77 @@ oo::class create blob {
     method delete {} { my APIerror delete }
 
     # # ## ### ##### ######## #############
-    ## API. Convenience method to add a file to the store.
-    ## Re-implement for efficiency (link, copy, ...).
+    ## API. Methods for uni- and bi-directional
+    ##      synchronization (push, pull, and sync).
+    ##      Limited sync possible
+
+    # TODO: async operation.
+
+    method push {destination {uuidlist *}} {
+	# Look at the Fossil Transfer protocol.
+	$destination ihave [my Expand $uuidlist] \
+	    [oo::callback channel]
+	# Might need a done-callback (async).
+	return
+    }
+
+    method ihave {uuidlist pullcmd} {
+	foreach uuid $uuidlist {
+	    if {[my exists $uuid]} continue
+	    my Push $uuid [{*}$pullcmd $uuid]
+	}
+	# Definitely need done-callback (async)
+	return
+    }
+
+    method pull {origin {uuidlist *}} {
+	# Look at the Fossil Transfer protocol.
+	# Allow async operation
+	$destination iwant [my Expand $uuidlist] \
+	    [oo::callback Push]
+	# Might need a done-callback (async)
+	return
+    }
+
+    method iwant {uuidlist pushcmd} {
+	foreach uuid $uuidlist {
+	    if {![my exists $uuid]} continue
+	    {*}$pushcmd [my channel $uuid]
+	}
+	# Definitely need a done-callback (async)
+	return
+    }
+
+    method sync {peer {uuidlist *}} {
+	# Look at the Fossil Transfer protocol.
+	# Allow async operation
+	#set uuidlist [my Expand $uuidlist]
+	#$peer ihave $uuidlist [oo::callback Pull]
+	#$peer iwant $ [oo::callback Push]
+	# Interleave push/pull for optimal operation.
+	# Might need a done-callback
+	return
+    }
+
+    # # ## ### ##### ######## #############
+    ## Internal sync helpers
+
+    method Expand {uuidlist} {
+	set r {}
+	foreach pattern $uuidlist {
+	    lappend r {*}[my names $pattern]
+	}
+	return $r
+    }
+
+    method Push {uuid channel} {
+	# Invoked by origin store during a pull, to hand us (the
+	# destination) a blob to save, as read-only channel. We are
+	# responsible for reading the data and closing the channel.
+	my add-verify $uuid [read $channel]
+	close $channel
+	return
+    }
 
     # # ## ### ##### ######## #############
     ## Internal helpers
