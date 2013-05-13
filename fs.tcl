@@ -39,35 +39,32 @@ oo::class create blob::fs {
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # add: blob --> uuid
-    method add {blob} {
-	set uuid [my Uuid.blob $blob]
+    # add: uuid, blob --> ()
+    method Enter {uuid content} {
 	set dstpath [my P $uuid]
-	if {![file exists $dstpath]} {
-	    file mkdir [file dirname $dstpath]
-	    fileutil::writeFile -translation binary \
-		$dstpath $blob
-	}
-	return $uuid
+	if {[file exists $dstpath]} return
+	file mkdir [file dirname $dstpath]
+	fileutil::writeFile -translation binary \
+	    $dstpath $content
+	return
     }
 
-    # put: path --> uuid
-    method put {path} {
-	set uuid    [my Uuid.path $path]
+    # put: uuid, path --> ()
+    method EnterPath {uuid path} {
 	set dstpath [my P $uuid]
-	if {![file exists $dstpath]} {
-	    file mkdir [file dirname $dstpath]
-	    if {[catch {
-		# Prefer hard linking, to save on disk space.
-		file link -hard $dstpath $path
-	    }]} {
-		# But copy if that is not possible, because, for
-		# example the platform does not supporting it, cross
-		# disk linkage, etc.
-		file copy $path $dstpath
-	    }
+	if {[file exists $dstpath]} return
+
+	file mkdir [file dirname $dstpath]
+	if {[catch {
+	    # Prefer hard linking, to save on disk space.
+	    file link -hard $dstpath $path
+	}]} {
+	    # But copy if that is not possible, because, for
+	    # example the platform does not supporting it, cross
+	    # disk linkage, etc.
+	    file copy $path $dstpath
 	}
-	return $uuid
+	return
     }
 
     # retrieve: uuid --> blob
@@ -84,20 +81,32 @@ oo::class create blob::fs {
 	return $data
     }
 
-    # retrieve: uuid --> channel
+    # channel: uuid --> channel
     method channel {uuid} {
 	set path [my P $uuid]
 	if {![file exists $path]} {
 	    my Error "Expected uuid, got \"$uuid\"" \
 		BAD UUID $uuid
 	}
-	return [open $path r]
+	set chan [open $path r]
+	fconfigure $chan -translation binary
+	return $chan
+    }
+
+    # path: uuid --> channel
+    method path {uuid} {
+	set path [my P $uuid]
+	if {![file exists $path]} {
+	    my Error "Expected uuid, got \"$uuid\"" \
+		BAD UUID $uuid
+	}
+	return $path
     }
 
     # names () -> list(uuid)
-    method names {} {
+    method names {{pattern *}} {
 	set r {}
-	foreach e [glob -nocomplain -directory $mybasedir -tails */*/*] {
+	foreach e [glob -nocomplain -directory $mybasedir -tails */*/$pattern] {
 	    lappend r [lindex [file split $e] end]
 	}
 	return $r
@@ -127,6 +136,9 @@ oo::class create blob::fs {
 	file delete -force [my P $uuid]
 	return
     }
+
+    # # ## ### ##### ######## #############
+    ## API. Synchronization support
 
     # # ## ### ##### ######## #############
     ## Internals

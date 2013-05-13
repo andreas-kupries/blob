@@ -4,16 +4,16 @@
 
 proc store-class {} { lindex [split [test-class] /] 0 }
 
-proc new-store {} {
-    sqlite3              test-database [file normalize _blob_[pid]_]
-    [store-class] create test-store    ::test-database blobs
+proc new-store {{suffix {}}} {
+    sqlite3              test-database$suffix [file normalize _blob_[pid]_$suffix]
+    [store-class] create test-store$suffix    ::test-database$suffix blobs
     return
 }
 
-proc release-store {} {
-    catch { test-store    destroy }
-    catch { test-database close   }
-    file delete [file normalize _blob_[pid]_]
+proc release-store {{suffix {}}} {
+    catch { test-store$suffix    destroy }
+    catch { test-database$suffix close   }
+    file delete [file normalize _blob_[pid]_$suffix]
     return
 }
 
