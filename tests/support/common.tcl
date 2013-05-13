@@ -12,7 +12,7 @@ proc badmethod {m real} {
 }
 
 proc methods {} {
-    return {add channel clear delete destroy exists ihave-for-chan ihave-for-path iwant names pull push put retrieve size}
+    return {add channel clear delete destroy exists ihave-async-chan ihave-async-path ihave-for-chan ihave-for-path iwant iwant-async names pull pull-async push push-async put retrieve size}
 }
 
 # # ## ### ##### ######## ############# #####################

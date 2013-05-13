@@ -66,8 +66,6 @@ oo::class create blob {
     ##      synchronization (push, pull, and sync).
     ##      Limited sync possible
 
-    # TODO: async operation.
-
     # # ## ### ##### ######## #############
     ## Push (self to other). Synchronous.
 
@@ -139,6 +137,58 @@ oo::class create blob {
     }
 
     # # ## ### ##### ######## #############
+    ## Push (self to other). Asynchronous.
+
+    # We are self in a push operation.
+    method push-async {donecmd destination {uuidlist *}} {
+	# Delegating to the peer for actual control of the operation.
+	# The peer will use either 'path' or 'channel' methods to gain
+	# access to the blobs to transfer.
+	set uuidlist [my Expand $uuidlist]
+	if {![llength $uuidlist]} {
+	    after 0 $donecmd
+	    return
+	}
+	if {[my HasPath]} {
+	    $destination ihave-async-path $donecmd $uuidlist [self]
+	} else {
+	    $destination ihave-async-chan $donecmd $uuidlist [self]
+	}
+	return
+    }
+
+    # We are the peer in a push operation, and have to pull blobs from
+    # the source. Two entry-points, depending on the retrieval API the
+    # source is able to provide. We ignore the blobs we already
+    # have/know.
+
+    method ihave-async-chan {donecmd uuidlist src} {
+	while {[llength $uuidlist]} {
+	    set uuidlist [lassign $uuidlist uuid]
+	    if {[my exists $uuid]} continue
+	    my AddVerify $uuid [$src channel $uuid]
+
+	    after 0 [mymethod ihave-async-chan $donecmd $uuidlist $src]
+	    return
+	}
+	after 0 $donecmd
+	return
+    }
+
+    method ihave-async-path {donecmd uuidlist src} {
+	while {[llength $uuidlist]} {
+	    set uuidlist [lassign $uuidlist uuid]
+	    if {[my exists $uuid]} continue
+	    my PutVerify $uuid [$src path $uuid]
+
+	    after 0 [mymethod ihave-async-path $donecmd $uuidlist $src]
+	    return
+	}
+	after 0 $donecmd
+	return
+    }
+
+    # # ## ### ##### ######## #############
     ## Pull (self from other). Synchronous.
 
     # The initiator, self, delegates the action to the peer for actual
@@ -195,14 +245,80 @@ oo::class create blob {
 	return
     }
 
+    # # ## ### ##### ######## #############
+    ## Pull (self from other). Asynchronous.
+
+    # We are self in a pull operation.
+    method pull-async {donecmd origin {uuidlist *}} {
+	# Delegating to the peer for actual control of the operation.
+	# The peer will use either 'put' or 'add' methods to enter
+	# the blobs to transfer.
+	#set uuidlist [my Filter [my Expand $uuidlist]]
+	if {![llength $uuidlist]} {
+	    after 0 $donecmd
+	    return
+	}
+	$origin iwant-async $donecmd $uuidlist [self]
+	return
+    }
+
+    # We are the peer in a pull operation and have to push blobs into
+    # the destination.
+    method iwant-async {donecmd uuidlist destination} {
+	# Split by (non-)support of 'path' lookup.
+	# If we have 'path' we can avoid
+
+	set uuidlist [my Expand $uuidlist]
+	if {[my HasPath]} {
+	    my IwantPut $donecmd $uuidlist $destination
+	} else {
+	    my IwantChan $donecmd $uuidlist $destination
+	}
+	return
+    }
+
+    method IwantPut {donecmd uuidlist destination} {
+	while {[llength $uuidlist]} {
+	    set uuidlist [lassign $uuidlist uuid]
+	    if {[$destination exists $uuid]} continue
+	    $destination put [my path $uuid]
+
+	    after 0 [mymethod IwantPut $donecmd $uuidlist $destination]
+	    return
+	}
+	after 0 $donecmd
+	return
+    }
+
+    method IwantChan {donecmd uuidlist destination} {
+	while {[llength $uuidlist]} {
+	    set uuidlist [lassign $uuidlist uuid]
+	    if {[$destination exists $uuid]} continue
+
+	    # Optimize: enter from channel?  Not really. Would
+	    # just move the common code below into the derived
+	    # classes.
+
+	    set channel [my channel $uuid]
+	    set blob    [read $channel]
+	    close       $channel
+
+	    $destination add $blob
+
+	    after 0 [mymethod IwantChan $donecmd $uuidlist $destination]
+	    return
+	}
+	after 0 $donecmd
+	return
+    }
 
     if 0 {
     method sync {peer {uuidlist *}} {
 	# Look at the Fossil Transfer protocol.
 	# Allow async operation
 	#set uuidlist [my Expand $uuidlist]
-	#$peer ihave $uuidlist [oo::callback Pull]
-	#$peer iwant $ [oo::callback Push]
+	#$peer ihave $uuidlist [mymethod Pull]
+	#$peer iwant $ [mymethod Push]
 	# Interleave push/pull for optimal operation.
 	# Might need a done-callback
 	return

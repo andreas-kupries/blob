@@ -492,6 +492,86 @@ test [test-class]-pull-1.4 {pull, by pattern} -setup {
     release-store -dst
     unset r
 } -result {{} 02aa629c8b16cd17a44f3a0efec2feed43937642}
+
+# # ## ### ##### ######## ############# #####################
+## Store synchronization: pull-async
+
+test [test-class]-pull-async-1.0 {pull-async, wrong#args, not enough} -setup {
+    new-store
+} -body {
+    test-store pull-async
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store pull-async donecmd origin ?uuidlist?"}
+
+test [test-class]-pull-async-1.1 {pull-async, wrong#args, too many} -setup {
+    new-store
+} -body {
+    test-store pull-async C D P X
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store pull-async donecmd origin ?uuidlist?"}
+
+test [test-class]-pull-async-1.2 {pull-async, nothing} -setup {
+    new-store -src
+    new-store -dst
+    set barrier 0
+    proc Complete {} { set ::barrier 1 }
+} -body {
+    test-store-dst pull-async Complete test-store-src
+    vwait barrier
+} -cleanup {
+    unset barrier
+    rename Complete {}
+    release-store -src
+    release-store -dst
+} -result {}
+
+test [test-class]-pull-async-1.3 {pull-async, all} -setup {
+    new-store -src
+    new-store -dst
+    test-store-src add S
+    test-store-src add A
+    test-store-src add R
+    test-store-src add C
+    lappend r [lsort [test-store-src names]]
+    set barrier 0
+    proc Complete {} { set ::barrier 1 }
+} -body {
+    lappend r [lsort [test-store-dst names]]
+    test-store-dst pull-async Complete test-store-src
+    vwait barrier
+    lappend r [lsort [test-store-dst names]]
+} -cleanup {
+    unset barrier
+    rename Complete {}
+    release-store -src
+    release-store -dst
+    unset r
+} -result {{02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b} {} {02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b}}
+
+test [test-class]-pull-async-1.4 {pull-async, by pattern} -setup {
+    new-store -src
+    new-store -dst
+    test-store-src add S
+    test-store-src add A
+    test-store-src add R
+    test-store-src add C
+    set barrier 0
+    proc Complete {} { set ::barrier 1 }
+} -body {
+    lappend r [test-store-dst names]
+    test-store-dst pull-async Complete test-store-src *aa*
+    vwait barrier
+    lappend r [test-store-dst names]
+} -cleanup {
+    unset barrier
+    rename Complete {}
+    release-store -src
+    release-store -dst
+    unset r
+} -result {{} 02aa629c8b16cd17a44f3a0efec2feed43937642}
+
 # # ## ### ##### ######## ############# #####################
 ## Store synchronization: push
 
@@ -554,6 +634,85 @@ test [test-class]-push-1.4 {push, by pattern} -setup {
     release-store -src
     release-store -dst
     unset r
+} -result {{} 02aa629c8b16cd17a44f3a0efec2feed43937642}
+
+# # ## ### ##### ######## ############# #####################
+## Store synchronization: push-async
+
+test [test-class]-push-async-1.0 {push-async, wrong#args, not enough} -setup {
+    new-store
+} -body {
+    test-store push-async
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store push-async donecmd destination ?uuidlist?"}
+
+test [test-class]-push-async-1.1 {push-async, wrong#args, too many} -setup {
+    new-store
+} -body {
+    test-store push-async C D P X
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store push-async donecmd destination ?uuidlist?"}
+
+test [test-class]-push-async-1.2 {push-async, nothing} -setup {
+    new-store -src
+    new-store -dst
+    set barrier 0
+    proc Complete {} { set ::barrier 1 }
+} -body {
+    test-store-src push-async Complete test-store-dst
+    vwait barrier
+} -cleanup {
+    unset barrier
+    release-store -src
+    release-store -dst
+    rename Complete {}
+} -result {}
+
+test [test-class]-push-async-1.3 {push-async, all} -setup {
+    new-store -src
+    new-store -dst
+    test-store-src add S
+    test-store-src add A
+    test-store-src add R
+    test-store-src add C
+    set barrier 0
+    proc Complete {} { set ::barrier 1 }
+    lappend r [lsort [test-store-src names]]
+} -body {
+    lappend r [lsort [test-store-dst names]]
+    test-store-src push-async Complete test-store-dst
+    vwait barrier
+    lappend r [lsort [test-store-dst names]]
+} -cleanup {
+    unset barrier
+    release-store -src
+    release-store -dst
+    unset r
+    rename Complete {}
+} -result {{02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b} {} {02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b}}
+
+test [test-class]-push-async-1.4 {push-async, by pattern} -setup {
+    new-store -src
+    new-store -dst
+    test-store-src add S
+    test-store-src add A
+    test-store-src add R
+    test-store-src add C
+    set barrier 0
+    proc Complete {} { set ::barrier 1 }
+} -body {
+    lappend r [test-store-dst names]
+    test-store-src push-async Complete test-store-dst *aa*
+    vwait barrier
+    lappend r [test-store-dst names]
+} -cleanup {
+    unset barrier
+    release-store -src
+    release-store -dst
+    unset r
+    rename Complete {}
 } -result {{} 02aa629c8b16cd17a44f3a0efec2feed43937642}
 
 # # ## ### ##### ######## ############# #####################
