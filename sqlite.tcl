@@ -94,10 +94,8 @@ oo::class create blob::sqlite {
 	}
     }
 
-
-
     # names () -> list(uuid)
-    method names {{pattern *}} {
+    method Names {{pattern *}} {
 	if {$pattern eq "*"} {
 	    DB transaction {
 		return [DB eval $sql_names_all]

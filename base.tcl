@@ -46,8 +46,18 @@ oo::class create blob {
     # channel: uuid --> channel		[validate uuid]
     method channel {uuid} { my API.error channel }
 
-    # names: ?pattern? --> list (uuid)
-    method names {{pattern *}}  { my API.error names }
+    # names: ?pattern?... --> list (uuid)
+    method names {args}  {
+	if {![llength $args]} {
+	    return [my Names]
+	}
+	set r {}
+	foreach pattern $args {
+	    lappend r {*}[my Names $pattern]
+	}
+	return $r
+    }
+    method Names {{pattern *}} { my API.error Names }
 
     # exists: uuid --> boolean
     method exists {uuid} { my API.error exists }
@@ -85,8 +95,6 @@ oo::class create blob {
 	# Delegating to the peer for actual control of the operation.
 	# The peer will use either 'path' or 'channel' methods to gain
 	# access to the blobs to transfer.
-	set uuidlist [my Expand $uuidlist]
-	if {![llength $uuidlist]} return
 	if {[my HasPath]} {
 	    $destination ihave-for-path $uuidlist [self]
 	} else {
@@ -101,6 +109,7 @@ oo::class create blob {
     # have/know.
 
     method ihave-for-chan {uuidlist src} {
+	set uuidlist [$src names {*}$uuidlist]
 	foreach uuid $uuidlist {
 	    if {[my exists $uuid]} continue
 	    my AddVerify $uuid [$src channel $uuid]
@@ -109,6 +118,7 @@ oo::class create blob {
     }
 
     method ihave-for-path {uuidlist src} {
+	set uuidlist [$src names {*}$uuidlist]
 	foreach uuid $uuidlist {
 	    if {[my exists $uuid]} continue
 	    my PutVerify $uuid [$src path $uuid]
@@ -144,11 +154,6 @@ oo::class create blob {
 	# Delegating to the peer for actual control of the operation.
 	# The peer will use either 'path' or 'channel' methods to gain
 	# access to the blobs to transfer.
-	set uuidlist [my Expand $uuidlist]
-	if {![llength $uuidlist]} {
-	    after 0 $donecmd
-	    return
-	}
 	if {[my HasPath]} {
 	    $destination ihave-async-path $donecmd $uuidlist [self]
 	} else {
@@ -163,12 +168,17 @@ oo::class create blob {
     # have/know.
 
     method ihave-async-chan {donecmd uuidlist src} {
+	my IHaveAsyncChan $donecmd [$src names {*}$uuidlist] $src
+	return
+    }
+
+    method IHaveAsyncChan {donecmd uuidlist src} {
 	while {[llength $uuidlist]} {
 	    set uuidlist [lassign $uuidlist uuid]
 	    if {[my exists $uuid]} continue
 	    my AddVerify $uuid [$src channel $uuid]
 
-	    after 0 [mymethod ihave-async-chan $donecmd $uuidlist $src]
+	    after 0 [mymethod IHaveAsyncChan $donecmd $uuidlist $src]
 	    return
 	}
 	after 0 $donecmd
@@ -176,12 +186,17 @@ oo::class create blob {
     }
 
     method ihave-async-path {donecmd uuidlist src} {
+	my IHaveAsyncPath $donecmd [$src names {*}$uuidlist] $src
+	return
+    }
+
+    method IHaveAsyncPath {donecmd uuidlist src} {
 	while {[llength $uuidlist]} {
 	    set uuidlist [lassign $uuidlist uuid]
 	    if {[my exists $uuid]} continue
 	    my PutVerify $uuid [$src path $uuid]
 
-	    after 0 [mymethod ihave-async-path $donecmd $uuidlist $src]
+	    after 0 [mymethod IHaveAsyncPath $donecmd $uuidlist $src]
 	    return
 	}
 	after 0 $donecmd
@@ -209,7 +224,6 @@ oo::class create blob {
 	# Delegating to the peer for actual control of the operation.
 	# The peer will use either 'put' or 'add' methods to enter
 	# the blobs to transfer.
-	#set uuidlist [my Filter [my Expand $uuidlist]]
 	if {![llength $uuidlist]} return
 	$origin iwant $uuidlist [self]
 	return
@@ -221,7 +235,7 @@ oo::class create blob {
 	# Split by (non-)support of 'path' lookup.
 	# If we have 'path' we can avoid
 
-	set uuidlist [my Expand $uuidlist]
+	set uuidlist [my names {*}$uuidlist]
 	if {[my HasPath]} {
 	    foreach uuid $uuidlist {
 		if {[$destination exists $uuid]} continue
@@ -253,7 +267,6 @@ oo::class create blob {
 	# Delegating to the peer for actual control of the operation.
 	# The peer will use either 'put' or 'add' methods to enter
 	# the blobs to transfer.
-	#set uuidlist [my Filter [my Expand $uuidlist]]
 	if {![llength $uuidlist]} {
 	    after 0 $donecmd
 	    return
@@ -268,7 +281,7 @@ oo::class create blob {
 	# Split by (non-)support of 'path' lookup.
 	# If we have 'path' we can avoid
 
-	set uuidlist [my Expand $uuidlist]
+	set uuidlist [my names {*}$uuidlist]
 	if {[my HasPath]} {
 	    my IwantPut $donecmd $uuidlist $destination
 	} else {
@@ -312,39 +325,48 @@ oo::class create blob {
 	return
     }
 
-    if 0 {
+    # # ## ### ##### ######## #############
+    # Sync (self push/pull to/from other). Synchronous.
+
+    # The initiator, self, delegates the action to the peer for actual
+    # control and execution of the operation (methods
+    # iexchange-*). The method chosen by self encodes whether it
+    # supports the 'path' retrieval operation or only the standard
+    # 'channel' retriever. The peer uses this information to optimize
+    # the blob transfer, i.e. chooses the API with which it retrieves
+    # the blob. The default implementations of the peer/ihave-* follow
+    # the hint given by the initiator. Filtering the uuid list happens
+    # only in the peer, as the only side knowing which blobs it is
+    # missing.
+
     method sync {peer {uuidlist *}} {
-	# Look at the Fossil Transfer protocol.
-	# Allow async operation
-	#set uuidlist [my Expand $uuidlist]
-	#$peer ihave $uuidlist [mymethod Pull]
-	#$peer iwant $ [mymethod Push]
-	# Interleave push/pull for optimal operation.
-	# Might need a done-callback
+	# Delegating to the peer for actual control of the operation.
+	# The peer will use either 'path' or 'channel' methods to gain
+	# access to the blobs to transfer.
+	if {[my HasPath]} {
+	    $peer iexchange-for-path $uuidlist [self]
+	} else {
+	    $peer iexchange-for-chan $uuidlist [self]
+	}
 	return
     }
 
+    # We are the peer in a sync operation, and have to push and pull
+    # blobs to and from the source. Two entry-points, depending on the
+    # retrieval API the source is able to provide. We ignore the blobs
+    # we already have/know. Internally we call on the existing APIs
+    # for pushing and pulling.
+
+    method iexchange-for-chan {uuidlist peer} {
+	my ihave-for-chan $uuidlist $peer
+	my iwant          $uuidlist $peer
+	return
     }
 
-    # # ## ### ##### ######## #############
-    ## Internal sync helpers
-
-    method Expand {uuidlist} {
-	set r {}
-	foreach pattern $uuidlist {
-	    lappend r {*}[my names $pattern]
-	}
-	return $r
-    }
-
-    # Can be overriden for performance.
-    method Filter {uuidlist} {
-	set r {}
-	foreach uuid $uuidlist {
-	    if {[my exists $uuid]} continue
-	    lappend r $uuid
-	}
-	return $r
+    method iexchange-for-path {uuidlist peer} {
+	my ihave-for-path $uuidlist $peer
+	my iwant          $uuidlist $peer
+	return
     }
 
     # # ## ### ##### ######## #############

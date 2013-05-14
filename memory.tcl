@@ -58,7 +58,7 @@ oo::class create blob::memory {
     }
 
     # names () -> list(uuid)
-    method names {{pattern *}} {
+    method Names {{pattern *}} {
 	dict keys $mystore $pattern
     }
 

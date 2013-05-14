@@ -104,7 +104,7 @@ oo::class create blob::fs {
     }
 
     # names () -> list(uuid)
-    method names {{pattern *}} {
+    method Names {{pattern *}} {
 	set r {}
 	foreach e [glob -nocomplain -directory $mybasedir -tails */*/$pattern] {
 	    lappend r [lindex [file split $e] end]

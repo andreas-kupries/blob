@@ -268,14 +268,6 @@ test [test-class]-exists-1.3 {exists, yes} -setup {
 # # ## ### ##### ######## ############# #####################
 ## names
 
-test [test-class]-names-1.0 {names, wrong#args, too many} -setup {
-    new-store
-} -body {
-    test-store names S X
-} -cleanup {
-    release-store
-} -returnCodes error -result {wrong # args: should be "test-store names ?pattern?"}
-
 test [test-class]-names-1.1 {names, none} -setup {
     new-store
 } -body {
@@ -714,6 +706,81 @@ test [test-class]-push-async-1.4 {push-async, by pattern} -setup {
     unset r
     rename Complete {}
 } -result {{} 02aa629c8b16cd17a44f3a0efec2feed43937642}
+
+# # ## ### ##### ######## ############# #####################
+## Store synchronization: sync
+
+test [test-class]-sync-1.0 {sync, wrong#args, not enough} -setup {
+    new-store
+} -body {
+    test-store sync
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store sync peer ?uuidlist?"}
+
+test [test-class]-sync-1.1 {sync, wrong#args, too many} -setup {
+    new-store
+} -body {
+    test-store sync D P X
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store sync peer ?uuidlist?"}
+
+test [test-class]-sync-1.2 {sync, nothing} -setup {
+    new-store -a
+    new-store -b
+} -body {
+    test-store-a sync test-store-b
+} -cleanup {
+    release-store -a
+    release-store -b
+} -result {}
+
+test [test-class]-sync-1.3 {sync, all} -setup {
+    new-store -a
+    new-store -b
+    test-store-a add S
+    test-store-a add A
+    test-store-b add R
+    test-store-b add C
+    lappend r [lsort [test-store-a names]]
+    lappend r [lsort [test-store-b names]]
+} -body {
+    test-store-a sync test-store-b
+    lappend r [lsort [test-store-a names]]
+    lappend r [lsort [test-store-b names]]
+    join $r \n
+} -cleanup {
+    release-store -a
+    release-store -b
+    unset r
+} -result {02aa629c8b16cd17a44f3a0efec2feed43937642 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
+06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d
+02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
+02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b}
+
+test [test-class]-sync-1.4 {sync, by pattern} -setup {
+    new-store -a
+    new-store -b
+    test-store-a add S
+    test-store-a add A
+    test-store-b add R
+    test-store-b add C
+    lappend r [lsort [test-store-a names]]
+    lappend r [lsort [test-store-b names]]
+} -body {
+    test-store-a sync test-store-b {*aa* *80*}
+    lappend r [lsort [test-store-a names]]
+    lappend r [lsort [test-store-b names]]
+    join $r \n
+} -cleanup {
+    release-store -a
+    release-store -b
+    unset r
+} -result {02aa629c8b16cd17a44f3a0efec2feed43937642 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
+06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d
+02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
+02aa629c8b16cd17a44f3a0efec2feed43937642 06576556d1ad802f247cad11ae748be47b70cd9c 32096c2e0eff33d844ee6d675407ace18289357d}
 
 # # ## ### ##### ######## ############# #####################
 return
