@@ -1,0 +1,443 @@
+
+The synchronization and transfer protocol for the blob stores provided
+by this package is a reduced form of the fossil synchronization
+protocol.
+
+Our protocol does not support deltas, clusters, nor phantoms. The last
+is a consequence of the first two, as only deltas and clusters can
+refer to unknown blobs requiring phantoms.
+
+The decision to remove deltas was made because the blob stores
+provided here currently treat all blobs as unconnected and
+uncorrelated individual files. For fossil, where blobs represent file
+and project revisions which are connected in time, deltas make sense
+to capture the differences and thus reduce storage volume.
+
+The decision to remove clusters was made because they simplify the
+protocol making the blob store the only state going into the transfer.
+With clusters additional state (the unclustered table) has to be
+maintained outside of a blob store. This choice comes at the expense
+of more initial traffic (larger artifact lists (1)) to exchange all
+artifacts.
+
+(Ad 1) Clusters compress partial artifact lists into a single content
+hash, replacing the full list of artifacts.
+
+General compression will be supported, as second stage.
+
+Key points:
+
+* The client sends one or more PUSH HTTP requests to the server.
+
+* The request and reply content type is "application/x-<TODO>".
+
+* HTTP request content is compressed using zlib (stage 2), different
+  content type.
+
+* The content of request and reply consists of cards with one card per
+  line.
+
+  Card formats are:
+  * login	userid nonce signature
+  * push	servercode projectcode
+  * pull	servercode projectcode
+  * clone	protocol-version sequence-number
+  * file	artifact-id size \n content
+  * igot	artifact-id
+  * gimme	artifact-id
+  * cookie	cookie-text
+  * #		arbitrary-text...
+  * error	error-message
+
+
+Overview
+
+The global state of a blob store consists of an unordered collection
+of artifacts.  Each artifact is identified by its SHA1 hash expressed
+as a 40-character lower-case hexadecimal string.  Synchronization the
+process of sharing artifacts between stores so that all stores have
+copies of all artifacts.  Because artifacts are unordered, the order
+in which artifacts are received at a server is inconsequential.  It is
+assumed that the SHA1 hashes of artifacts are unique - that every
+artifact has a different SHA1 hash.  To a first approximation,
+synchronization proceeds by sharing lists SHA1 hashes of available
+artifacts, then sharing those artifacts that are not found on one side
+or the other of the connection.
+
+Transport
+
+All communication between client and server is via HTTP requests.  The
+server is listening for incoming HTTP requests.  The client issues one
+or more HTTP requests and receives replies for each request.
+
+Note: The details of how a server is configured to "listen" for
+incoming HTTP requests is immaterial (inetd, CGI, integrated
+listener,...)  The important point is that the server is listening for
+requests and the client is the issuer of the requests.
+
+A single push, pull, or sync might involve multiple HTTP requests.
+The client maintains state between all requests.  But on the server
+side, each request is independent.  The server does not preserve any
+information about the client from one request to the next.
+
+Server Identification
+
+The server is identified by a URL argument that accompanies the
+client.
+
+The client modifies the URL by appending the method name "/xfer" to
+the end.  For example, if the specified URL is
+
+<blockquote>
+http://fossil-scm.hwaci.com/fossil
+</blockquote>
+
+Then the URL that is really used to do the synchronization will be:
+
+<blockquote>
+http://fossil-scm.hwaci.com/fossil/xfer
+</blockquote>
+
+HTTP Request Format
+
+The client always sends a POST request to the server.  The
+general format of the POST request is as follows:
+
+<blockquote><pre>
+POST /fossil/xfer HTTP/1.0
+Host: fossil-scm.hwaci.com:80
+Content-Type: application/x-<TODO>
+Content-Length: 4216
+
+<i>content...</i>
+</pre></blockquote>
+
+In the example above, the pathname given after the POST keyword on the
+first line is a copy of the URL pathname.  The Host: parameter is also
+taken from the URL.  The content type is always either
+"application/x-<TODO>" or "application/x-<TODO>-uncompressed".  The
+"x-<TODO>" content type is the default.  The only difference is that
+"x-<TODO>" content is compressed using zlib whereas
+"x-<TODO>-uncompressed" is sent uncompressed.</p>
+
+<p>A typical reply from the server might look something like this:</p>
+
+<blockquote><pre>
+HTTP/1.0 200 OK
+Date: Mon, 10 Sep 2007 12:21:01 GMT
+Connection: close
+Cache-control: private
+Content-Type: application/x-<TODO>; charset=US-ASCII
+Content-Length: 265
+
+<i>content...</i>
+</pre></blockquote>
+
+<p>The content type of the reply is always the same as the content type
+of the request.</p>
+
+<h2>Synchronization Content</h2>
+
+<p>A synchronization request between a client and server consists of
+one or more HTTP requests as described in the previous section.  This
+section details the "x-<TODO>" content type.</p>
+
+<h3>3.1 Line-oriented Format</h3>
+
+<p>The x-<TODO> content type consists of zero or more "cards".  Cards
+are separated by the newline character ("\n").  Leading and trailing
+whitespace on a card is ignored.  Blank cards are ignored.</p>
+
+<p>Each card is divided into zero or more space separated tokens.  The
+first token on each card is the operator.  Subsequent tokens are
+arguments.  The set of operators understood by servers is slightly
+different from the operators understood by clients, though the two are
+very similar.</p>
+
+<h3>3.2 Login Cards</h3>
+
+<p>Every message from client to server begins with one or more login
+cards.  Each login card has the following format:</p>
+
+<blockquote>
+<b>login</b>  <i>userid  nonce  signature</i>
+</blockquote>
+
+<p>The userid is the name of the user that is requesting service from
+the server.  The nonce is the SHA1 hash of the remainder of the
+message - all text that follows the newline character that terminates
+the login card.  The signature is the SHA1 hash of the concatenation
+of the nonce and the users password.</p>
+
+<p>For each login card, the server looks up the user and verifies that
+the nonce matches the SHA1 hash of the remainder of the message.  It
+then checks the signature hash to make sure the signature matches.  If
+everything checks out, then the client is granted all privileges of
+the specified user.</p>
+
+<p>Privileges are cumulative.  There can be multiple successful login
+cards.  The session privileges are the bit-wise OR of the privileges
+of each individual login.</p>
+
+<h3>3.3 File Cards</h3>
+
+<p>Artifacts are transferred using "file" cards.  (The name "file"
+card comes from the fact that most artifacts correspond to files.)</p>
+
+<blockquote>
+<b>file</b> <i>artifact-id size</i> <b>\n</b> <i>content</i><br>
+</blockquote>
+
+<p>File cards are different from all other cards in that they followed
+by in-line "payload" data.  The content of the artifact consists of
+the first <i>size</i> bytes of the x-<TODO> content that immediately
+follow the newline that terminates the file card.  No other cards have
+this characteristic.  </p>
+
+<p>The first argument of a file card is the ID of the artifact that is
+being transferred.  The artifact ID is the lower-case hexadecimal
+representation of the SHA1 hash of the artifact.  The last argument of
+the file card is the number of bytes of payload that immediately
+follow the file card.  This payload is the complete content of the
+artifact.</p>
+
+<p>File cards are sent in both directions: client to server and server
+to client.</p>
+
+<h3>3.4 Push and Pull Cards</h3>
+
+<p>Among of the first cards in a client-to-server message are the push
+and pull cards.  The push card tell the server that the client is
+pushing content.  The pull card tell the server that the client wants
+to pull content.  In the event of a sync, both cards are sent.  The
+format is as follows:</p>
+
+<blockquote>
+<b>push</b> <i>servercode projectcode</i><br>
+<b>pull</b> <i>servercode projectcode</i>
+</blockquote>
+
+<p>The <i>servercode</i> argument is the physical store ID for the
+client.  The server will only allow the transaction to proceed if the
+servercode is different from its own servercode.  This prevents a
+sync-loop.  The <i>projectcode</i> is the logical identifier for the
+data that the client store contains.  The projectcode for the client
+and server must match in order for the transaction to proceed.</p>
+
+<p>The server will also send a push card back to the client
+during a clone.  This is how the client determines what project
+code to put into the new repository it is constructing.</p>
+
+<h3>3.5 Clone Cards</h3>
+
+<p>A clone card works like a pull card in that it is sent from
+client to server in order to tell the server that the client
+wants to pull content.</p>
+
+<blockquote>
+<b>clone</b> <i>protocol-version sequence-number</i>
+</blockquote>
+
+<h4>3.5.1 Protocol 2</h4>
+
+<p>The clients send a two-argument clone message with a protocol
+version of "1".  (Future versions of the package might use larger
+protocol version numbers.)  The sequence-number sent is the number of
+artifacts received so far.  For the first clone message, the sequence
+number is 0.  The server will respond by sending file cards for some
+number of artifacts up to the maximum message size.
+
+<p>The server will also send a single "clone_seqno" card to the client
+so that the client can know where the server left off.
+
+<blockquote>
+<b>clone_seqno</b>  <i>sequence-number</i>
+</blockquote>
+
+<p>The clone message in subquence HTTP requests for the same clone
+operation will use the sequence-number from the
+clone_seqno of the previous reply.</p>
+
+<p>In response to an initial clone message, the server also sends the
+client a push message so that the client can discover the projectcode
+for this project.</p>
+
+<h4>3.5.2 Legacy Protocol</h4>
+
+<p>Older clients send a clone card with no argument.  The server responds
+to a blank clone card by sending an "igot" card for every artifact in the
+repository.  The client will then issue "gimme" cards to pull down all the
+content it needs.
+
+<p>The legacy protocol works well for smaller repositories (50MB with 50,000
+artifacts) but is too slow and unwieldy for larger repositories.
+The version 2 protocol is an effort to improve performance.  Further
+performance improvements with higher-numbered clone protocols are
+possible in future versions of Fossil.
+
+<h3>3.6 Igot Cards</h3>
+
+<p>An igot card can be sent from either client to server or from
+server to client in order to indicate that the sender holds a copy
+of a particular artifact.  The format is:</p>
+
+<blockquote>
+<b>igot</b> <i>artifact-id</i>
+</blockquote>
+
+<p>The argument of the igot card is the ID of the artifact that the
+sender possesses.  The receiver of an igot card will typically check
+to see if it also holds the same artifact and if not it will request
+the artifact using a gimme card in either the reply or in the next
+message.</p>
+
+<h3>3.7 Gimme Cards</h3>
+
+<p>A gimme card is sent from either client to server or from server to
+client.  The gimme card asks the receiver to send a particular (set
+of) artifact(s) back to the sender.  The format of a gimme card is
+this:</p>
+
+<blockquote>
+<b>gimme</b> <i>artifact-id</i>
+</blockquote>
+
+<p>The argument to the gimme card is the ID of the artifact that the
+sender wants. This can also be a glob pattern.  The receiver will
+typically respond to a gimme card by sending one or more file cards in
+its reply or in the next message.</p>
+
+<h3>3.8 Cookie Cards</h3>
+
+<p>A cookie card can be used by a server to record a small amount
+of state information on a client.  The server sends a cookie to the
+client.  The client sends the same cookie back to the server on
+its next request.  The cookie card has a single argument which
+is its payload.</p>
+
+<blockquote>
+<b>cookie</b> <i>payload</i>
+</blockquote>
+
+<p>The client is not required to return the cookie to the server on
+its next request.  Or the client might send a cookie from a different
+server on the next request.  So the server must not depend on the
+cookie and the server must structure the cookie payload in such a way
+that it can tell if the cookie it sees is its own cookie or a cookie
+from another server.  (Typically the server will embed its servercode
+as part of the cookie.)</p>
+
+<h3>3.11 Error Cards</h3>
+
+<p>If the server discovers anything wrong with a request, it generates
+an error card in its reply.  When the client sees the error card,
+it displays an error message to the user and aborts the sync
+operation.  An error card looks like this:</p>
+
+<blockquote>
+<b>error</b> <i>error-message</i>
+</blockquote>
+
+<p>The error message is English text that is encoded in order to
+be a single token.
+A space (ASCII 0x20) is represented as "\s" (ASCII 0x5C, 0x73).  A
+newline (ASCII 0x0a) is "\n" (ASCII 0x6C, x6E).  A backslash 
+(ASCII 0x5C) is represented as two backslashes "\\".  Apart from
+space and newline, no other whitespace characters nor any
+unprintable characters are allowed in
+the error message.</p>
+
+<h3>3.12 Comment Cards</h3>
+
+<p>Any card that begins with "#" (ASCII 0x23) is a comment card and
+is silently ignored.</p>
+
+<h3>3.13 Unknown Cards</h3>
+
+<p>If either the client or the server sees a card that is not
+described above, then it generates an error and aborts.</p>
+
+<h2>5.0 Synchronization Strategies</h2>
+
+<h3>5.1 Pull</h3>
+
+<p>A typical pull operation proceeds as shown below.  Details
+of the actual implementation may very slightly but the gist of
+a pull is captured in the following steps:</p>
+
+<ol>
+<li>The client sends login and pull cards.
+<li>The client sends a cookie card if it has previously received a cookie.
+<hr>
+<li>The server checks the login password and rejects the session if
+the user does not have permission to pull.
+<li>If the number of entries in the unclustered table on the server is
+greater than 100, then the server constructs a new cluster artifact to
+cover all those unclustered entries.
+<li>The server sends file cards for every gimme card it received
+from the client.
+<li>The server sends igot cards for every artifact.
+<hr>
+<li>The client adds the content of file cards to its repository.
+</ol>
+
+<p>These ten steps represent a single HTTP round-trip request.
+The first three steps are the processing that occurs on the client
+to generate the request.  The middle four steps are processing
+that occurs on the server to interpret the request and generate a
+reply.  And the last three steps are the processing that the
+client does to interpret the reply.</p>
+
+<p>During a pull, the client will keep sending HTTP requests
+until it holds all artifacts that exist on the server.</p>
+
+<p>Note that the server tries
+to limit the size of its reply message to something reasonable
+(usually about 1MB) so that it might stop sending file cards as
+described in step (6) if the reply becomes too large.</p>
+
+<p>Step (5) is the only way in which new clusters can be created.
+By only creating clusters on the server, we hope to minimize the
+amount of overlap between clusters in the common configuration where
+there is a single server and many clients.  The same synchronization
+protocol will continue to work even if there are multiple servers
+or if servers and clients sometimes change roles.  The only negative
+effects of these unusual arrangements is that more than the minimum
+number of clusters might be generated.</p>
+
+<h3>5.2 Push</h3>
+
+<p>A typical push operation proceeds roughly as shown below.  As
+with a pull, the actual implementation may vary slightly.</p>
+
+<ol>
+<li>The client sends login and push cards.
+<li>The client sends file cards for any artifacts that it holds that have
+never before been pushed - artifacts that come from local check-ins.
+<li>If this is the second or later cycle in a push, then the
+client sends file cards for any gimme cards that the server sent
+in the previous cycle.
+<li>The client sends igot cards for every artifact.
+<hr>
+<li>The server checks the login and push cards and issues an error if
+anything is amiss.
+<li>The server accepts file cards from the client and adds those artifacts
+to its repository.
+<hr>
+<li>The client remembers the gimme cards from the server so that it
+can generate file cards in reply on the next cycle.
+</ol>
+
+<p>As with a pull, the steps of a push operation repeat until the
+server knows all artifacts that exist on the client.  Also, as with
+pull, the client attempts to keep the size of the request from
+growing too large by suppressing file cards once the
+size of the request reaches 1MB.</p>
+
+<h3>5.3 Sync</h3>
+
+<p>A sync is just a pull and a push that happen at the same time.
+The first three steps of a pull are combined with the first five steps
+of a push.  Steps (4) through (7) of a pull are combined with steps
+(5) through (8) of a push.  And steps (8) through (10) of a pull
+are combined with step (9) of a push.</p>
