@@ -39,6 +39,8 @@ oo::class create blob::sqlite {
 
 	my InitializeSchema $table
 	set mytable $table
+
+	next
 	return
     }
 

@@ -33,6 +33,8 @@ oo::class create blob::fs {
 	my Check writable    $dir "not writable" DENIED WRITE
 
 	set mybasedir $dir
+
+	next
 	return
     }
 

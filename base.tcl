@@ -370,6 +370,66 @@ oo::class create blob {
     }
 
     # # ## ### ##### ######## #############
+    ## Sync. Asynchronous.
+
+    method sync-async {donecmd peer {uuidlist *}} {
+	# Delegating to the peer for actual control of the operation.
+	# The peer will use either 'path' or 'channel' methods to gain
+	# access to the blobs to transfer.
+	if {[my HasPath]} {
+	    $peer iexchange-async-path $donecmd $uuidlist [self]
+	} else {
+	    $peer iexchange-async-chan $donecmd $uuidlist [self]
+	}
+	return
+    }
+
+    method iexchange-async-chan {donecmd uuidlist peer} {
+	# donecmd - generate a merger triggering done only when both
+	# parts completed.
+
+	set n $exchcounter
+	variable merge$n 2
+	set donecmd [mymethod IExchDone n $donecmd]
+
+	my ihave-async-chan $donecmd $uuidlist $peer
+	my iwant-async      $donecmd $uuidlist $peer
+	return
+    }
+
+    method iexchange-async-path {donecmd uuidlist peer} {
+	# donecmd - generate a merger triggering done only when both
+	# parts completed.
+
+	set n $exchcounter
+	variable merge$n 2
+	set donecmd [mymethod IExchDone n $donecmd]
+
+	my ihave-async-path $donecmd $uuidlist $peer
+	my iwant-async      $donecmd $uuidlist $peer
+	return
+    }
+
+    method IExchDone {id donecmd} {
+	variable merge$id
+	upvar 0 merge$id mergecount
+
+	incr mergecount -1
+	if {$mergecount > 0} return
+	unset merge$id
+
+	after 0 $donecmd
+	return
+    }
+
+    variable exchcounter
+
+    constructor {} {
+	set exchcounter 0
+	return
+    }
+
+    # # ## ### ##### ######## #############
     ## Internal helpers
 
     method HasPath {} {

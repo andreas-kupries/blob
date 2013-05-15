@@ -26,7 +26,11 @@ oo::class create blob::memory {
     # # ## ### ##### ######## #############
     ## Lifecycle.
 
-    constructor {} { my clear }
+    constructor {} {
+	my clear
+	next
+	return
+    }
 
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.

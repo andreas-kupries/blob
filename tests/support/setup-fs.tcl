@@ -16,7 +16,7 @@ proc release-store {{suffix {}}} {
 
 # Override common definition. One additional method (path).
 proc methods {} {
-    return {add channel clear delete destroy exists iexchange-for-chan iexchange-for-path ihave-async-chan ihave-async-path ihave-for-chan ihave-for-path iwant iwant-async names path pull pull-async push push-async put retrieve size sync}
+    return {add channel clear delete destroy exists iexchange-async-chan iexchange-async-path iexchange-for-chan iexchange-for-path ihave-async-chan ihave-async-path ihave-for-chan ihave-for-path iwant iwant-async names path pull pull-async push push-async put retrieve size sync sync-async}
 }
 
 # # ## ### ##### ######## ############# #####################

@@ -12,8 +12,13 @@ proc badmethod {m real} {
 }
 
 proc methods {} {
-    return {add channel clear delete destroy exists iexchange-for-chan iexchange-for-path ihave-async-chan ihave-async-path ihave-for-chan ihave-for-path iwant iwant-async names pull pull-async push push-async put retrieve size sync}
+    return {add channel clear delete destroy exists iexchange-async-chan iexchange-async-path iexchange-for-chan iexchange-for-path ihave-async-chan ihave-async-path ihave-for-chan ihave-for-path iwant iwant-async names pull pull-async push push-async put retrieve size sync sync-async}
 }
+
+proc setup-wall   {} { set   ::wall 0 }
+proc wait-wall    {} { vwait ::wall   }
+proc pass-wall    {} { set   ::wall 1 }
+proc release-wall {} { unset ::wall   }
 
 # # ## ### ##### ######## ############# #####################
 return
