@@ -24,7 +24,8 @@ oo::class create blob::sqlite {
 
     variable mytable \
 	sql_extend sql_clear sql_delete \
-	sql_toblob sql_toid sql_names sql_size
+	sql_toblob sql_toid sql_names sql_size \
+	sql_names_all
     # Name of the database table used for storage.
     # plus the sql commands to access it.
 
@@ -38,15 +39,16 @@ oo::class create blob::sqlite {
 
 	my InitializeSchema $table
 	set mytable $table
+
+	next
 	return
     }
 
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # add: blob --> uuid
-    method add {blob} {
-	set uuid [my Uuid.blob $blob]
+    # add: uuid, blob --> ()
+    method Enter {uuid blob} {
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size
@@ -54,11 +56,11 @@ oo::class create blob::sqlite {
 		DB eval $sql_extend
 	    }
 	}
-	return $uuid
+	return
     }
 
-    # put: path --> uuid
-    method put {path} {
+    # put: uuid, path --> ()
+    method EnterPath {uuid path} {
 	set uuid [my Uuid.path $path]
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
@@ -94,12 +96,16 @@ oo::class create blob::sqlite {
 	}
     }
 
-
-
     # names () -> list(uuid)
-    method names {} {
-	DB transaction {
-	    return [DB eval $sql_names]
+    method Names {{pattern *}} {
+	if {$pattern eq "*"} {
+	    DB transaction {
+		return [DB eval $sql_names_all]
+	    }
+	} else {
+	    DB transaction {
+		return [DB eval $sql_names]
+	    }
 	}
     }
 
@@ -158,13 +164,14 @@ oo::class create blob::sqlite {
 	}
 
 	# Generate the custom sql commands.
-	my Def sql_extend   { INSERT          INTO "<<table>>" VALUES (NULL, :uuid, @blob) }
-	my Def sql_clear    { DELETE          FROM "<<table>>" }
-	my Def sql_delete   { DELETE          FROM "<<table>>" WHERE uuid = :uuid }
-	my Def sql_toblob   { SELECT data     FROM "<<table>>" WHERE uuid = :uuid }
-	my Def sql_toid     { SELECT id       FROM "<<table>>" WHERE uuid = :uuid }
-	my Def sql_names    { SELECT uuid     FROM "<<table>>" }
-	my Def sql_size     { SELECT count(*) FROM "<<table>>" }
+	my Def sql_extend    { INSERT          INTO "<<table>>" VALUES (NULL, :uuid, @blob) }
+	my Def sql_clear     { DELETE          FROM "<<table>>" }
+	my Def sql_delete    { DELETE          FROM "<<table>>" WHERE uuid = :uuid }
+	my Def sql_toblob    { SELECT data     FROM "<<table>>" WHERE uuid = :uuid }
+	my Def sql_toid      { SELECT id       FROM "<<table>>" WHERE uuid = :uuid }
+	my Def sql_names_all { SELECT uuid     FROM "<<table>>" }
+	my Def sql_names     { SELECT uuid     FROM "<<table>>" WHERE uuid GLOB :pattern }
+	my Def sql_size      { SELECT count(*) FROM "<<table>>" }
 
 	return
     }

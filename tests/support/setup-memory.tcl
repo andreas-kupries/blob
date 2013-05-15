@@ -2,13 +2,13 @@
 ## (c) 2013 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
 
-proc new-store {} {
-    [test-class] create test-store
+proc new-store {{suffix {}}} {
+    [test-class] create test-store$suffix
     return
 }
 
-proc release-store {} {
-    test-store destroy
+proc release-store {{suffix {}}} {
+    test-store$suffix destroy
     return
 }
 

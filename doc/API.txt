@@ -21,6 +21,10 @@ API	Name		Inputs		Results
 	exists		uuid	-->	boolean
 	size		()	-->	integer
 ---	----		------		-------
+	push		dst ?uuidlist?	()
+	pull		src ?uuidlist?	()
+	sync		peer ?uuidlist?	()
+---	----		------		-------
     
 TODO:	push, pull, sync
 	With internals APIs for negotiated method of transfer
