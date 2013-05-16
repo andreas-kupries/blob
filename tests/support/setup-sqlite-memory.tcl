@@ -4,15 +4,15 @@
 
 proc store-class {} { lindex [split [test-class] /] 0 }
 
-proc new-store {} {
-    sqlite3              test-database :memory:
-    [store-class] create test-store    ::test-database blobs
+proc new-store {{suffix {}}} {
+    sqlite3              test-database$suffix :memory:
+    [store-class] create test-store$suffix    ::test-database$suffix blobs
     return
 }
 
-proc release-store {} {
-    catch { test-store    destroy }
-    catch { test-database close   }
+proc release-store {{suffix {}}} {
+    catch { test-store$suffix    destroy }
+    catch { test-database$suffix close   }
     return
 }
 

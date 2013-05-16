@@ -26,27 +26,27 @@ oo::class create blob::memory {
     # # ## ### ##### ######## #############
     ## Lifecycle.
 
-    constructor {} { my clear }
+    constructor {} {
+	my clear
+	next
+	return
+    }
 
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # add: blob --> uuid
-    method add {blob} {
-	set uuid [my Uuid.blob $blob]
-	if {![dict exists $mystore $uuid]} {
-	    dict set mystore $uuid $blob
-	}
-	return $uuid
+    # add: blob --> ()
+    method Enter {uuid blob} {
+	if {[dict exists $mystore $uuid]} return
+	dict set mystore $uuid $blob
+	return
     }
 
-    # put: blob --> uuid
-    method put {path} {
-	set uuid [my Uuid.path $path]
-	if {![dict exists $mystore $uuid]} {
-	    dict set mystore $uuid [my Cat $path]
-	}
-	return $uuid
+    # put: path --> ()
+    method EnterPath {uuid path} {
+	if {[dict exists $mystore $uuid]} return
+	dict set mystore $uuid [my Cat $path]
+	return
     }
 
     # retrieve: uuid --> blob
@@ -62,7 +62,9 @@ oo::class create blob::memory {
     }
 
     # names () -> list(uuid)
-    method names {} { dict keys $mystore }
+    method Names {{pattern *}} {
+	dict keys $mystore $pattern
+    }
 
     # exists: string -> boolean
     method exists {uuid} { dict exists $mystore $uuid }

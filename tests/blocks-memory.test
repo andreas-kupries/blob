@@ -1,0 +1,34 @@
+# -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
+## (c) 2013 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## blocks.test:  tests for the blob::blocks package.
+
+kt check Tcl     8.5
+kt check tcltest 2
+
+kt require support TclOO
+kt require support sqlite3
+kt require support dbutil
+kt require support sha1 2
+kt require support fileutil
+kt require support tcl::chan::cat
+
+kt local   support blob
+kt local   testing blob::sqlite
+kt local   testing blob::blocks
+
+# # ## ### ##### ######## ############# #####################
+
+proc test-class {} { return blob::blocks/memory }
+
+# # ## ### ##### ######## ############# #####################
+## Two testsuites, for the custom (instantiation) and shared APIs.
+
+kt source support/common.tcl
+kt source support/setup-blocks-memory.tcl
+
+#kt source parts/blocks.testsuite
+kt source parts/base.testsuite
+
+# # ## ### ##### ######## ############# #####################
+cleanupTests
