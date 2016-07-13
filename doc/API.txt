@@ -16,6 +16,11 @@ API	Name		Inputs		Results
 ---	----		------		-------
 	retrieve	uuid	-->	blob
 	channel		uuid	-->	channel (read-only)
+	path		uuid	-->	path	(blob::fs only)
+NEW	place		uuid path --->	()	Place at path,
+			     	  		optimized operation.
+NEW	place		uuid path...	()	Multi-placement.
+			     			More optimizations.
 ---	----		------		-------
 	names		()	-->	list (uuid)
 	exists		uuid	-->	boolean

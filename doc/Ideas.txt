@@ -1,0 +1,71 @@
+Ideas for extension:
+
+1. Compute and/or cache mime-type information
+2. Remember creation-time, i.e. time of entry for a blob
+
+3. Compress blobs for storage
+   - General compression of blob by itself
+   - Compare blobs to other blobs and do delta-compression against the
+     most similar.
+     Notes: Complex to implement,
+     	    slow to run (Quadratic in worst case)
+	    best compression
+	    needs supporting index (content hashes) to overcome
+	    slowness,
+   - Delta-compression against user-chosen (hinted) blob
+     Notes: Easier to implement,
+     	    faster to perform,
+	    worse for compression ratio,
+	    no supporting data needed
+
+   - Store blobs by splitting into blocks, semi delta compression by
+     sharing blocks. Can be complexified by using variable-length
+     blocks at variable alignments. This moves over into the delta-
+     compression, although against all already existing files/blocks.
+
+4. Store blobs with error correction information.
+
+5. Combine 3 and 4.
+
+6. Filesystem based stores can have/use another optimization:
+   - Hardlink to the original file where possible.
+   - Copy only where needed, i.e. cross-device
+
+   Note: The various things noted above, compression and error
+   correction pretty effectively disable this optimization.
+   I.e. works only for the simplest possible filesystem store.
+
+   This is not too bad for stores on separate drives, where we always
+   have to copy, and the other methods give us the proper compression.
+
+   For store on the same device it is likely better to hard-link and
+   do other compression methods only for files which exist solely in
+   the store itself.
+
+   Note further: Hardlinking is also something we can use on
+   retrieval, when a blob is used in multiple destinations.
+
+   In compressed stores this can be handled by linking from the temp
+   file needed to hold the assembled form of the file. Best placed on
+   the same device as the final destinations ...
+
+   This can be made as complex as we like.
+
+Note
+
+- All of 3, 4 and 5 have impact on the access time of files/blobs in
+  the store, i.e. error correction, decompression, assembly of the
+  pieces, etc.
+
+- All of 3, 4, and 5 can be implemented invisible to the user.
+
+7. Combine filesystem and sqlite stores.
+   The blob values are stores in the filesystem.
+   The management information is in the database.
+
+   Faster access for various pieces of information, like size of the
+   store, i.e. the database is a cache.
+
+   The cache may get out of sync with the data in the filesystem.
+
+   Note that this can be combined with any of 3-6.
