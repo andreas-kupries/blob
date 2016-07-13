@@ -95,7 +95,7 @@ oo::class create blob::fs {
 	return $chan
     }
 
-    # path: uuid --> channel
+    # path: uuid --> path
     method path {uuid} {
 	set path [my P $uuid]
 	if {![file exists $path]} {
