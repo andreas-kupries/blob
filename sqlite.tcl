@@ -47,7 +47,7 @@ oo::class create blob::sqlite {
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # add: uuid, blob --> ()
+    # add :- Enter: uuid, blob --> ()
     method Enter {uuid blob} {
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
@@ -59,9 +59,8 @@ oo::class create blob::sqlite {
 	return
     }
 
-    # put: uuid, path --> ()
+    # put :- EnterPath: uuid, path --> ()
     method EnterPath {uuid path} {
-	set uuid [my Uuid.path $path]
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size
@@ -70,7 +69,7 @@ oo::class create blob::sqlite {
 		DB eval $sql_extend
 	    }
 	}
-	return $uuid
+	return
     }
 
     # retrieve: uuid --> blob
