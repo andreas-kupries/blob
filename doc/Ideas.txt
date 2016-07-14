@@ -69,3 +69,7 @@ Note
    The cache may get out of sync with the data in the filesystem.
 
    Note that this can be combined with any of 3-6.
+
+8. Sort by size
+
+Note: Keep indices separate from the blob store itself
