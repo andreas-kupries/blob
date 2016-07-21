@@ -1,0 +1,29 @@
+[include parts/definitions.inc]
+[manpage_begin [vset LABEL_INTRO] [vset MAN_SECTION] [vset PROJ_VERSION]]
+[include parts/module.inc]
+[titledesc [vset TITLE_INTRO]]
+[description]
+[include parts/welcome.inc]
+
+[vset PROJECT] provides a set of 4 related Tcl packages for the
+management and storage of arbitrary blobs, in memory or more
+persistent. The differences between the packages are mainly what type
+of storage is used.
+
+[section {System Architecture}]
+[include parts/architecture.inc]
+
+[section {Extensibility}]
+
+While the current set of packages should cover most to all of the
+common cases where is always the possibility of encountering
+unanticipated situations.
+
+[para] Extending it is as easy as adding additional packages to the
+project. In the case of custom storage backends such a package has to
+be derived from the base class provided by [package [vset PROJECT]].
+
+[include parts/related.inc]
+[include parts/feedback.inc]
+[manpage_end]
+

@@ -1,37 +1,29 @@
 
-Classes		Notes		Constructor arguments
--------		-----		---------------------
-blob		Virtual base	none
-blob::memory	In-memory	none
-blob::sqlite	Database	sqlite database + table name
-blob::fs	Filesystem	directory path
--------		-----		---------------------
+Classes			Notes		Constructor arguments
+-------			-----		----------------------
+	atom		Virtual base
+	atom::memory	In-memory	none
+	atom::sqlite	Database	sqlite database + table name
+	atom::cache			backend atom instance to cache
+-------			-----		----------------------
 
-API	Name		Inputs		Results
----	----		------		-------
-	add		blob	-->	uuid
-	put		path	-->	uuid
-	clear		()	-->	()
-	delete		uuid	-->	()
----	----		------		-------
-	retrieve	uuid	-->	blob
-	channel		uuid	-->	channel (read-only)
-	path		uuid	-->	path	(blob::fs only)
-NEW	place		uuid path --->	()	Place at path,
-			     	  		optimized operation.
-NEW	place		uuid path...	()	Multi-placement.
-			     			More optimizations.
----	----		------		-------
-	names		()	-->	list (uuid)
-	exists		uuid	-->	boolean
-	size		()	-->	integer
----	----		------		-------
-	push		dst ?uuidlist?	()
-	pull		src ?uuidlist?	()
-	sync		peer ?uuidlist?	()
----	----		------		-------
-    
-TODO:	push, pull, sync
-	With internals APIs for negotiated method of transfer
-	Also ability to run in the background (event loop)
-	And hooks to report on progress.
+API	Name		Arguments		Results
+---	----		---------		-------
+	id		string		 -->	id
+	str		id		 -->	string
+	names		()		 -->	list (string)
+	exists		string		 -->	boolean
+	exists-id	id		 -->	boolean
+	size		()		 -->	integer
+	map		string id	 -->	()
+	clear		()		 -->	()
+	serialize	()		 -->	dict (string -> id)
+	deserialize	dict (str -> id) -->	()
+	load		dict (str -> id) -->	()
+	merge		dict (str -> id) -->	()
+---	----		---------		-------
+
+	<--	<==>	deserialize	(in)
+	-->	<==>	serialize	(out)
+	:=	<==>	load
+	+=	<==>	merge

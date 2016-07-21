@@ -1,0 +1,7 @@
+[comment {--- Project requirements --}]
+[include rq_tcl85.inc]
+[include rq_tcloo.inc]
+[include rq_dbutil.inc]
+[include rq_sqlite3.inc]
+[include rq_kettle.inc]
+[include rq_tcllib.inc]

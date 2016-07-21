@@ -1,0 +1,281 @@
+
+<html><head>
+<title>blob_development - Blob. General content storage with deduplication</title>
+<style type="text/css"><!--
+    HTML {
+	background: 	#FFFFFF;
+	color: 		black;
+    }
+    BODY {
+	background: 	#FFFFFF;
+	color:	 	black;
+    }
+    DIV.doctools {
+	margin-left:	10%;
+	margin-right:	10%;
+    }
+    DIV.doctools H1,DIV.doctools H2 {
+	margin-left:	-5%;
+    }
+    H1, H2, H3, H4 {
+	margin-top: 	1em;
+	font-family:	sans-serif;
+	font-size:	large;
+	color:		#005A9C;
+	background: 	transparent;
+	text-align:		left;
+    }
+    H1.title {
+	text-align: center;
+    }
+    UL,OL {
+	margin-right: 0em;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+    }
+    UL LI {
+	list-style: disc;
+    }
+    OL LI {
+	list-style: decimal;
+    }
+    DT {
+	padding-top: 	1ex;
+    }
+    UL.toc,UL.toc UL, UL.toc UL UL {
+	font:		normal 12pt/14pt sans-serif;
+	list-style:	none;
+    }
+    LI.section, LI.subsection {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding: 	0em;
+    }
+    PRE {
+	display: 	block;
+	font-family:	monospace;
+	white-space:	pre;
+	margin:		0%;
+	padding-top:	0.5ex;
+	padding-bottom:	0.5ex;
+	padding-left:	1ex;
+	padding-right:	1ex;
+	width:		100%;
+    }
+    PRE.example {
+	color: 		black;
+	background: 	#f5dcb3;
+	border:		1px solid black;
+    }
+    UL.requirements LI, UL.syntax LI {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding:	0em;
+    }
+    DIV.synopsis {
+	color: 		black;
+	background: 	#80ffff;
+	border:		1px solid black;
+	font-family:	serif;
+	margin-top: 	1em;
+	margin-bottom: 	1em;
+    }
+    UL.syntax {
+	margin-top: 	1em;
+	border-top:	1px solid black;
+    }
+    UL.requirements {
+	margin-bottom: 	1em;
+	border-bottom:	1px solid black;
+    }
+--></style>
+</head>
+<! -- Generated from file 'blob_howto_development.man' by tcllib/doctools with format 'html'
+   -->
+<! -- Copyright &copy; 2013-2016 Andreas Kupries   -- Copyright &copy; 2013-2016 Documentation, Andreas Kupries
+   -->
+<! -- CVS: $Id$ blob_development.n
+   -->
+<body><div class="doctools">
+<hr> [
+   <a href="../../../../../../home">Home</a>
+| <a href="../../toc.html">Main Table Of Contents</a>
+| <a href="../toc.html">Table Of Contents</a>
+| <a href="../../index.html">Keyword Index</a>
+ ] <hr>
+<h1 class="title">blob_development(n) 1 doc &quot;Blob. General content storage with deduplication&quot;</h1>
+<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<p>blob_development - Blob - The Developer's Guide</p>
+</div>
+<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="toc">
+<li class="section"><a href="#toc">Table Of Contents</a></li>
+<li class="section"><a href="#section1">Description</a></li>
+<li class="section"><a href="#section2">Development Tools</a></li>
+<li class="section"><a href="#section3">Demonstration/Example Applications</a></li>
+<li class="section"><a href="#section4">Directory structure</a></li>
+<li class="section"><a href="#section5">Extended Build Actions</a></li>
+<li class="section"><a href="#section6">Architecture &amp; Concepts</a></li>
+<li class="section"><a href="#section7">Related Documents</a></li>
+<li class="section"><a href="#section8">Bugs, Ideas, Feedback</a></li>
+<li class="section"><a href="#keywords">Keywords</a></li>
+<li class="section"><a href="#copyright">Copyright</a></li>
+</ul>
+</div>
+<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<p>Welcome to the Blob project, written by Andreas Kupries.</p>
+<p>For availability please read <i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i>.</p>
+<p>The audience of this document are anyone wishing to modify
+Blob in any way, shape, or form. This can be a maintainer
+fixing bugs, a developer adding functionality, or patching it to
+accommodate local cicumstances, etc.</p>
+<p>Please read</p>
+<ol class="enumerated">
+<li><p><i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i> and</p></li>
+<li><p><i class="term"><a href="blob_howto_installation.html">Blob - The Installer's Guide</a></i></p></li>
+</ol>
+<p>first, if that was not done already. Here we assume that the sources
+are already available in a directory of your choice, that it is known
+how to build and install the project, and that all the necessary
+requisites are available.</p>
+</div>
+<div id="section2" class="section"><h2><a name="section2">Development Tools</a></h2>
+<p>Blob requires the following tools going beyond those needed
+for build and installation.</p>
+<dl class="definitions">
+<dt><b class="syscmd">dia</b></dt>
+<dd><p>Processor for <b class="package">diagram</b>-based figures.
+See package <b class="package">tklib</b>.</p></dd>
+<dt><b class="syscmd">dtplite</b></dt>
+<dd><p>Processor for <b class="package">doctools</b>-based documentation files, i.e. the
+&quot;<b class="file">.man</b>&quot; files under &quot;<b class="file">doc/</b>&quot;.
+See package <b class="package">tcllib</b>.</p>
+<p>This requirement is optional. If a Tcllib providing the package
+<b class="package">dtplite</b> is installed then <b class="syscmd">kettle</b> will use the
+package in favor of the external application.</p></dd>
+</dl>
+</div>
+<div id="section3" class="section"><h2><a name="section3">Demonstration/Example Applications</a></h2>
+<p>Blob (currently) does not have demonstrations, nor examples.</p>
+</div>
+<div id="section4" class="section"><h2><a name="section4">Directory structure</a></h2>
+<p>The directory structure of the sources is as explained below:</p>
+<dl class="definitions">
+<dt>&quot;<b class="file">build.tcl</b>&quot;</dt>
+<dd><p>The main file of the <b class="syscmd">kettle</b>-based build-system.</p></dd>
+<dt>&quot;<b class="file">doc/</b>&quot;</dt>
+<dd><p>Main directory for all documentation.</p>
+<p>Based on the <b class="package">doctools</b> package and tools provided by
+<b class="package">Tcllib</b>.</p></dd>
+<dt>&quot;<b class="file">doc/figures/</b>&quot;</dt>
+<dd><p>Main directory for all diagrams and figures used by the documentation.</p>
+<p>Based on the <b class="package">diagram</b> package and tools provided by
+<b class="package">Tklib</b>.</p></dd>
+<dt>&quot;<b class="file">embedded/</b>&quot;</dt>
+<dd><p>Compiled documentation (manpages and HTML).
+Part of the repository for</p>
+<ol class="enumerated">
+<li><p>easy access from the repository's web interface
+(<a href="http://fossil-scm.org/index.html/doc/tip/www/embeddeddoc.wiki">embedded documentation</a>),
+and</p></li>
+<li><p>quicker installation (no need to compile during the
+installation process itself).</p></li>
+</ol></dd>
+<dt>&quot;<b class="file">tests/</b>&quot;</dt>
+<dd><p>Main directory for the test-suite.</p>
+<p>Based on the <b class="package">tcltest</b> package distributed with the Tcl
+core.</p></dd>
+<dt>&quot;<b class="file">lib/blob.tcl</b>&quot;</dt>
+<dd><p>Package <b class="package"><a href="blob.html">blob</a></b>.</p></dd>
+<dt>&quot;<b class="file">lib/fs.tcl</b>&quot;</dt>
+<dd><p>Package <b class="package"><a href="blob_fs.html">blob::fs</a></b>.</p></dd>
+<dt>&quot;<b class="file">lib/memory.tcl</b>&quot;</dt>
+<dd><p>Package <b class="package"><a href="blob_memory.html">blob::memory</a></b>.</p></dd>
+<dt>&quot;<b class="file">lib/sqlite.tcl</b>&quot;</dt>
+<dd><p>Package <b class="package"><a href="blob_sqlite.html">blob::sqlite</a></b>.</p></dd>
+</dl>
+</div>
+<div id="section5" class="section"><h2><a name="section5">Extended Build Actions</a></h2>
+<p>Our build-system is based on <b class="syscmd">kettle</b>, as already explained in
+the <i class="term"><a href="blob_howto_installation.html">Blob - The Installer's Guide</a></i>. Beyond the targets useful for
+installation it also provides targets aiding developers and
+maintainers. These are:</p>
+<dl class="definitions">
+<dt>Validation of the documentation</dt>
+<dd>
+<pre class="example">
+% /path/to/blob/build.tcl validate-doc
+</pre>
+</dd>
+<dt>Regeneration of the embedded documentation</dt>
+<dd>
+<pre class="example">
+% /path/to/blob/build.tcl doc
+</pre>
+</dd>
+<dt>Regeneration of the figures for the documentation</dt>
+<dd>
+<pre class="example">
+% /path/to/blob/build.tcl figures
+</pre>
+</dd>
+<dt>Execution of the test-suite</dt>
+<dd><p>The most basic execution of the test-suite is done with</p>
+<pre class="example">
+% /path/to/blob/build.tcl test
+</pre>
+<p>When the test-suite reports issues with the framework use of
+the more extended form below is indicated, with a <b class="const">&lt;stem&gt;</b> of
+your choice. This will generate a number of files whose name starts
+with the prefix &quot;<b class="file">&lt;stem&gt;.</b>&quot;. These will contain extended test logs,
+details about errors and failures, etc.</p>
+<pre class="example">
+% /path/to/blob/build.tcl test --log &lt;stem&gt;
+</pre>
+</dd>
+</dl>
+</div>
+<div id="section6" class="section"><h2><a name="section6">Architecture &amp; Concepts</a></h2>
+<p>All packages to one of two layers,
+as shown below:</p>
+<p><img alt="architecture" src="../../image/architecture.png"></p>
+<p>Note that:</p>
+<ul class="itemized">
+<li><p>Packages marked with a dashed border are private.</p></li>
+<li><p>Packages marked with an unbroken blue border are fully public.</p></li>
+<li><p>The topmost layer contains the various public storage backends.</p></li>
+<li><p>The other, supporting, layer contains only a single package,
+<b class="package"><a href="blob.html">blob</a></b>, the base class for all others.</p></li>
+</ul>
+<p>The dependencies between the packages are very
+straight-forward:</p>
+<p><img alt="pkg_dependencies" src="../../image/pkg_dependencies.png"></p>
+</div>
+<div id="section7" class="section"><h2><a name="section7">Related Documents</a></h2>
+<ol class="enumerated">
+<li><p><i class="term"><a href="blob_introduction.html">Blob - Introduction to the project</a></i></p></li>
+<li><p><i class="term"><a href="blob_license.html">Blob - License</a></i></p></li>
+<li><p><i class="term"><a href="blob_changes.html">Blob - Log of Changes</a></i></p></li>
+<li><p><i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i></p></li>
+<li><p><i class="term"><a href="blob_howto_installation.html">Blob - The Installer's Guide</a></i></p></li>
+<li><p><i class="term">Blob - The Developer's Guide</i></p></li>
+</ol>
+</div>
+<div id="section8" class="section"><h2><a name="section8">Bugs, Ideas, Feedback</a></h2>
+<p>Both the package(s) and this documentation will undoubtedly contain
+bugs and other problems.
+Please report such at
+<a href="https:/core.tcl.tk/akupries/blob">Blob Tickets</a>.</p>
+<p>Please also report any ideas you may have for enhancements of
+either package(s) and/or documentation.</p>
+</div>
+<div id="keywords" class="section"><h2><a name="keywords">Keywords</a></h2>
+<p><a href="../../index.html#key5">blob</a>, <a href="../../index.html#key1">blob storage</a>, <a href="../../index.html#key2">content deduplication</a>, <a href="../../index.html#key0">content storage</a>, <a href="../../index.html#key4">deduplication</a>, <a href="../../index.html#key3">storage</a></p>
+</div>
+<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<p>Copyright &copy; 2013-2016 Andreas Kupries<br>
+Copyright &copy; 2013-2016 Documentation, Andreas Kupries</p>
+</div>
+</div></body></html>

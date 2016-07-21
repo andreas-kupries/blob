@@ -1,0 +1,85 @@
+[include parts/definitions.inc]
+[manpage_begin [vset LABEL_DEV] [vset MAN_SECTION] [vset PROJ_VERSION]]
+[include parts/module.inc]
+[titledesc [vset TITLE_DEV]]
+[description]
+[include parts/welcome.inc]
+
+[para]
+
+The audience of this document are anyone wishing to modify
+[vset PTITLE] in any way, shape, or form. This can be a maintainer
+fixing bugs, a developer adding functionality, or patching it to
+accommodate local cicumstances, etc.
+
+[para]
+
+Please read
+
+[list_begin enum]
+[enum][term [vset TITLE_SOURCES]] and
+[enum][term [vset TITLE_INSTALL]]
+[list_end]
+
+first, if that was not done already. Here we assume that the sources
+are already available in a directory of your choice, that it is known
+how to build and install the project, and that all the necessary
+requisites are available.
+
+[comment @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]
+[section {Development Tools}]
+
+[vset PTITLE] requires the following tools going beyond those needed
+for build and installation.
+
+[list_begin definitions]
+
+[def [syscmd dia]]
+
+Processor for [package diagram]-based figures.
+See package [package tklib].
+
+[def [syscmd dtplite]]
+
+Processor for [package doctools]-based documentation files, i.e. the
+[file .man] files under [file doc/].
+See package [package tcllib].
+
+[para] This requirement is optional. If a Tcllib providing the package
+[package dtplite] is installed then [syscmd kettle] will use the
+package in favor of the external application.
+
+[list_end]
+
+[comment @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]
+[section {Demonstration/Example Applications}]
+
+[vset PTITLE] (currently) does not have demonstrations, nor examples.
+
+[comment @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]
+[section {Directory structure}]
+
+The directory structure of the sources is as explained below:
+
+[list_begin definitions]
+[include parts/layout_standard.inc]
+
+[def [file lib/blob.tcl]]     Package [package [vset PROJECT]].
+[def [file lib/fs.tcl]]       Package [package [vset PROJECT]::fs].
+[def [file lib/memory.tcl]]   Package [package [vset PROJECT]::memory].
+[def [file lib/sqlite.tcl]]   Package [package [vset PROJECT]::sqlite].
+[list_end]
+
+[comment @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]
+[section {Extended Build Actions}]
+[include parts/build-dev.inc]
+
+[comment @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]
+[section {Architecture & Concepts}]
+
+[include parts/architecture.inc]
+
+[comment @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@]
+[include parts/related.inc]
+[include parts/feedback.inc]
+[manpage_end]

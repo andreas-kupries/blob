@@ -1,0 +1,35 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[manpage_begin [vset LABEL_MEMORY] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset PROJECT]::memory]
+[titledesc [vset TITLE_MEMORY]]
+[description]
+[include parts/welcome.inc]
+
+This package provides an in-memory storage for blobs.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::memory] [method create] [arg obj]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::memory] [method new]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[list_end]
+
+[include parts/api.inc]
+
+[include parts/feedback.inc]
+[manpage_end]

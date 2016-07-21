@@ -1,0 +1,29 @@
+# -*- tcl -*- tcl.tk//DSL diagram//EN//1.0
+## ====================================================================
+## DSL for dependency diagram. Default parameters.
+
+source [file join [file dirname [file normalize [info script]]] dsl_dependencies.inc]
+
+## ====================================================================
+## Dependencies, bottom-up, one procedure per package.
+
+proc sqlite {} { box blob::sqlite color blue stroke 2 }
+proc fs     {} { box blob::fs     color blue stroke 2 }
+proc memory {} { box blob::memory color blue stroke 2 width [grid 9] }
+
+proc blob {} {
+    box blob
+    group { down ; ---> 3 ; memory }
+    group { down ; --- ; l ; --- 4 ; r ; ---> 6 ; fs }
+    group { down ; --- ; r ; --- 3 ; l ; ---> 6 ; sqlite }
+}
+
+## ====================================================================
+
+proc layout {} {
+    blob
+}
+
+## ====================================================================
+
+layout

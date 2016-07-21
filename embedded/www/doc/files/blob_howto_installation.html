@@ -1,0 +1,363 @@
+
+<html><head>
+<title>blob-installation - Blob. General content storage with deduplication</title>
+<style type="text/css"><!--
+    HTML {
+	background: 	#FFFFFF;
+	color: 		black;
+    }
+    BODY {
+	background: 	#FFFFFF;
+	color:	 	black;
+    }
+    DIV.doctools {
+	margin-left:	10%;
+	margin-right:	10%;
+    }
+    DIV.doctools H1,DIV.doctools H2 {
+	margin-left:	-5%;
+    }
+    H1, H2, H3, H4 {
+	margin-top: 	1em;
+	font-family:	sans-serif;
+	font-size:	large;
+	color:		#005A9C;
+	background: 	transparent;
+	text-align:		left;
+    }
+    H1.title {
+	text-align: center;
+    }
+    UL,OL {
+	margin-right: 0em;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+    }
+    UL LI {
+	list-style: disc;
+    }
+    OL LI {
+	list-style: decimal;
+    }
+    DT {
+	padding-top: 	1ex;
+    }
+    UL.toc,UL.toc UL, UL.toc UL UL {
+	font:		normal 12pt/14pt sans-serif;
+	list-style:	none;
+    }
+    LI.section, LI.subsection {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding: 	0em;
+    }
+    PRE {
+	display: 	block;
+	font-family:	monospace;
+	white-space:	pre;
+	margin:		0%;
+	padding-top:	0.5ex;
+	padding-bottom:	0.5ex;
+	padding-left:	1ex;
+	padding-right:	1ex;
+	width:		100%;
+    }
+    PRE.example {
+	color: 		black;
+	background: 	#f5dcb3;
+	border:		1px solid black;
+    }
+    UL.requirements LI, UL.syntax LI {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding:	0em;
+    }
+    DIV.synopsis {
+	color: 		black;
+	background: 	#80ffff;
+	border:		1px solid black;
+	font-family:	serif;
+	margin-top: 	1em;
+	margin-bottom: 	1em;
+    }
+    UL.syntax {
+	margin-top: 	1em;
+	border-top:	1px solid black;
+    }
+    UL.requirements {
+	margin-bottom: 	1em;
+	border-bottom:	1px solid black;
+    }
+--></style>
+</head>
+<! -- Generated from file 'blob_howto_installation.man' by tcllib/doctools with format 'html'
+   -->
+<! -- Copyright &copy; 2013-2016 Andreas Kupries   -- Copyright &copy; 2013-2016 Documentation, Andreas Kupries
+   -->
+<! -- CVS: $Id$ blob-installation.n
+   -->
+<body><div class="doctools">
+<hr> [
+   <a href="../../../../../../home">Home</a>
+| <a href="../../toc.html">Main Table Of Contents</a>
+| <a href="../toc.html">Table Of Contents</a>
+| <a href="../../index.html">Keyword Index</a>
+ ] <hr>
+<h1 class="title">blob-installation(n) 1 doc &quot;Blob. General content storage with deduplication&quot;</h1>
+<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<p>blob-installation - Blob - The Installer's Guide</p>
+</div>
+<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="toc">
+<li class="section"><a href="#toc">Table Of Contents</a></li>
+<li class="section"><a href="#section1">Description</a></li>
+<li class="section"><a href="#section2">Requisites</a>
+<ul>
+<li class="subsection"><a href="#subsection1">Tcl</a></li>
+<li class="subsection"><a href="#subsection2">TclOO</a></li>
+<li class="subsection"><a href="#subsection3">DbUtil</a></li>
+<li class="subsection"><a href="#subsection4">Sqlite</a></li>
+<li class="subsection"><a href="#subsection5">Kettle</a></li>
+<li class="subsection"><a href="#subsection6">Tcllib</a></li>
+</ul>
+</li>
+<li class="section"><a href="#section3">Build &amp; Installation</a></li>
+<li class="section"><a href="#section4">Related Documents</a></li>
+<li class="section"><a href="#section5">Bugs, Ideas, Feedback</a></li>
+<li class="section"><a href="#keywords">Keywords</a></li>
+<li class="section"><a href="#copyright">Copyright</a></li>
+</ul>
+</div>
+<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<p>Welcome to the Blob project, written by Andreas Kupries.</p>
+<p>For availability please read <i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i>.</p>
+<p>The audience of this document are anyone wishing to build the
+Blob project, for either themselves, or others.</p>
+<p>If you are a developer intending to extend or modify the project
+please see the list of <span class="sectref"><a href="#section4">Related Documents</a></span> for references to
+more information on this topic.</p>
+<p>Please read <i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i> first, if that was not done
+already. Here we assume that the sources are already available in a
+directory of your choice.</p>
+</div>
+<div id="section2" class="section"><h2><a name="section2">Requisites</a></h2>
+<div id="subsection1" class="subsection"><h3><a name="subsection1">Tcl</a></h3>
+<p>This project requires a working installation of Tcl 8.5, or higher.</p>
+<p>Use whatever you are comfortable with, as long as it provides
+Tcl 8.5, or higher.</p>
+<p>An easy way to get a proper installation of a recent Tcl 8.5,
+(which I recommend) is to download and install
+<a href="https://www.activestate.com">ActiveState's</a> 
+<a href="https://www.activestate.com/activetcl">ActiveTcl 8.5</a>
+for your platform. Just follow the link and instruction on that site.</p>
+<p>After the installation of ActiveTcl 8.5 simply run the command</p>
+<pre class="example">
+    teacup update
+</pre>
+<p>This will install a lot more packages than found in the distribution
+alone.
+(Disclosure: I, Andreas Kupries, did work for ActiveState, maintaining
+ActiveTcl and TclDevKit).</p>
+<p>Do you wish to build Tcl on your own ?
+The sources of all versions can be found at</p>
+<dl class="definitions">
+<dt>Tcl</dt>
+<dd><p><a href="https://core.tcl.tk/tcl/">https://core.tcl.tk/tcl/</a></p></dd>
+</dl>
+<p>together with the necessary instructions on how to build it.</p>
+<p>If there are problems with building, installing, or using Tcl
+and its packages please file a bug against Tcl, or the vendor of
+your distribution, and not <b class="package"><a href="blob.html">blob</a></b>.</p>
+</div>
+<div id="subsection2" class="subsection"><h3><a name="subsection2">TclOO</a></h3>
+<p>The framework uses the <b class="package">TclOO</b> package in its implementation.
+This package requires Tcl 8.5 or higher.</p>
+<p>In Tcl 8.6 the package is part of the core itself, without
+requiring a separate installation.</p>
+<p>For Tcl 8.5 it has to be installed separately.</p>
+<p>Out of the many possibilites for getting TclOO (OS vendor,
+os-independent vendor, building from sources) use whatever you are
+comfortable with.</p>
+<p>For myself, I am most comfortable with using
+<a href="https://www.activestate.com">ActiveState's</a>
+ActiveTcl distribution and TEApot.</p>
+<p>See the previous section (<span class="sectref"><a href="#subsection1">Tcl</a></span>) for disclosure and
+information on how to get it.</p>
+<p>Assuming that ActiveTcl got installed running the command</p>
+<pre class="example">
+    teacup install TclOO
+</pre>
+<p>will install the package for your platform, if you have not done the
+more inclusive</p>
+<pre class="example">
+    teacup update
+</pre>
+<p>to get everything and the kitchensink.</p>
+<p>For those wishing to build and install TclOO on their own, the
+relevant sources can be found at <a href="https://core.tcl.tk/tcloo">https://core.tcl.tk/tcloo</a>
+together with the necessary instructions on how to build it.</p>
+<p>If there are problems with building, installing, or using TclOO
+and its packages please file a bug against TclOO, or the vendor of
+your distribution, and not <b class="package"><a href="blob.html">blob</a></b>.</p>
+</div>
+<div id="subsection3" class="subsection"><h3><a name="subsection3">DbUtil</a></h3>
+<p>Dbutil is required by the <b class="package"><a href="blob_sqlite.html">blob::sqlite</a></b> package.</p>
+<p>The package can be found
+at  <a href="https://core.tcl.tk/akupries/dbutil">https://core.tcl.tk/akupries/dbutil</a>
+and <a href="https://chiselapp.com/user/andreas_kupries/repository/dbutil">https://chiselapp.com/user/andreas_kupries/repository/dbutil</a></p>
+<p>You will have to build and install it on your own, because as
+far as I know it is not included in any type of distribution yet. The
+necessary instructions for that are found at the sites referenced
+above.</p>
+<p>If there are problems with building, installing, or using
+DbUtil please file a bug against DbUtil itself, and not
+<b class="package"><a href="blob.html">blob</a></b>.</p>
+</div>
+<div id="subsection4" class="subsection"><h3><a name="subsection4">Sqlite</a></h3>
+<p>Sqlite is required by the <b class="package"><a href="blob_sqlite.html">blob::sqlite</a></b> package.</p>
+<p>Out of the many possibilites for getting sqlite and its Tcl
+bindings (OS vendor, os-independent vendor, building from sources) use
+whatever you are comfortable with.</p>
+<p>For myself, I am most comfortable with using
+<a href="https://www.activestate.com">ActiveState's</a>
+ActiveTcl distribution and TEApot.</p>
+<p>See the previous section (<span class="sectref"><a href="#subsection1">Tcl</a></span>) for disclosure and
+information on how to get it.</p>
+<p>Assuming that ActiveTcl got installed running the command</p>
+<pre class="example">
+    teacup install sqlite3
+</pre>
+<p>will install the package for your platform, if you have not done the
+more inclusive</p>
+<pre class="example">
+    teacup update
+</pre>
+<p>to get everything and the kitchensink.</p>
+<p>For those wishing to build and install sqlite and its Tcl
+bindings on their own, the relevant sources can be found at
+<a href="https://sqlite.org">https://sqlite.org</a> together with the necessary instructions on
+how to build it.</p>
+<p>If there are problems with building, installing, or using
+Sqlite please file a bug against Sqlite, or the vendor of your
+distribution, and not <b class="package"><a href="blob.html">blob</a></b>.</p>
+</div>
+<div id="subsection5" class="subsection"><h3><a name="subsection5">Kettle</a></h3>
+<p>This project uses the Kettle application and package as its build system.</p>
+<p>Please go to either the main repository at
+<a href="http://core.tcl.tk/akupries/kettle">http://core.tcl.tk/akupries/kettle</a>
+or the backup at
+<a href="http://chiselapp.com/andreas_kupries/repositories/Kettle">http://chiselapp.com/andreas_kupries/repositories/Kettle</a>
+and follow the instructions given at these sites to create a working
+installation. They are not repeated here. If there are problems with
+these instructions please file a bug against the Kettle project, and
+not <b class="package"><a href="blob.html">Blob</a></b>.</p>
+</div>
+<div id="subsection6" class="subsection"><h3><a name="subsection6">Tcllib</a></h3>
+<p>The framework requires six packages found in Tcllib.
+These are</p>
+<ol class="enumerated">
+<li><p><b class="package">debug</b></p></li>
+<li><p><b class="package">debug::caller</b></p></li>
+<li><p><b class="package">fileutil</b></p></li>
+<li><p><b class="package">oo::util</b></p></li>
+<li><p><b class="package">sha1</b></p></li>
+<li><p><b class="package">try</b></p></li>
+</ol>
+<p>Out of the many possibilites for getting Tcllib (OS vendor,
+os-independent vendor, building from sources) use whatever you are
+comfortable with.</p>
+<p>For myself, I am most comfortable with using
+<a href="http://www.activestate.com">ActiveState's</a>
+ActiveTcl distribution and TEApot.</p>
+<p>See the previous section (<span class="sectref"><a href="#subsection1">Tcl</a></span>) for disclosure and
+information on how to get it.</p>
+<p>Assuming that ActiveTcl got installed running the commands</p>
+<pre class="example">
+    teacup install debug
+    teacup install debug::caller
+    teacup install fileutil
+    teacup install oo::util
+    teacup install sha1
+    teacup install try
+</pre>
+<p>will install them for your platform, if you have not done the more
+inclusive</p>
+<pre class="example">
+    teacup update
+</pre>
+<p>to get everything and the kitchensink.</p>
+<p>For those wishing to build and install Tcllib on their own, the
+relevant sources can be found at <a href="http://core.tcl.tk/tcllib">http://core.tcl.tk/tcllib</a>
+together with the necessary instructions on how to build it.</p>
+<p>If there are problems with building, installing, or using
+Tcllib and its packages please file a bug against Tcllib, or the
+vendor of your distribution, and not <b class="package"><a href="blob.html">blob</a></b>.</p>
+</div>
+</div>
+<div id="section3" class="section"><h2><a name="section3">Build &amp; Installation</a></h2>
+<p>Blob uses the Kettle application and package to handle building
+and installation. It is assumed to be installed and working. Please see
+section <span class="sectref"><a href="#subsection5">Kettle</a></span> in <span class="sectref"><a href="#section2">Requisites</a></span> for more information.</p>
+<p>Note that all access to Kettle is mediated by the &quot;<b class="file">build.tcl</b>&quot;
+script, found in the top-level directory of the project.</p>
+<p>For the most basic installation of Blob run</p>
+<pre class="example">
+% /path/to/blob/build.tcl install
+</pre>
+<p>This command uses the <b class="syscmd">kettle</b> application found in the
+, and the associated <b class="syscmd">tclsh</b>.</p>
+<p>The command builds all packages and applications of Blob,
+and then installs them so that the associated <b class="syscmd">tclsh</b> has access
+to them. Any applications will become siblings of <b class="syscmd">tclsh</b>.</p>
+<p>For more control about which version of <b class="syscmd">kettle</b> and/or
+<b class="syscmd">tclsh</b> gets used run either</p>
+<pre class="example">
+% /path/to/kettle /path/to/blob/build.tcl install
+</pre>
+<p>or even</p>
+<pre class="example">
+% /path/to/tclsh /path/to/kettle /path/to/blob/build.tcl install
+</pre>
+<p>to specify the exact files to use.</p>
+<p>On Windows it is possible to invoke the the file &quot;<b class="file">build.tcl</b>&quot; with a
+double-click. This will start a graphical interface to the system, with
+buttons for all the possible actions, which includes 'install'ation.</p>
+<p>On unix the same GUI is acessible by invoking &quot;<b class="file">build.tcl</b>&quot; with the
+arguments <b class="cmd">gui</b>, i.e. as</p>
+<pre class="example">
+% /path/to/blob/build.tcl gui
+</pre>
+<p>To get help about the methods of &quot;<b class="file">build.tcl</b>&quot;, and their complete
+syntax, simply invoke &quot;<b class="file">build.tcl</b>&quot; like</p>
+<pre class="example">
+% /path/to/blob/build.tcl gui
+</pre>
+</div>
+<div id="section4" class="section"><h2><a name="section4">Related Documents</a></h2>
+<ol class="enumerated">
+<li><p><i class="term"><a href="blob_introduction.html">Blob - Introduction to the project</a></i></p></li>
+<li><p><i class="term"><a href="blob_license.html">Blob - License</a></i></p></li>
+<li><p><i class="term"><a href="blob_changes.html">Blob - Log of Changes</a></i></p></li>
+<li><p><i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i></p></li>
+<li><p><i class="term">Blob - The Installer's Guide</i></p></li>
+<li><p><i class="term"><a href="blob_howto_development.html">Blob - The Developer's Guide</a></i></p></li>
+</ol>
+</div>
+<div id="section5" class="section"><h2><a name="section5">Bugs, Ideas, Feedback</a></h2>
+<p>Both the package(s) and this documentation will undoubtedly contain
+bugs and other problems.
+Please report such at
+<a href="https:/core.tcl.tk/akupries/blob">Blob Tickets</a>.</p>
+<p>Please also report any ideas you may have for enhancements of
+either package(s) and/or documentation.</p>
+</div>
+<div id="keywords" class="section"><h2><a name="keywords">Keywords</a></h2>
+<p><a href="../../index.html#key5">blob</a>, <a href="../../index.html#key1">blob storage</a>, <a href="../../index.html#key2">content deduplication</a>, <a href="../../index.html#key0">content storage</a>, <a href="../../index.html#key4">deduplication</a>, <a href="../../index.html#key3">storage</a></p>
+</div>
+<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<p>Copyright &copy; 2013-2016 Andreas Kupries<br>
+Copyright &copy; 2013-2016 Documentation, Andreas Kupries</p>
+</div>
+</div></body></html>

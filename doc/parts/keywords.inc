@@ -1,0 +1,7 @@
+[comment {--- Standard keywords for all manpages in the module --}]
+[keywords deduplication]
+[keywords blob]
+[keywords storage]
+[keywords {content deduplication}]
+[keywords {blob storage}]
+[keywords {content storage}]

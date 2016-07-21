@@ -1,0 +1,54 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[manpage_begin [vset LABEL_SQLITE] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset PROJECT]::sqlite]
+[titledesc [vset TITLE_SQLITE]]
+[description]
+[include parts/welcome.inc]
+
+This package provides a blob storage which uses a table in an sqlite3
+database to hold the blob contents.
+
+[para] Note and remember that sqlite databases may exist only in
+memory and not just with a backing file as usual. This is another way
+of getting an in-memory string storage.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::sqlite] [method create] [arg obj] [arg db] [arg table]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[para] The named [arg table] in the sqlite database identified by its
+object command [arg database] is used to hold the mapping.
+
+The table will be created if it does not exist.  If it exists its
+schema will be verified instead and an error thrown if the schema is
+not as expected.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::sqlite] [method new] [arg db] [arg table]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[para] The named [arg table] in the sqlite database identified by its
+object command [arg database] is used to hold the mapping.
+
+The table will be created if it does not exist.  If it exists its
+schema will be verified instead and an error thrown if the schema is
+not as expected.
+
+[list_end]
+
+[include parts/api.inc]
+
+[include parts/feedback.inc]
+[manpage_end]

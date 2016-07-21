@@ -1,0 +1,44 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[manpage_begin [vset LABEL_FS] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset PROJECT]::fs]
+[titledesc [vset TITLE_FS]]
+[description]
+[include parts/welcome.inc]
+
+This package provides a blob storage which uses a directory in a
+filesystem to hold the blob contents.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::fs] [method create] [arg obj] [arg basedir]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[para] The [arg basedir] is the path to the directory used to hold the
+blob contents. The exact structure maintained by the package is
+intentionally not documented.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::fs] [method new] [arg basedir]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[para] The [arg basedir] is the path to the directory used to hold the
+blob contents. The exact structure maintained by the package is
+intentionally not documented.
+
+[list_end]
+
+[include parts/api.inc]
+
+[include parts/feedback.inc]
+[manpage_end]

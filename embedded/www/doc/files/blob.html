@@ -1,0 +1,495 @@
+
+<html><head>
+<title>blob - Blob. General content storage with deduplication</title>
+<style type="text/css"><!--
+    HTML {
+	background: 	#FFFFFF;
+	color: 		black;
+    }
+    BODY {
+	background: 	#FFFFFF;
+	color:	 	black;
+    }
+    DIV.doctools {
+	margin-left:	10%;
+	margin-right:	10%;
+    }
+    DIV.doctools H1,DIV.doctools H2 {
+	margin-left:	-5%;
+    }
+    H1, H2, H3, H4 {
+	margin-top: 	1em;
+	font-family:	sans-serif;
+	font-size:	large;
+	color:		#005A9C;
+	background: 	transparent;
+	text-align:		left;
+    }
+    H1.title {
+	text-align: center;
+    }
+    UL,OL {
+	margin-right: 0em;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+    }
+    UL LI {
+	list-style: disc;
+    }
+    OL LI {
+	list-style: decimal;
+    }
+    DT {
+	padding-top: 	1ex;
+    }
+    UL.toc,UL.toc UL, UL.toc UL UL {
+	font:		normal 12pt/14pt sans-serif;
+	list-style:	none;
+    }
+    LI.section, LI.subsection {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding: 	0em;
+    }
+    PRE {
+	display: 	block;
+	font-family:	monospace;
+	white-space:	pre;
+	margin:		0%;
+	padding-top:	0.5ex;
+	padding-bottom:	0.5ex;
+	padding-left:	1ex;
+	padding-right:	1ex;
+	width:		100%;
+    }
+    PRE.example {
+	color: 		black;
+	background: 	#f5dcb3;
+	border:		1px solid black;
+    }
+    UL.requirements LI, UL.syntax LI {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding:	0em;
+    }
+    DIV.synopsis {
+	color: 		black;
+	background: 	#80ffff;
+	border:		1px solid black;
+	font-family:	serif;
+	margin-top: 	1em;
+	margin-bottom: 	1em;
+    }
+    UL.syntax {
+	margin-top: 	1em;
+	border-top:	1px solid black;
+    }
+    UL.requirements {
+	margin-bottom: 	1em;
+	border-bottom:	1px solid black;
+    }
+--></style>
+</head>
+<! -- Generated from file 'blob.man' by tcllib/doctools with format 'html'
+   -->
+<! -- Copyright &copy; 2013-2016 Andreas Kupries   -- Copyright &copy; 2013-2016 Documentation, Andreas Kupries
+   -->
+<! -- CVS: $Id$ blob.n
+   -->
+<body><div class="doctools">
+<hr> [
+   <a href="../../../../../../home">Home</a>
+| <a href="../../toc.html">Main Table Of Contents</a>
+| <a href="../toc.html">Table Of Contents</a>
+| <a href="../../index.html">Keyword Index</a>
+ ] <hr>
+<h1 class="title">blob(n) 1 doc &quot;Blob. General content storage with deduplication&quot;</h1>
+<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<p>blob - Blob - Base class, common API</p>
+</div>
+<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="toc">
+<li class="section"><a href="#toc">Table Of Contents</a></li>
+<li class="section"><a href="#synopsis">Synopsis</a></li>
+<li class="section"><a href="#section1">Description</a></li>
+<li class="section"><a href="#section2">Public API</a></li>
+<li class="section"><a href="#section3">API to implement</a></li>
+<li class="section"><a href="#section4">API hooks</a></li>
+<li class="section"><a href="#section5">Push and pull overview</a></li>
+<li class="section"><a href="#section6">Bugs, Ideas, Feedback</a></li>
+<li class="section"><a href="#keywords">Keywords</a></li>
+<li class="section"><a href="#copyright">Copyright</a></li>
+</ul>
+</div>
+<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="synopsis">
+<ul class="requirements">
+<li>package require <b class="pkgname">cmdr</b></li>
+</ul>
+<ul class="syntax">
+<li><a href="#1"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-string</b> <i class="arg">blob</i></a></li>
+<li><a href="#2"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-file</b> <i class="arg">path</i></a></li>
+<li><a href="#3"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-channel</b> <i class="arg">chan</i></a></li>
+<li><a href="#4"><b class="cmd">&lt;instance&gt;</b> <b class="method">new</b></a></li>
+<li><a href="#5"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-string</b> <i class="arg">uuid</i></a></li>
+<li><a href="#6"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-channel</b> <i class="arg">uuid</i></a></li>
+<li><a href="#7"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-file</b> <i class="arg">uuid</i></a></li>
+<li><a href="#8"><b class="cmd">&lt;instance&gt;</b> <b class="method">store-to-file</b> <i class="arg">uuid</i> <i class="arg">path</i></a></li>
+<li><a href="#9"><b class="cmd">&lt;instance&gt;</b> <b class="method">remove</b> <i class="arg">uuid</i></a></li>
+<li><a href="#10"><b class="cmd">&lt;instance&gt;</b> <b class="method">clear</b></a></li>
+<li><a href="#11"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></li>
+<li><a href="#12"><b class="cmd">&lt;instance&gt;</b> <b class="method">names</b> <span class="opt">?<i class="arg">pattern</i>...?</span></a></li>
+<li><a href="#13"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></li>
+<li><a href="#14"><b class="cmd">&lt;instance&gt;</b> <b class="method">push</b> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#15"><b class="cmd">&lt;instance&gt;</b> <b class="method">push-async</b> <i class="arg">donecmd</i> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#16"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull</b> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#17"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull-async</b> <i class="arg">donecmd</i> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#18"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync</b> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#19"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync-async</b> <i class="arg">donecmd</i> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#20"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-for-string</b> <i class="arg">uuids</i> <i class="arg">src</i></a></li>
+<li><a href="#21"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-for-file</b> <i class="arg">uuids</i> <i class="arg">src</i></a></li>
+<li><a href="#22"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-for-chan</b> <i class="arg">uuids</i> <i class="arg">src</i></a></li>
+<li><a href="#23"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-async-string</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">src</i></a></li>
+<li><a href="#24"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-async-file</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">src</i></a></li>
+<li><a href="#25"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-async-chan</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">src</i></a></li>
+<li><a href="#26"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-as-string</b> <i class="arg">uuids</i> <i class="arg">dst</i></a></li>
+<li><a href="#27"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-as-file</b> <i class="arg">uuids</i> <i class="arg">dst</i></a></li>
+<li><a href="#28"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-as-chan</b> <i class="arg">uuids</i> <i class="arg">dst</i></a></li>
+<li><a href="#29"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-async-string</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">dst</i></a></li>
+<li><a href="#30"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-async-file</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">dst</i></a></li>
+<li><a href="#31"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-async-chan</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">dst</i></a></li>
+<li><a href="#32"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-for-string</b> <i class="arg">uuids</i> <i class="arg">peer</i></a></li>
+<li><a href="#33"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-for-file</b> <i class="arg">uuids</i> <i class="arg">peer</i></a></li>
+<li><a href="#34"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-for-chan</b> <i class="arg">uuids</i> <i class="arg">peer</i></a></li>
+<li><a href="#35"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-async-string</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">peer</i></a></li>
+<li><a href="#36"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-async-file</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">peer</i></a></li>
+<li><a href="#37"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-async-chan</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">peer</i></a></li>
+<li><a href="#38"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-string</b> <i class="arg">uuid</i></a></li>
+<li><a href="#39"><b class="cmd">&lt;instance&gt;</b> <b class="method">remove</b> <i class="arg">uuid</i></a></li>
+<li><a href="#40"><b class="cmd">&lt;instance&gt;</b> <b class="method">clear</b></a></li>
+<li><a href="#41"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></li>
+<li><a href="#42"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></li>
+<li><a href="#43"><b class="cmd">&lt;instance&gt;</b> <b class="method">PreferedPut</b></a></li>
+<li><a href="#44"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterString</b> <i class="arg">uuid</i> <i class="arg">blob</i></a></li>
+<li><a href="#45"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterFile</b> <i class="arg">uuid</i> <i class="arg">path</i></a></li>
+<li><a href="#46"><b class="cmd">&lt;instance&gt;</b> <b class="method">Names</b> <span class="opt">?<i class="arg">pattern</i>?</span></a></li>
+<li><a href="#47"><b class="cmd">&lt;instance&gt;</b> <b class="method">TempFile</b></a></li>
+</ul>
+</div>
+</div>
+<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<p>Welcome to the Blob project, written by Andreas Kupries.</p>
+<p>For availability please read <i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i>.</p>
+<p>While this package, from its name, looks like the public entrypoint of
+the system, it is <em>not</em>. This package is internal, providing the
+base class for all the others implementing actual storage backends.</p>
+<p>The following sections are of interest only to developers
+intending to extend or modify the system, then. Everybody else can
+skip this document.</p>
+</div>
+<div id="section2" class="section"><h2><a name="section2">Public API</a></h2>
+<p>This section lists and describes all the public methods of a proper
+and functional blob storage. Some of them may have to be implemented
+by the derived class for a specific kind of storage.</p>
+<p>Note further that not all of the public methods are for general
+use.</p>
+<dl class="definitions">
+	
+	
+<dt><a name="1"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-string</b> <i class="arg">blob</i></a></dt>
+<dd><p>This method adds the string <i class="arg">blob</i> to the instance
+		and returns the blob's uuid as the result of the
+		method. Adding the same string multiple times actually
+		adds it only on the first call, and all invokations
+		return the same uuid.</p></dd>
+<dt><a name="2"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-file</b> <i class="arg">path</i></a></dt>
+<dd><p>This method adds the (binary) string found in the file
+		at the specified <i class="arg">path</i> to the instance and
+		returns the blob's uuid as the result of the
+		method. Adding the same content multiple times
+		actually adds it only on the first call, and all
+		invokations return the same uuid.</p></dd>
+<dt><a name="3"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-channel</b> <i class="arg">chan</i></a></dt>
+<dd><p>This method adds the (binary) string found in the
+		channel <i class="arg">chan</i> to the instance and returns the
+		blob's uuid as the result of the method. Adding the
+		same content multiple times actually adds it only on
+		the first call, and all invokations return the same
+		uuid.</p>
+<p>The content is read from <i class="arg">chan</i> once, starting at
+		the current location. After the call the channel is
+		positioned at EOF. Note that the caller has to close
+		the channel.</p></dd>
+<dt><a name="4"><b class="cmd">&lt;instance&gt;</b> <b class="method">new</b></a></dt>
+<dd><p>This method returns a boolean value indicating if the
+		last call to one of the <b class="method">put-*</b> methods
+		actually added a new blob (<b class="const">true</b>), or not
+		(<b class="const">false</b>).</p></dd>
+<dt><a name="5"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-string</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and returns them as the result of the method.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p>
+<p><em>This is an abstract method. Derived classes have to implement it.</em></p></dd>
+<dt><a name="6"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-channel</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and returns a channel containing it as the result of
+		the method.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p>
+<p>The returned channel is read-only, binary, and
+		positioned at the beginning of the blob content. No
+		assurances are made about the ability to seek the
+		channel. It is the responsibility of the caller to
+		close the channel after use.</p></dd>
+<dt><a name="7"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-file</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and returns the path of a file containing it as the
+		result of the method.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p>
+<p>The returned file should be considered transient. It
+		is owned by the caller and can be moved, modified, and
+		deleted at will. It is the responsibility of the
+		caller to delete the file after use.</p></dd>
+<dt><a name="8"><b class="cmd">&lt;instance&gt;</b> <b class="method">store-to-file</b> <i class="arg">uuid</i> <i class="arg">path</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and stores them into the file with the specified
+		<i class="arg">path</i>. Any previous content of the file is
+		overwritten by this operation. The result of the
+		method is the empty string.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p></dd>
+<dt><a name="9"><b class="cmd">&lt;instance&gt;</b> <b class="method">remove</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the blob <i class="arg">uuid</i> and removes it
+		from the instance. The result of the method is the
+		empty string.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p>
+<p><em>This is an abstract method. Derived classes have to implement it.</em></p></dd>
+<dt><a name="10"><b class="cmd">&lt;instance&gt;</b> <b class="method">clear</b></a></dt>
+<dd><p>This method removes all blobs from the instance. After
+		the call the instance is empty. The result of the
+		method is the empty string.</p>
+<p><em>This is an abstract method. Derived classes have to implement it.</em></p></dd>
+<dt><a name="11"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></dt>
+<dd><p>This method determines the number of blobs found in
+		the instance and returns that number as the result of
+		the method.</p>
+<p><em>This is an abstract method. Derived classes have to implement it.</em></p></dd>
+<dt><a name="12"><b class="cmd">&lt;instance&gt;</b> <b class="method">names</b> <span class="opt">?<i class="arg">pattern</i>...?</span></a></dt>
+<dd></dd>
+<dt><a name="13"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method returns a boolean value indicating if the
+		blob <i class="arg">uuid</i> is known to the instance
+		(<b class="const">true</b>), or not (<b class="const">false</b>).</p>
+<p><em>This is an abstract method. Derived classes have to implement it.</em></p></dd>
+<dt><a name="14"><b class="cmd">&lt;instance&gt;</b> <b class="method">push</b> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="15"><b class="cmd">&lt;instance&gt;</b> <b class="method">push-async</b> <i class="arg">donecmd</i> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd><p>This method copies the blobs specified by the list of
+		<i class="arg">uuids</i> from the instance to the specified peer
+		<i class="arg">to</i>. This has to be an object exporting the same
+		API as documented for <b class="package">blob</b>.
+		The result of the method is the empty string.</p>
+<p>If no set of uuids is specified the operation will
+		push all blobs found in the instance, as if
+		&quot;<i class="arg">uuids</i> == <b class="const">*</b> had been specified&quot;.</p>
+<p>Note that the elements of <i class="arg">uuids</i> are interpreted
+		as glob patterns.</p>
+<p>In the <b class="method">push-async</b> form the execution is done
+		through the event-loop, invoking the command prefix
+		<i class="arg">donecmd</i> when the operation completes, with no
+		additional arguments.</p></dd>
+<dt><a name="16"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull</b> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="17"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull-async</b> <i class="arg">donecmd</i> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd><p>This method copies the blobs specified by the list of
+		<i class="arg">uuids</i> from the specified peer <i class="arg">from</i> to the
+		instance. The peer has to be an object exporting the
+		same API as documented for <b class="package">blob</b>.
+		The result of the method is the empty string.</p>
+<p>If no set of uuids is specified the operation will
+		pull all blobs found in the peer, as if
+		&quot;<i class="arg">uuids</i> == <b class="const">*</b> had been specified&quot;.</p>
+<p>Note that the elements of <i class="arg">uuids</i> are interpreted
+		as glob patterns.</p>
+<p>In the <b class="method">pull-async</b> form the execution is done
+		through the event-loop, invoking the command prefix
+		<i class="arg">donecmd</i> when the operation completes, with no
+		additional arguments.</p></dd>
+<dt><a name="18"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync</b> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="19"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync-async</b> <i class="arg">donecmd</i> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd><p>This method exchanges the blobs specified by the list
+		of <i class="arg">uuids</i> with the specified peer <i class="arg">with</i>,
+		copying from and to the instance, as needed. The peer
+		has to be an object exporting the same API as
+		documented for <b class="package">blob</b>.
+		The result of the method is the empty string.</p>
+<p>If no set of uuids is specified the operation will
+		exchange all blobs found in the instance and the peer,
+		as if &quot;<i class="arg">uuids</i> == <b class="const">*</b> had been specified&quot;.</p>
+<p>Note that the elements of <i class="arg">uuids</i> are interpreted
+		as glob patterns.</p>
+<p>In the <b class="method">sync-async</b> form the execution is done
+		through the event-loop, invoking the command prefix
+		<i class="arg">donecmd</i> when the operation completes, with no
+		additional arguments.</p></dd>
+<dt><a name="20"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-for-string</b> <i class="arg">uuids</i> <i class="arg">src</i></a></dt>
+<dd></dd>
+<dt><a name="21"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-for-file</b> <i class="arg">uuids</i> <i class="arg">src</i></a></dt>
+<dd></dd>
+<dt><a name="22"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-for-chan</b> <i class="arg">uuids</i> <i class="arg">src</i></a></dt>
+<dd><p>These methods pull the blobs specified by the uuid
+		glob patterns found in <i class="arg">uuids</i> from the <i class="arg">src</i>,
+		an instance command of a blob store providing at least
+		method <b class="method">names</b> and the indicated <b class="method">get-*</b>
+		method.
+		The result of the methods is the empty string.</p></dd>
+<dt><a name="23"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-async-string</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">src</i></a></dt>
+<dd></dd>
+<dt><a name="24"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-async-file</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">src</i></a></dt>
+<dd></dd>
+<dt><a name="25"><b class="cmd">&lt;instance&gt;</b> <b class="method">ihave-async-chan</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">src</i></a></dt>
+<dd><p>These are the asynchronous forms of the
+		<b class="method">ihave-for-*</b> methods above. They yield to the
+		event-loop and invoke the <i class="arg">donecmd</i> on completion,
+		without any additional arguments.</p></dd>
+<dt><a name="26"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-as-string</b> <i class="arg">uuids</i> <i class="arg">dst</i></a></dt>
+<dd></dd>
+<dt><a name="27"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-as-file</b> <i class="arg">uuids</i> <i class="arg">dst</i></a></dt>
+<dd></dd>
+<dt><a name="28"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-as-chan</b> <i class="arg">uuids</i> <i class="arg">dst</i></a></dt>
+<dd><p>These methods push the blobs specified by the uuid
+		glob patterns found in <i class="arg">uuids</i> to the <i class="arg">dst</i>,
+		an instance command of a blob store providing at least
+		method <b class="method">exists</b> and the indicated <b class="method">put-*</b>
+		method.
+		The result of the methods is the empty string.</p></dd>
+<dt><a name="29"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-async-string</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">dst</i></a></dt>
+<dd></dd>
+<dt><a name="30"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-async-file</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">dst</i></a></dt>
+<dd></dd>
+<dt><a name="31"><b class="cmd">&lt;instance&gt;</b> <b class="method">iwant-async-chan</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">dst</i></a></dt>
+<dd><p>These are the asynchronous forms of the
+		<b class="method">iwant-for-*</b> methods above. They yield to the
+		event-loop and invoke the <i class="arg">donecmd</i> on completion,
+		without any additional arguments.</p></dd>
+<dt><a name="32"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-for-string</b> <i class="arg">uuids</i> <i class="arg">peer</i></a></dt>
+<dd></dd>
+<dt><a name="33"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-for-file</b> <i class="arg">uuids</i> <i class="arg">peer</i></a></dt>
+<dd></dd>
+<dt><a name="34"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-for-chan</b> <i class="arg">uuids</i> <i class="arg">peer</i></a></dt>
+<dd><p>These methods exchange the blobs specified by the uuid
+		glob patterns found in <i class="arg">uuids</i> with the
+		<i class="arg">peer</i>, an instance command of a blob store
+		providing at least method <b class="method">exists</b>,
+		<b class="method">names</b> and the indicated <b class="method">put-*</b> and
+		<b class="method">get-*</b> methods.
+		The result of the methods is the empty string.</p></dd>
+<dt><a name="35"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-async-string</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">peer</i></a></dt>
+<dd></dd>
+<dt><a name="36"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-async-file</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">peer</i></a></dt>
+<dd></dd>
+<dt><a name="37"><b class="cmd">&lt;instance&gt;</b> <b class="method">iexchange-async-chan</b> <i class="arg">donecmd</i> <i class="arg">uuids</i> <i class="arg">peer</i></a></dt>
+<dd><p>These are the asynchronous forms of the
+		<b class="method">iexchange-for-*</b> methods above. They yield to the
+		event-loop and invoke the <i class="arg">donecmd</i> on completion,
+		without any additional arguments.</p></dd>
+</dl>
+</div>
+<div id="section3" class="section"><h2><a name="section3">API to implement</a></h2>
+<p>This section lists and describes all the methods a derived class
+<em>has</em> to override to be a proper and functional blob storage.
+This is not quite a subset of the methods listed in the
+<span class="sectref"><a href="#section2">Public API</a></span> above, because it also contains a number of
+private methods.</p>
+<dl class="definitions">
+	
+	
+<dt><a name="38"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-string</b> <i class="arg">uuid</i></a></dt>
+<dd></dd>
+<dt><a name="39"><b class="cmd">&lt;instance&gt;</b> <b class="method">remove</b> <i class="arg">uuid</i></a></dt>
+<dd></dd>
+<dt><a name="40"><b class="cmd">&lt;instance&gt;</b> <b class="method">clear</b></a></dt>
+<dd></dd>
+<dt><a name="41"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></dt>
+<dd></dd>
+<dt><a name="42"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></dt>
+<dd><p>These are the public methods a derived class has to
+		implement to become a functional blob store. Their
+		detailed descriptions can be found in section
+		<span class="sectref"><a href="#section2">Public API</a></span> above.</p></dd>
+<dt><a name="43"><b class="cmd">&lt;instance&gt;</b> <b class="method">PreferedPut</b></a></dt>
+<dd><p>This method is used by the standard implementations of
+		<b class="method">push</b>, <b class="method">pull</b>, and <b class="method">sync</b> to
+		decide which of the <b class="method">get-*</b> and/or
+		<b class="method">put-*</b> methods to use for the transfer of
+		blobs between the two instances.</p>
+<p>The derived class has to implement it and return one
+		of <b class="const">string</b>, <b class="const">file</b> and <b class="const">chan</b>.</p></dd>
+<dt><a name="44"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterString</b> <i class="arg">uuid</i> <i class="arg">blob</i></a></dt>
+<dd><p>This method is used by the standard method
+		<b class="method">put-string</b> to enter the <i class="arg">blob</i> with
+		<i class="arg">uuid</i> into the instance.</p>
+<p>The derived class has to implement it and return a
+		boolean value indicating whether the blob is new
+		(<b class="const">true</b>), or not (<b class="const">false</b>).</p></dd>
+<dt><a name="45"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterFile</b> <i class="arg">uuid</i> <i class="arg">path</i></a></dt>
+<dd><p>This method is used by the standard method
+		<b class="method">put-file</b> to enter the blob found in the file
+		at <i class="arg">path</i> with <i class="arg">uuid</i> into the instance.</p>
+<p>The derived class has to implement it and return a
+		boolean value indicating whether the blob is new
+		(<b class="const">true</b>), or not (<b class="const">false</b>).</p></dd>
+<dt><a name="46"><b class="cmd">&lt;instance&gt;</b> <b class="method">Names</b> <span class="opt">?<i class="arg">pattern</i>?</span></a></dt>
+<dd><p>This method is used by the standard method
+		<b class="method">names</b> to search the instance for blobs whose
+		uuid matches the <i class="arg">pattern</i>.</p>
+<p>The derived class has to implement it and return a
+		list with the matching uuids.</p></dd>
+</dl>
+</div>
+<div id="section4" class="section"><h2><a name="section4">API hooks</a></h2>
+<p>This section lists the base class methods a derived class <em>may</em>
+override. While they have implementations these are generic and may
+not be as efficient as is possible for the derived class itself and
+its full access to its own datastructures.</p>
+<dl class="definitions">
+	
+	
+<dt><a name="47"><b class="cmd">&lt;instance&gt;</b> <b class="method">TempFile</b></a></dt>
+<dd><p>The standard implementation of method
+		<b class="method">get-file</b> uses this method to get a path to a
+		temp file it can return to the user.</p>
+<p>The standard implementation of this method returns a
+		standard tempfile, as per the <b class="cmd">fileutil::tempfile</b>
+		command. Derived classes can re-implement it to make
+		their own choices regarding the location of the temp
+		files to return.</p>
+<p>Package <b class="package"><a href="blob_fs.html">blob::fs</a></b> is an example of
+		this, returning temp files located under the base
+		directory the blob store is configured with.</p></dd>
+</dl>
+</div>
+<div id="section5" class="section"><h2><a name="section5">Push and pull overview</a></h2>
+</div>
+<div id="section6" class="section"><h2><a name="section6">Bugs, Ideas, Feedback</a></h2>
+<p>Both the package(s) and this documentation will undoubtedly contain
+bugs and other problems.
+Please report such at
+<a href="https:/core.tcl.tk/akupries/blob">Blob Tickets</a>.</p>
+<p>Please also report any ideas you may have for enhancements of
+either package(s) and/or documentation.</p>
+</div>
+<div id="keywords" class="section"><h2><a name="keywords">Keywords</a></h2>
+<p><a href="../../index.html#key5">blob</a>, <a href="../../index.html#key1">blob storage</a>, <a href="../../index.html#key2">content deduplication</a>, <a href="../../index.html#key0">content storage</a>, <a href="../../index.html#key4">deduplication</a>, <a href="../../index.html#key3">storage</a></p>
+</div>
+<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<p>Copyright &copy; 2013-2016 Andreas Kupries<br>
+Copyright &copy; 2013-2016 Documentation, Andreas Kupries</p>
+</div>
+</div></body></html>

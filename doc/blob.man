@@ -1,0 +1,409 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[manpage_begin [vset LABEL_BLOB] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require cmdr]
+[titledesc [vset TITLE_BLOB]]
+[description]
+[include parts/welcome.inc]
+
+While this package, from its name, looks like the public entrypoint of
+the system, it is [emph not]. This package is internal, providing the
+base class for all the others implementing actual storage backends.
+
+[para] The following sections are of interest only to developers
+intending to extend or modify the system, then. Everybody else can
+skip this document.
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[section {Public API}]
+
+This section lists and describes all the public methods of a proper
+and functional blob storage. Some of them may have to be implemented
+by the derived class for a specific kind of storage.
+
+[para] Note further that not all of the public methods are for general
+use.
+
+[list_begin definitions]
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method put-string] [arg blob]]
+
+		This method adds the string [arg blob] to the instance
+		and returns the blob's uuid as the result of the
+		method. Adding the same string multiple times actually
+		adds it only on the first call, and all invokations
+		return the same uuid.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method put-file] [arg path]]
+
+		This method adds the (binary) string found in the file
+		at the specified [arg path] to the instance and
+		returns the blob's uuid as the result of the
+		method. Adding the same content multiple times
+		actually adds it only on the first call, and all
+		invokations return the same uuid.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method put-channel] [arg chan]]
+
+		This method adds the (binary) string found in the
+		channel [arg chan] to the instance and returns the
+		blob's uuid as the result of the method. Adding the
+		same content multiple times actually adds it only on
+		the first call, and all invokations return the same
+		uuid.
+
+	[para]	The content is read from [arg chan] once, starting at
+		the current location. After the call the channel is
+		positioned at EOF. Note that the caller has to close
+		the channel.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method new]]
+
+		This method returns a boolean value indicating if the
+		last call to one of the [method put-*] methods
+		actually added a new blob ([const true]), or not
+		([const false]).
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method get-string] [arg uuid]]
+
+		This method locates the contents of blob [arg uuid]
+		and returns them as the result of the method.
+
+		An error is thrown if [arg uuid] is not known to the
+		instance.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method get-channel] [arg uuid]]
+
+		This method locates the contents of blob [arg uuid]
+		and returns a channel containing it as the result of
+		the method.
+
+		An error is thrown if [arg uuid] is not known to the
+		instance.
+
+	[para]	The returned channel is read-only, binary, and
+		positioned at the beginning of the blob content. No
+		assurances are made about the ability to seek the
+		channel. It is the responsibility of the caller to
+		close the channel after use.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method get-file] [arg uuid]]
+
+		This method locates the contents of blob [arg uuid]
+		and returns the path of a file containing it as the
+		result of the method.
+
+		An error is thrown if [arg uuid] is not known to the
+		instance.
+
+	[para]	The returned file should be considered transient. It
+		is owned by the caller and can be moved, modified, and
+		deleted at will. It is the responsibility of the
+		caller to delete the file after use.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method store-to-file] [arg uuid] [arg path]]
+
+		This method locates the contents of blob [arg uuid]
+		and stores them into the file with the specified
+		[arg path]. Any previous content of the file is
+		overwritten by this operation. The result of the
+		method is the empty string.
+
+		An error is thrown if [arg uuid] is not known to the
+		instance.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method remove] [arg uuid]]
+
+		This method locates the blob [arg uuid] and removes it
+		from the instance. The result of the method is the
+		empty string.
+
+		An error is thrown if [arg uuid] is not known to the
+		instance.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method clear]]
+
+		This method removes all blobs from the instance. After
+		the call the instance is empty. The result of the
+		method is the empty string.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method size]]
+
+		This method determines the number of blobs found in
+		the instance and returns that number as the result of
+		the method.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method names] [opt [arg pattern]...]]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method exists] [arg uuid]]
+
+		This method returns a boolean value indicating if the
+		blob [arg uuid] is known to the instance
+		([const true]), or not ([const false]).
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method push] [arg to] [opt [arg uuids]]]
+	[call [cmd <instance>] [method push-async] [arg donecmd] [arg to] [opt [arg uuids]]]
+
+		This method copies the blobs specified by the list of
+		[arg uuids] from the instance to the specified peer
+		[arg to]. This has to be an object exporting the same
+		API as documented for [package [vset PROJECT]].
+
+		The result of the method is the empty string.
+
+	[para]	If no set of uuids is specified the operation will
+		push all blobs found in the instance, as if
+		"[arg uuids] == [const *] had been specified".
+
+	[para]	Note that the elements of [arg uuids] are interpreted
+		as glob patterns.
+
+	[para]	In the [method push-async] form the execution is done
+		through the event-loop, invoking the command prefix
+		[arg donecmd] when the operation completes, with no
+		additional arguments.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method pull] [arg from] [opt [arg uuids]]]
+	[call [cmd <instance>] [method pull-async] [arg donecmd] [arg from] [opt [arg uuids]]]
+
+		This method copies the blobs specified by the list of
+		[arg uuids] from the specified peer [arg from] to the
+		instance. The peer has to be an object exporting the
+		same API as documented for [package [vset PROJECT]].
+
+		The result of the method is the empty string.
+
+	[para]	If no set of uuids is specified the operation will
+		pull all blobs found in the peer, as if
+		"[arg uuids] == [const *] had been specified".
+
+	[para]	Note that the elements of [arg uuids] are interpreted
+		as glob patterns.
+
+	[para]	In the [method pull-async] form the execution is done
+		through the event-loop, invoking the command prefix
+		[arg donecmd] when the operation completes, with no
+		additional arguments.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method sync] [arg with] [opt [arg uuids]]]
+	[call [cmd <instance>] [method sync-async] [arg donecmd] [arg with] [opt [arg uuids]]]
+
+		This method exchanges the blobs specified by the list
+		of [arg uuids] with the specified peer [arg with],
+		copying from and to the instance, as needed. The peer
+		has to be an object exporting the same API as
+		documented for [package [vset PROJECT]].
+
+		The result of the method is the empty string.
+
+	[para]	If no set of uuids is specified the operation will
+		exchange all blobs found in the instance and the peer,
+		as if "[arg uuids] == [const *] had been specified".
+
+	[para]	Note that the elements of [arg uuids] are interpreted
+		as glob patterns.
+
+	[para]	In the [method sync-async] form the execution is done
+		through the event-loop, invoking the command prefix
+		[arg donecmd] when the operation completes, with no
+		additional arguments.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method ihave-for-string] [arg uuids] [arg src]]
+	[call [cmd <instance>] [method ihave-for-file] [arg uuids] [arg src]]
+	[call [cmd <instance>] [method ihave-for-chan] [arg uuids] [arg src]]
+
+		These methods pull the blobs specified by the uuid
+		glob patterns found in [arg uuids] from the [arg src],
+		an instance command of a blob store providing at least
+		method [method names] and the indicated [method get-*]
+		method.
+
+		The result of the methods is the empty string.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method ihave-async-string] [arg donecmd] [arg uuids] [arg src]]
+	[call [cmd <instance>] [method ihave-async-file] [arg donecmd] [arg uuids] [arg src]]
+	[call [cmd <instance>] [method ihave-async-chan] [arg donecmd] [arg uuids] [arg src]]
+
+		These are the asynchronous forms of the
+		[method ihave-for-*] methods above. They yield to the
+		event-loop and invoke the [arg donecmd] on completion,
+		without any additional arguments.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method iwant-as-string] [arg uuids] [arg dst]]
+	[call [cmd <instance>] [method iwant-as-file] [arg uuids] [arg dst]]
+	[call [cmd <instance>] [method iwant-as-chan] [arg uuids] [arg dst]]
+
+		These methods push the blobs specified by the uuid
+		glob patterns found in [arg uuids] to the [arg dst],
+		an instance command of a blob store providing at least
+		method [method exists] and the indicated [method put-*]
+		method.
+
+		The result of the methods is the empty string.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method iwant-async-string] [arg donecmd] [arg uuids] [arg dst]]
+	[call [cmd <instance>] [method iwant-async-file] [arg donecmd] [arg uuids] [arg dst]]
+	[call [cmd <instance>] [method iwant-async-chan] [arg donecmd] [arg uuids] [arg dst]]
+
+		These are the asynchronous forms of the
+		[method iwant-for-*] methods above. They yield to the
+		event-loop and invoke the [arg donecmd] on completion,
+		without any additional arguments.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method iexchange-for-string] [arg uuids] [arg peer]]
+	[call [cmd <instance>] [method iexchange-for-file] [arg uuids] [arg peer]]
+	[call [cmd <instance>] [method iexchange-for-chan] [arg uuids] [arg peer]]
+
+		These methods exchange the blobs specified by the uuid
+		glob patterns found in [arg uuids] with the
+		[arg peer], an instance command of a blob store
+		providing at least method [method exists],
+		[method names] and the indicated [method put-*] and
+		[method get-*] methods.
+
+		The result of the methods is the empty string.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method iexchange-async-string] [arg donecmd] [arg uuids] [arg peer]]
+	[call [cmd <instance>] [method iexchange-async-file] [arg donecmd] [arg uuids] [arg peer]]
+	[call [cmd <instance>] [method iexchange-async-chan] [arg donecmd] [arg uuids] [arg peer]]
+
+		These are the asynchronous forms of the
+		[method iexchange-for-*] methods above. They yield to the
+		event-loop and invoke the [arg donecmd] on completion,
+		without any additional arguments.
+[list_end]
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[section {API to implement}]
+
+This section lists and describes all the methods a derived class
+[emph has] to override to be a proper and functional blob storage.
+This is not quite a subset of the methods listed in the
+[sectref {Public API}] above, because it also contains a number of
+private methods.
+
+[list_begin definitions]
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method get-string] [arg uuid]]
+	[call [cmd <instance>] [method remove] [arg uuid]]
+	[call [cmd <instance>] [method clear]]
+	[call [cmd <instance>] [method size]]
+	[call [cmd <instance>] [method exists] [arg uuid]]
+
+		These are the public methods a derived class has to
+		implement to become a functional blob store. Their
+		detailed descriptions can be found in section
+		[sectref {Public API}] above.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method PreferedPut]]
+
+		This method is used by the standard implementations of
+		[method push], [method pull], and [method sync] to
+		decide which of the [method get-*] and/or
+		[method put-*] methods to use for the transfer of
+		blobs between the two instances.
+
+	[para]	The derived class has to implement it and return one
+		of [const string], [const file] and [const chan].
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method EnterString] [arg uuid] [arg blob]]
+
+		This method is used by the standard method
+		[method put-string] to enter the [arg blob] with
+		[arg uuid] into the instance.
+
+	[para]	The derived class has to implement it and return a
+		boolean value indicating whether the blob is new
+		([const true]), or not ([const false]).
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method EnterFile] [arg uuid] [arg path]]
+
+		This method is used by the standard method
+		[method put-file] to enter the blob found in the file
+		at [arg path] with [arg uuid] into the instance.
+
+	[para]	The derived class has to implement it and return a
+		boolean value indicating whether the blob is new
+		([const true]), or not ([const false]).
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method Names] [opt [arg pattern]]]
+
+		This method is used by the standard method
+		[method names] to search the instance for blobs whose
+		uuid matches the [arg pattern].
+
+	[para]	The derived class has to implement it and return a
+		list with the matching uuids.
+[list_end]
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[section {API hooks}]
+
+This section lists the base class methods a derived class [emph may]
+override. While they have implementations these are generic and may
+not be as efficient as is possible for the derived class itself and
+its full access to its own datastructures.
+
+[list_begin definitions]
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method TempFile]]
+
+		The standard implementation of method
+		[method get-file] uses this method to get a path to a
+		temp file it can return to the user.
+
+	[para]	The standard implementation of this method returns a
+		standard tempfile, as per the [cmd fileutil::tempfile]
+		command. Derived classes can re-implement it to make
+		their own choices regarding the location of the temp
+		files to return.
+
+	[para]	Package [package [vset PROJECT]::fs] is an example of
+		this, returning temp files located under the base
+		directory the blob store is configured with.
+[list_end]
+
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[section {Push and pull overview}]
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[include parts/feedback.inc]
+[manpage_end]

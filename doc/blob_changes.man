@@ -1,0 +1,18 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[manpage_begin [vset LABEL_CHANGES] [vset MAN_SECTION] [vset PROJ_VERSION]]
+[include parts/module.inc]
+[titledesc [vset TITLE_CHANGES]]
+[description]
+[include parts/welcome.inc]
+
+This document provides an overview of the changes [package [vset PROJECT]]
+underwent from version to version.
+
+[comment {--- Changes Begin ---}]
+[include parts/changes.inc]
+[comment {--- Changes End -----}]
+
+[include parts/related.inc]
+[include parts/feedback.inc]
+[manpage_end]

@@ -1,0 +1,343 @@
+
+<html><head>
+<title>blob::sqlite - Blob. General content storage with deduplication</title>
+<style type="text/css"><!--
+    HTML {
+	background: 	#FFFFFF;
+	color: 		black;
+    }
+    BODY {
+	background: 	#FFFFFF;
+	color:	 	black;
+    }
+    DIV.doctools {
+	margin-left:	10%;
+	margin-right:	10%;
+    }
+    DIV.doctools H1,DIV.doctools H2 {
+	margin-left:	-5%;
+    }
+    H1, H2, H3, H4 {
+	margin-top: 	1em;
+	font-family:	sans-serif;
+	font-size:	large;
+	color:		#005A9C;
+	background: 	transparent;
+	text-align:		left;
+    }
+    H1.title {
+	text-align: center;
+    }
+    UL,OL {
+	margin-right: 0em;
+	margin-top: 3pt;
+	margin-bottom: 3pt;
+    }
+    UL LI {
+	list-style: disc;
+    }
+    OL LI {
+	list-style: decimal;
+    }
+    DT {
+	padding-top: 	1ex;
+    }
+    UL.toc,UL.toc UL, UL.toc UL UL {
+	font:		normal 12pt/14pt sans-serif;
+	list-style:	none;
+    }
+    LI.section, LI.subsection {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding: 	0em;
+    }
+    PRE {
+	display: 	block;
+	font-family:	monospace;
+	white-space:	pre;
+	margin:		0%;
+	padding-top:	0.5ex;
+	padding-bottom:	0.5ex;
+	padding-left:	1ex;
+	padding-right:	1ex;
+	width:		100%;
+    }
+    PRE.example {
+	color: 		black;
+	background: 	#f5dcb3;
+	border:		1px solid black;
+    }
+    UL.requirements LI, UL.syntax LI {
+	list-style: 	none;
+	margin-left: 	0em;
+	text-indent:	0em;
+	padding:	0em;
+    }
+    DIV.synopsis {
+	color: 		black;
+	background: 	#80ffff;
+	border:		1px solid black;
+	font-family:	serif;
+	margin-top: 	1em;
+	margin-bottom: 	1em;
+    }
+    UL.syntax {
+	margin-top: 	1em;
+	border-top:	1px solid black;
+    }
+    UL.requirements {
+	margin-bottom: 	1em;
+	border-bottom:	1px solid black;
+    }
+--></style>
+</head>
+<! -- Generated from file 'blob_sqlite.man' by tcllib/doctools with format 'html'
+   -->
+<! -- Copyright &copy; 2013-2016 Andreas Kupries   -- Copyright &copy; 2013-2016 Documentation, Andreas Kupries
+   -->
+<! -- CVS: $Id$ blob::sqlite.n
+   -->
+<body><div class="doctools">
+<hr> [
+   <a href="../../../../../../home">Home</a>
+| <a href="../../toc.html">Main Table Of Contents</a>
+| <a href="../toc.html">Table Of Contents</a>
+| <a href="../../index.html">Keyword Index</a>
+ ] <hr>
+<h1 class="title">blob::sqlite(n) 1 doc &quot;Blob. General content storage with deduplication&quot;</h1>
+<div id="name" class="section"><h2><a name="name">Name</a></h2>
+<p>blob::sqlite - Blob - Sqlite storage backend</p>
+</div>
+<div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
+<ul class="toc">
+<li class="section"><a href="#toc">Table Of Contents</a></li>
+<li class="section"><a href="#synopsis">Synopsis</a></li>
+<li class="section"><a href="#section1">Description</a></li>
+<li class="section"><a href="#section2">Class API</a></li>
+<li class="section"><a href="#section3">Standard API</a></li>
+<li class="section"><a href="#section4">Bugs, Ideas, Feedback</a></li>
+<li class="section"><a href="#keywords">Keywords</a></li>
+<li class="section"><a href="#copyright">Copyright</a></li>
+</ul>
+</div>
+<div id="synopsis" class="section"><h2><a name="synopsis">Synopsis</a></h2>
+<div class="synopsis">
+<ul class="requirements">
+<li>package require <b class="pkgname">Tclx</b></li>
+<li>package require <b class="pkgname">blob::sqlite</b></li>
+</ul>
+<ul class="syntax">
+<li><a href="#1"><b class="cmd">::blob::sqlite</b> <b class="method">create</b> <i class="arg">obj</i> <i class="arg">db</i> <i class="arg">table</i></a></li>
+<li><a href="#2"><b class="cmd">::blob::sqlite</b> <b class="method">new</b> <i class="arg">db</i> <i class="arg">table</i></a></li>
+<li><a href="#3"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-string</b> <i class="arg">blob</i></a></li>
+<li><a href="#4"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-file</b> <i class="arg">path</i></a></li>
+<li><a href="#5"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-channel</b> <i class="arg">chan</i></a></li>
+<li><a href="#6"><b class="cmd">&lt;instance&gt;</b> <b class="method">new</b></a></li>
+<li><a href="#7"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-string</b> <i class="arg">uuid</i></a></li>
+<li><a href="#8"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-channel</b> <i class="arg">uuid</i></a></li>
+<li><a href="#9"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-file</b> <i class="arg">uuid</i></a></li>
+<li><a href="#10"><b class="cmd">&lt;instance&gt;</b> <b class="method">store-to-file</b> <i class="arg">uuid</i> <i class="arg">path</i></a></li>
+<li><a href="#11"><b class="cmd">&lt;instance&gt;</b> <b class="method">remove</b> <i class="arg">uuid</i></a></li>
+<li><a href="#12"><b class="cmd">&lt;instance&gt;</b> <b class="method">clear</b></a></li>
+<li><a href="#13"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></li>
+<li><a href="#14"><b class="cmd">&lt;instance&gt;</b> <b class="method">names</b> <span class="opt">?<i class="arg">pattern</i>...?</span></a></li>
+<li><a href="#15"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></li>
+<li><a href="#16"><b class="cmd">&lt;instance&gt;</b> <b class="method">push</b> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#17"><b class="cmd">&lt;instance&gt;</b> <b class="method">push-async</b> <i class="arg">donecmd</i> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#18"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull</b> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#19"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull-async</b> <i class="arg">donecmd</i> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#20"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync</b> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#21"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync-async</b> <i class="arg">donecmd</i> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+</ul>
+</div>
+</div>
+<div id="section1" class="section"><h2><a name="section1">Description</a></h2>
+<p>Welcome to the Blob project, written by Andreas Kupries.</p>
+<p>For availability please read <i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i>.</p>
+<p>This package provides a blob storage which uses a table in an sqlite3
+database to hold the blob contents.</p>
+<p>Note and remember that sqlite databases may exist only in
+memory and not just with a backing file as usual. This is another way
+of getting an in-memory string storage.</p>
+</div>
+<div id="section2" class="section"><h2><a name="section2">Class API</a></h2>
+<dl class="definitions">
+<dt><a name="1"><b class="cmd">::blob::sqlite</b> <b class="method">create</b> <i class="arg">obj</i> <i class="arg">db</i> <i class="arg">table</i></a></dt>
+<dd><p>This constructor command creates a new instance <i class="arg">obj</i>
+of the class and returns the fully qualified name of that
+instance.</p>
+<p>The named <i class="arg">table</i> in the sqlite database identified by its
+object command <i class="arg">database</i> is used to hold the mapping.
+The table will be created if it does not exist.  If it exists its
+schema will be verified instead and an error thrown if the schema is
+not as expected.</p></dd>
+<dt><a name="2"><b class="cmd">::blob::sqlite</b> <b class="method">new</b> <i class="arg">db</i> <i class="arg">table</i></a></dt>
+<dd><p>This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.</p>
+<p>The named <i class="arg">table</i> in the sqlite database identified by its
+object command <i class="arg">database</i> is used to hold the mapping.
+The table will be created if it does not exist.  If it exists its
+schema will be verified instead and an error thrown if the schema is
+not as expected.</p></dd>
+</dl>
+</div>
+<div id="section3" class="section"><h2><a name="section3">Standard API</a></h2>
+<p>As a derived class of <b class="package"><a href="blob.html">blob</a></b> instances of this class
+provide the following methods to their users:</p>
+<dl class="definitions">
+	
+	
+<dt><a name="3"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-string</b> <i class="arg">blob</i></a></dt>
+<dd><p>This method adds the string <i class="arg">blob</i> to the instance
+		and returns the blob's uuid as the result of the
+		method. Adding the same string multiple times actually
+		adds it only on the first call, and all invokations
+		return the same uuid.</p></dd>
+<dt><a name="4"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-file</b> <i class="arg">path</i></a></dt>
+<dd><p>This method adds the (binary) string found in the file
+		at the specified <i class="arg">path</i> to the instance and
+		returns the blob's uuid as the result of the
+		method. Adding the same content multiple times
+		actually adds it only on the first call, and all
+		invokations return the same uuid.</p></dd>
+<dt><a name="5"><b class="cmd">&lt;instance&gt;</b> <b class="method">put-channel</b> <i class="arg">chan</i></a></dt>
+<dd><p>This method adds the (binary) string found in the
+		channel <i class="arg">chan</i> to the instance and returns the
+		blob's uuid as the result of the method. Adding the
+		same content multiple times actually adds it only on
+		the first call, and all invokations return the same
+		uuid.</p>
+<p>The content is read from <i class="arg">chan</i> once, starting at
+		the current location. After the call the channel is
+		positioned at EOF. Note that the caller has to close
+		the channel.</p></dd>
+<dt><a name="6"><b class="cmd">&lt;instance&gt;</b> <b class="method">new</b></a></dt>
+<dd><p>This method returns a boolean value indicating if the
+		last call to one of the <b class="method">put-*</b> methods
+		actually added a new blob (<b class="const">true</b>), or not
+		(<b class="const">false</b>).</p></dd>
+<dt><a name="7"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-string</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and returns them as the result of the method.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p></dd>
+<dt><a name="8"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-channel</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and returns a channel containing it as the result of
+		the method.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p>
+<p>The returned channel is read-only, binary, and
+		positioned at the beginning of the blob content. No
+		assurances are made about the ability to seek the
+		channel. It is the responsibility of the caller to
+		close the channel after use.</p></dd>
+<dt><a name="9"><b class="cmd">&lt;instance&gt;</b> <b class="method">get-file</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and returns the path of a file containing it as the
+		result of the method.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p>
+<p>The returned file should be considered transient. It
+		is owned by the caller and can be moved, modified, and
+		deleted at will. It is the responsibility of the
+		caller to delete the file after use.</p></dd>
+<dt><a name="10"><b class="cmd">&lt;instance&gt;</b> <b class="method">store-to-file</b> <i class="arg">uuid</i> <i class="arg">path</i></a></dt>
+<dd><p>This method locates the contents of blob <i class="arg">uuid</i>
+		and stores them into the file with the specified
+		<i class="arg">path</i>. Any previous content of the file is
+		overwritten by this operation. The result of the
+		method is the empty string.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p></dd>
+<dt><a name="11"><b class="cmd">&lt;instance&gt;</b> <b class="method">remove</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method locates the blob <i class="arg">uuid</i> and removes it
+		from the instance. The result of the method is the
+		empty string.
+		An error is thrown if <i class="arg">uuid</i> is not known to the
+		instance.</p></dd>
+<dt><a name="12"><b class="cmd">&lt;instance&gt;</b> <b class="method">clear</b></a></dt>
+<dd><p>This method removes all blobs from the instance. After
+		the call the instance is empty. The result of the
+		method is the empty string.</p></dd>
+<dt><a name="13"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></dt>
+<dd><p>This method determines the number of blobs found in
+		the instance and returns that number as the result of
+		the method.</p></dd>
+<dt><a name="14"><b class="cmd">&lt;instance&gt;</b> <b class="method">names</b> <span class="opt">?<i class="arg">pattern</i>...?</span></a></dt>
+<dd></dd>
+<dt><a name="15"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></dt>
+<dd><p>This method returns a boolean value indicating if the
+		blob <i class="arg">uuid</i> is known to the instance
+		(<b class="const">true</b>), or not (<b class="const">false</b>).</p></dd>
+<dt><a name="16"><b class="cmd">&lt;instance&gt;</b> <b class="method">push</b> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="17"><b class="cmd">&lt;instance&gt;</b> <b class="method">push-async</b> <i class="arg">donecmd</i> <i class="arg">to</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd><p>This method copies the blobs specified by the list of
+		<i class="arg">uuids</i> from the instance to the specified peer
+		<i class="arg">to</i>. This has to be an object exporting the same
+		API as documented for <b class="package"><a href="blob.html">blob</a></b>.
+		The result of the method is the empty string.</p>
+<p>If no set of uuids is specified the operation will
+		push all blobs found in the instance, as if
+		&quot;<i class="arg">uuids</i> == <b class="const">*</b> had been specified&quot;.</p>
+<p>Note that the elements of <i class="arg">uuids</i> are interpreted
+		as glob patterns.</p>
+<p>In the <b class="method">push-async</b> form the execution is done
+		through the event-loop, invoking the command prefix
+		<i class="arg">donecmd</i> when the operation completes, with no
+		additional arguments.</p></dd>
+<dt><a name="18"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull</b> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="19"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull-async</b> <i class="arg">donecmd</i> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd><p>This method copies the blobs specified by the list of
+		<i class="arg">uuids</i> from the specified peer <i class="arg">from</i> to the
+		instance. The peer has to be an object exporting the
+		same API as documented for <b class="package"><a href="blob.html">blob</a></b>.
+		The result of the method is the empty string.</p>
+<p>If no set of uuids is specified the operation will
+		pull all blobs found in the peer, as if
+		&quot;<i class="arg">uuids</i> == <b class="const">*</b> had been specified&quot;.</p>
+<p>Note that the elements of <i class="arg">uuids</i> are interpreted
+		as glob patterns.</p>
+<p>In the <b class="method">pull-async</b> form the execution is done
+		through the event-loop, invoking the command prefix
+		<i class="arg">donecmd</i> when the operation completes, with no
+		additional arguments.</p></dd>
+<dt><a name="20"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync</b> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="21"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync-async</b> <i class="arg">donecmd</i> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></dt>
+<dd><p>This method exchanges the blobs specified by the list
+		of <i class="arg">uuids</i> with the specified peer <i class="arg">with</i>,
+		copying from and to the instance, as needed. The peer
+		has to be an object exporting the same API as
+		documented for <b class="package"><a href="blob.html">blob</a></b>.
+		The result of the method is the empty string.</p>
+<p>If no set of uuids is specified the operation will
+		exchange all blobs found in the instance and the peer,
+		as if &quot;<i class="arg">uuids</i> == <b class="const">*</b> had been specified&quot;.</p>
+<p>Note that the elements of <i class="arg">uuids</i> are interpreted
+		as glob patterns.</p>
+<p>In the <b class="method">sync-async</b> form the execution is done
+		through the event-loop, invoking the command prefix
+		<i class="arg">donecmd</i> when the operation completes, with no
+		additional arguments.</p></dd>
+</dl>
+</div>
+<div id="section4" class="section"><h2><a name="section4">Bugs, Ideas, Feedback</a></h2>
+<p>Both the package(s) and this documentation will undoubtedly contain
+bugs and other problems.
+Please report such at
+<a href="https:/core.tcl.tk/akupries/blob">Blob Tickets</a>.</p>
+<p>Please also report any ideas you may have for enhancements of
+either package(s) and/or documentation.</p>
+</div>
+<div id="keywords" class="section"><h2><a name="keywords">Keywords</a></h2>
+<p><a href="../../index.html#key5">blob</a>, <a href="../../index.html#key1">blob storage</a>, <a href="../../index.html#key2">content deduplication</a>, <a href="../../index.html#key0">content storage</a>, <a href="../../index.html#key4">deduplication</a>, <a href="../../index.html#key3">storage</a></p>
+</div>
+<div id="copyright" class="section"><h2><a name="copyright">Copyright</a></h2>
+<p>Copyright &copy; 2013-2016 Andreas Kupries<br>
+Copyright &copy; 2013-2016 Documentation, Andreas Kupries</p>
+</div>
+</div></body></html>
