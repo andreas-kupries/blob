@@ -1,7 +1,27 @@
 # -*- tcl -*-
-## (c) 2013 Andreas Kupries
+## (c) 2013-2016 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
 ## sqlite based blob storage.
+
+# @@ Meta Begin
+# Package blob::sqlite 1
+# Meta author      {Andreas Kupries}
+# Meta category    Blob storage, database
+# Meta description Store blobs in sqlite databases
+# Meta location    http:/core.tcl.tk/akupries/blob
+# Meta platform    tcl
+# Meta require     {Tcl 8.5-}
+# Meta require     TclOO
+# Meta require     blob
+# Meta require     dbutil
+# Meta require     debug
+# Meta require     debug::caller
+# Meta require     sha1
+# Meta require     sqlite3
+# Meta subject     {blob storage} storage sqlite
+# Meta subject     database
+# Meta summary     Blob storage
+# @@ Meta End
 
 # # ## ### ##### ######## ############# #####################
 ## Requisites
@@ -12,6 +32,15 @@ package require blob
 package require dbutil
 package require sha1 2
 package require sqlite3
+package require debug
+package require debug::caller
+
+# # ## ### ##### ######## ############# #####################
+
+debug define blob/sqlite
+debug level  blob/sqlite
+#debug prefix blob/sqlite {[debug caller] | }
+debug prefix blob/sqlite {} ;# No prefix, arguments can be large
 
 # # ## ### ##### ######## ############# #####################
 ## Implementation
@@ -47,8 +76,10 @@ oo::class create blob::sqlite {
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # add :- Enter: uuid, blob --> ()
-    method Enter {uuid blob} {
+    method PreferedPut {} { return path }
+
+    # put-string :- EnterString: uuid, blob --> ()
+    method EnterString {uuid blob} {
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size
@@ -59,8 +90,8 @@ oo::class create blob::sqlite {
 	return
     }
 
-    # put :- EnterPath: uuid, path --> ()
-    method EnterPath {uuid path} {
+    # put-file :- EnterFile: uuid, path --> ()
+    method EnterFile {uuid path} {
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size
@@ -72,30 +103,26 @@ oo::class create blob::sqlite {
 	return
     }
 
-    # retrieve: uuid --> blob
-    method retrieve {uuid} {
+    # get-string: uuid --> blob
+    method get-string {uuid} {
 	DB transaction {
-	    if {![DB exists $sql_toblob]} {
-		my Error "Expected uuid, got \"$uuid\"" \
-		    BAD UUID $uuid
-	    }
+	    my Validate $uuid
 	    return [DB onecolumn $sql_toblob]
 	}
     }
 
-    # retrieve: uuid --> channel
-    method channel {uuid} {
+    # get-channel: uuid --> channel
+    method get-channel {uuid} {
 	DB transaction {
-	    if {![DB exists $sql_toblob]} {
-		my Error "Expected uuid, got \"$uuid\"" \
-		    BAD UUID $uuid
-	    }
+	    my Validate $uuid
 	    set rid [DB onecolumn $sql_toid]
 	    DB incrblob -readonly $mytable data $rid
 	}
     }
 
-    # names () -> list(uuid)
+    # get-file: inherited, via get-string
+
+    # names :- Names: (?pattern?) -> list(uuid)
     method Names {{pattern *}} {
 	if {$pattern eq "*"} {
 	    DB transaction {
@@ -125,7 +152,7 @@ oo::class create blob::sqlite {
 	# implied return
     }
 
-    # clear () -> ()
+    # clear: () -> ()
     # Remove all known mappings.
     method clear {} {
 	variable size ; unset -nocomplain size

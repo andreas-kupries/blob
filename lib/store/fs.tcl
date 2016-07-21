@@ -1,7 +1,23 @@
 # -*- tcl -*-
-## (c) 2013 Andreas Kupries
+## (c) 2013-2016 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
 ## filesystem based blob storage.
+
+# @@ Meta Begin
+# Package blob::fs 1
+# Meta author      {Andreas Kupries}
+# Meta category    Blob storage, database
+# Meta description Store blobs in the filesystem
+# Meta location    http:/core.tcl.tk/akupries/blob
+# Meta platform    tcl
+# Meta require     {Tcl 8.5-}
+# Meta require     TclOO
+# Meta require     debug
+# Meta require     debug::caller
+# Meta require     blob
+# Meta subject     {blob storage} storage filesystem
+# Meta summary     Blob storage
+# @@ Meta End
 
 # # ## ### ##### ######## ############# #####################
 ## Requisites
@@ -9,7 +25,15 @@
 package require Tcl 8.5
 package require TclOO
 package require blob
-package require sha1 2
+package require debug
+package require debug::caller
+
+# # ## ### ##### ######## ############# #####################
+
+debug define blob/fs
+debug level  blob/fs
+#debug prefix blob/fs {[debug caller] | }
+debug prefix blob/fs {} ;# No prefix, arguments can be large
 
 # # ## ### ##### ######## ############# #####################
 ## Implementation
@@ -20,7 +44,7 @@ oo::class create blob::fs {
     # # ## ### ##### ######## #############
     ## State
 
-    variable mybasedir
+    variable mybasedir mycounter
     # Name of the directory representing the blob store.
 
     # # ## ### ##### ######## #############
@@ -33,6 +57,7 @@ oo::class create blob::fs {
 	my Check writable    $dir "not writable" DENIED WRITE
 
 	set mybasedir $dir
+	set mycounter 0
 
 	next
 	return
@@ -41,8 +66,18 @@ oo::class create blob::fs {
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # add: uuid, blob --> ()
-    method Enter {uuid content} {
+    method PreferedPut {} { return path }
+
+    method TempFile {} {
+	while {1} {
+	    set result $mybasedir/T-[incr mycounter]-X
+	    if {[file exists $result]} continue
+	    return $result
+	}
+    }
+
+    # put-string :- EnterString: uuid, blob --> ()
+    method EnterString {uuid content} {
 	set dstpath [my P $uuid]
 	if {[file exists $dstpath]} return
 	file mkdir [file dirname $dstpath]
@@ -51,8 +86,8 @@ oo::class create blob::fs {
 	return
     }
 
-    # put: uuid, path --> ()
-    method EnterPath {uuid path} {
+    # put-file:- EnterFile: uuid, path --> ()
+    method EnterFile {uuid path} {
 	set dstpath [my P $uuid]
 	if {[file exists $dstpath]} return
 
@@ -69,40 +104,35 @@ oo::class create blob::fs {
 	return
     }
 
-    # retrieve: uuid --> blob
-    method retrieve {uuid} {
-	set path [my P $uuid]
-	if {![file exists $path]} {
-	    my Error "Expected uuid, got \"$uuid\"" \
-		BAD UUID $uuid
-	}
-	set c [open $path r]
-	fconfigure $c -translation binary
-	set data [read $c]
-	close $c
-	return $data
+    # get-string: uuid --> blob
+    method get-string {uuid} {
+	my Validate $uuid
+	return [my Cat [my P $uuid]]
     }
 
-    # channel: uuid --> channel
-    method channel {uuid} {
+    # get-channel: uuid --> channel
+    method get-channel {uuid} {
+	my Validate $uuid
 	set path [my P $uuid]
-	if {![file exists $path]} {
-	    my Error "Expected uuid, got \"$uuid\"" \
-		BAD UUID $uuid
-	}
 	set chan [open $path r]
 	fconfigure $chan -translation binary
 	return $chan
     }
 
-    # path: uuid --> path
-    method path {uuid} {
+    # get-file: uuid --> path
+    method get-file {uuid} {
+	my Validate $uuid
 	set path [my P $uuid]
-	if {![file exists $path]} {
-	    my Error "Expected uuid, got \"$uuid\"" \
-		BAD UUID $uuid
+	set temp [my TempFile]
+	try {
+	    file link -hard $temp $path
+	} on error {e o} {
+# See if we can trap on a specific error
+puts |$o|
+	    file copy -force -- $path $temp
 	}
-	return $path
+
+	return $temp
     }
 
     # names () -> list(uuid)

@@ -11,20 +11,24 @@
 ## The external procedures 'new-store' and 'release-store' are used to
 ## create and destroy an instance of the store under test.
 
-# ------------*----------------
-# dispatch    | *
-# destroy     | *
-# ------------*----------------
-# add         | *
-# channel     | *
-# clear       | *
-# delete      | *
-# exists      | *
-# names       | *
-# put         | *
-# retrieve    | *
-# size        | *
-# ------------*----------------
+# --------------*----------------
+# dispatch      | *
+# destroy       | *
+# --------------*----------------
+# clear         | *
+# delete        | *
+# exists        | *
+# get-channel   | *
+# get-file      | *
+# get-string    | *
+# names         | *
+# put-channel    <---
+# put-file      | *
+# put-string    | *
+# size          | *
+# store-to-file  <---
+# new            <---
+# --------------*----------------
 
 # # ## ### ##### ######## ############# #####################
 ## dispatch
@@ -66,80 +70,80 @@ test [test-class]-destroy-1.1 {destroy} -setup {
 } -result {}
 
 # # ## ### ##### ######## ############# #####################
-## add
+## put-string
 
-test [test-class]-add-1.0 {add, wrong#args, not enough} -setup {
+test [test-class]-put-string-1.0 {put-string, wrong#args, not enough} -setup {
     new-store
 } -body {
-    test-store add
+    test-store put-string
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store add blob"}
+} -returnCodes error -result {wrong # args: should be "test-store put-string blob"}
 
-test [test-class]-add-1.1 {add, wrong#args, too many} -setup {
+test [test-class]-put-string-1.1 {put-string, wrong#args, too many} -setup {
     new-store
 } -body {
-    test-store add S X
+    test-store put-string S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store add blob"}
+} -returnCodes error -result {wrong # args: should be "test-store put-string blob"}
 
-test [test-class]-add-1.2 {add} -setup {
+test [test-class]-put-string-1.2 {put-string} -setup {
     new-store
 } -body {
-    test-store add S
+    test-store put-string S
 } -cleanup {
     release-store
 } -result 02aa629c8b16cd17a44f3a0efec2feed43937642
 
-test [test-class]-add-1.3 {add, duplicates have same uuid} -setup {
+test [test-class]-put-string-1.3 {put-string, duplicates have same uuid} -setup {
     new-store
 } -body {
-    list [test-store add S] [test-store add S]
+    list [test-store put-string S] [test-store put-string S]
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 02aa629c8b16cd17a44f3a0efec2feed43937642}
 
-test [test-class]-add-1.4 {add, different blobs, different uuids} -setup {
+test [test-class]-put-string-1.4 {put-string, different blobs, different uuids} -setup {
     new-store
 } -body {
-    list [test-store add S] [test-store add S2]
+    list [test-store put-string S] [test-store put-string S2]
 } -cleanup {
     release-store
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642 474c9bc027ee3ef22851a5f8bfd976f08b197386}
 
 # # ## ### ##### ######## ############# #####################
-## channel
+## get-channel
 
-test [test-class]-channel-1.0 {channel, wrong#args, not enough} -setup {
+test [test-class]-get-channel-1.0 {get-channel, wrong#args, not enough} -setup {
     new-store
 } -body {
-    test-store channel
+    test-store get-channel
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store channel uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store get-channel uuid"}
 
-test [test-class]-channel-1.1 {channel, wrong#args, too many} -setup {
+test [test-class]-get-channel-1.1 {get-channel, wrong#args, too many} -setup {
     new-store
 } -body {
-    test-store channel S X
+    test-store get-channel S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store channel uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store get-channel uuid"}
 
-test [test-class]-channel-1.2 {channel, unknown uuid} -setup {
+test [test-class]-get-channel-1.2 {get-channel, unknown uuid} -setup {
     new-store
 } -body {
-    test-store channel 0
+    test-store get-channel 0
 } -cleanup {
     release-store
 } -returnCodes error -result {Expected uuid, got "0"}
 
-test [test-class]-channel-1.3 {channel, known} -setup {
+test [test-class]-get-channel-1.3 {get-channel, known} -setup {
     new-store
-    test-store add S
+    test-store put-string S
 } -body {
-    set c [test-store channel 02aa629c8b16cd17a44f3a0efec2feed43937642]
+    set c [test-store get-channel 02aa629c8b16cd17a44f3a0efec2feed43937642]
     read $c
 } -cleanup {
     close $c
@@ -147,18 +151,72 @@ test [test-class]-channel-1.3 {channel, known} -setup {
     release-store
 } -result S
 
-test [test-class]-channel-1.4 {channel, known} -setup {
+test [test-class]-get-channel-1.4 {get-channel, known} -setup {
     new-store
-    test-store add S
-    test-store add A
-    test-store add R
-    test-store add C
+    test-store put-string S
+    test-store put-string A
+    test-store put-string R
+    test-store put-string C
 } -body {
-    set c [test-store channel 06576556d1ad802f247cad11ae748be47b70cd9c]
+    set c [test-store get-channel 06576556d1ad802f247cad11ae748be47b70cd9c]
     read $c
 } -cleanup {
     close $c
     unset c
+    release-store
+} -result R
+
+# # ## ### ##### ######## ############# #####################
+## get-file
+
+test [test-class]-get-file-1.0 {get-file, wrong#args, not enough} -setup {
+    new-store
+} -body {
+    test-store get-file
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store get-file uuid"}
+
+test [test-class]-get-file-1.1 {get-file, wrong#args, too many} -setup {
+    new-store
+} -body {
+    test-store get-file S X
+} -cleanup {
+    release-store
+} -returnCodes error -result {wrong # args: should be "test-store get-file uuid"}
+
+test [test-class]-get-file-1.2 {get-file, unknown uuid} -setup {
+    new-store
+} -body {
+    test-store get-file 0
+} -cleanup {
+    release-store
+} -returnCodes error -result {Expected uuid, got "0"}
+
+test [test-class]-get-file-1.3 {get-file, known} -setup {
+    new-store
+    test-store put-string S
+} -body {
+    set path [test-store get-file 02aa629c8b16cd17a44f3a0efec2feed43937642]
+    fileutil::cat $path
+} -cleanup {
+    file delete $path
+    unset path
+    release-store
+} -result S
+
+test [test-class]-get-file-1.4 {get-file, known} -setup {
+    new-store
+    test-store put-string S
+    test-store put-string A
+    test-store put-string R
+    test-store put-string C
+} -body {
+    set path [test-store get-file 06576556d1ad802f247cad11ae748be47b70cd9c]
+    fileutil::cat $path
+} -cleanup {
+    file delete $path
+    unset path
     release-store
 } -result R
 
@@ -183,10 +241,10 @@ test [test-class]-clear-1.1 {clear, none} -setup {
 
 test [test-class]-clear-1.2 {clear, some} -setup {
     new-store
-    test-store add S
-    test-store add A
-    test-store add R
-    test-store add C
+    test-store put-string S
+    test-store put-string A
+    test-store put-string R
+    test-store put-string C
 } -body {
     list [test-store size] [test-store clear] [test-store size]
 } -cleanup {
@@ -222,7 +280,7 @@ test [test-class]-delete-1.2 {delete, unknown} -setup {
 
 test [test-class]-delete-1.3 {delete, known} -setup {
     new-store
-    test-store add S
+    test-store put-string S
 } -body {
     test-store delete 02aa629c8b16cd17a44f3a0efec2feed43937642
 } -cleanup {
@@ -258,7 +316,7 @@ test [test-class]-exists-1.2 {exists, no} -setup {
 
 test [test-class]-exists-1.3 {exists, yes} -setup {
     new-store
-    test-store add S
+    test-store put-string S
 } -body {
     test-store exists 02aa629c8b16cd17a44f3a0efec2feed43937642
 } -cleanup {
@@ -278,10 +336,10 @@ test [test-class]-names-1.1 {names, none} -setup {
 
 test [test-class]-names-1.2 {names, all} -setup {
     new-store
-    test-store add S
-    test-store add A
-    test-store add R
-    test-store add C
+    test-store put-string S
+    test-store put-string A
+    test-store put-string R
+    test-store put-string C
 } -body {
     lsort [test-store names]
 } -cleanup {
@@ -290,10 +348,10 @@ test [test-class]-names-1.2 {names, all} -setup {
 
 test [test-class]-names-1.3 {names, by pattern} -setup {
     new-store
-    test-store add S
-    test-store add A
-    test-store add R
-    test-store add C
+    test-store put-string S
+    test-store put-string A
+    test-store put-string R
+    test-store put-string C
 } -body {
     lsort [test-store names *aa*]
 } -cleanup {
@@ -301,92 +359,92 @@ test [test-class]-names-1.3 {names, by pattern} -setup {
 } -result {02aa629c8b16cd17a44f3a0efec2feed43937642}
 
 # # ## ### ##### ######## ############# #####################
-## put
+## put-file
 
-test [test-class]-put-1.0 {put, wrong#args, not enough} -setup {
+test [test-class]-put-file-1.0 {put-file, wrong#args, not enough} -setup {
     new-store
 } -body {
-    test-store put
+    test-store put-file
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store put path"}
+} -returnCodes error -result {wrong # args: should be "test-store put-file path"}
 
-test [test-class]-put-1.1 {put, wrong#args, too many} -setup {
+test [test-class]-put-file-1.1 {put-file, wrong#args, too many} -setup {
     new-store
 } -body {
-    test-store put S X
+    test-store put-file S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store put path"}
+} -returnCodes error -result {wrong # args: should be "test-store put-file path"}
 
-test [test-class]-put-1.2 {put} -setup {
+test [test-class]-put-file-1.2 {put-file} -setup {
     new-store
 } -body {
-    test-store put data/empty
+    test-store put-file data/empty
 } -cleanup {
     release-store
 } -result da39a3ee5e6b4b0d3255bfef95601890afd80709
 
-test [test-class]-put-1.3 {put, duplicates have same uuid} -setup {
+test [test-class]-put-file-1.3 {put-file, duplicates have same uuid} -setup {
     new-store
 } -body {
-    list [test-store put data/empty] [test-store put data/empty]
+    list [test-store put-file data/empty] [test-store put-file data/empty]
 } -cleanup {
     release-store
 } -result {da39a3ee5e6b4b0d3255bfef95601890afd80709 da39a3ee5e6b4b0d3255bfef95601890afd80709}
 
-test [test-class]-put-1.4 {put, different blobs, different uuids} -setup {
+test [test-class]-put-file-1.4 {put-file, different blobs, different uuids} -setup {
     new-store
 } -body {
-    list [test-store put data/empty] [test-store put data/echo]
+    list [test-store put-file data/empty] [test-store put-file data/echo]
 } -cleanup {
     release-store
 } -result {da39a3ee5e6b4b0d3255bfef95601890afd80709 d929c82d2ee727ccbea9c50c669a71075249899f}
 
 # # ## ### ##### ######## ############# #####################
-## retrieve
+## get-string
 
-test [test-class]-retrieve-1.0 {retrieve, wrong#args, not enough} -setup {
+test [test-class]-get-string-1.0 {get-string, wrong#args, not enough} -setup {
     new-store
 } -body {
-    test-store retrieve
+    test-store get-string
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store retrieve uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store get-string uuid"}
 
-test [test-class]-retrieve-1.1 {retrieve, wrong#args, too many} -setup {
+test [test-class]-get-string-1.1 {get-string, wrong#args, too many} -setup {
     new-store
 } -body {
-    test-store retrieve S X
+    test-store get-string S X
 } -cleanup {
     release-store
-} -returnCodes error -result {wrong # args: should be "test-store retrieve uuid"}
+} -returnCodes error -result {wrong # args: should be "test-store get-string uuid"}
 
-test [test-class]-retrieve-1.2 {retrieve, unknown uuid} -setup {
+test [test-class]-get-string-1.2 {get-string, unknown uuid} -setup {
     new-store
 } -body {
-    test-store retrieve 0
+    test-store get-string 0
 } -cleanup {
     release-store
 } -returnCodes error -result {Expected uuid, got "0"}
 
-test [test-class]-retrieve-1.3 {retrieve, known} -setup {
+test [test-class]-get-string-1.3 {get-string, known} -setup {
     new-store
-    test-store add S
+    test-store put-string S
 } -body {
-    test-store retrieve 02aa629c8b16cd17a44f3a0efec2feed43937642
+    test-store get-string 02aa629c8b16cd17a44f3a0efec2feed43937642
 } -cleanup {
     release-store
 } -result S
 
-test [test-class]-retrieve-1.4 {retrieve, known} -setup {
+test [test-class]-get-string-1.4 {get-string, known} -setup {
     new-store
-    test-store add S
-    test-store add A
-    test-store add R
-    test-store add C
+    test-store put-string S
+    test-store put-string A
+    test-store put-string R
+    test-store put-string C
 } -body {
-    test-store retrieve 06576556d1ad802f247cad11ae748be47b70cd9c
+    test-store get-string 06576556d1ad802f247cad11ae748be47b70cd9c
 } -cleanup {
     release-store
 } -result R
@@ -404,7 +462,7 @@ test [test-class]-size-1.0 {size, wrong#args, too many} -setup {
 
 test [test-class]-size-1.1 {size} -setup {
     new-store
-    test-store add A
+    test-store put-string A
 } -body {
     test-store size
 } -cleanup {
@@ -413,8 +471,8 @@ test [test-class]-size-1.1 {size} -setup {
 
 test [test-class]-size-1.2 {size} -setup {
     new-store
-    test-store add A
-    test-store add B
+    test-store put-string A
+    test-store put-string B
 } -body {
     test-store size
 } -cleanup {
@@ -453,10 +511,10 @@ test [test-class]-pull-1.2 {pull, nothing} -setup {
 test [test-class]-pull-1.3 {pull, all} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
     lappend r [lsort [test-store-src names]]
 } -body {
     lappend r [lsort [test-store-dst names]]
@@ -471,10 +529,10 @@ test [test-class]-pull-1.3 {pull, all} -setup {
 test [test-class]-pull-1.4 {pull, by pattern} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
 } -body {
     lappend r [test-store-dst names]
     test-store-dst pull test-store-src *aa*
@@ -520,10 +578,10 @@ test [test-class]-pull-async-1.2 {pull-async, nothing} -setup {
 test [test-class]-pull-async-1.3 {pull-async, all} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
     lappend r [lsort [test-store-src names]]
     setup-wall
 } -body {
@@ -541,10 +599,10 @@ test [test-class]-pull-async-1.3 {pull-async, all} -setup {
 test [test-class]-pull-async-1.4 {pull-async, by pattern} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
     setup-wall
 } -body {
     lappend r [test-store-dst names]
@@ -590,10 +648,10 @@ test [test-class]-push-1.2 {push, nothing} -setup {
 test [test-class]-push-1.3 {push, all} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
     lappend r [lsort [test-store-src names]]
 } -body {
     lappend r [lsort [test-store-dst names]]
@@ -608,10 +666,10 @@ test [test-class]-push-1.3 {push, all} -setup {
 test [test-class]-push-1.4 {push, by pattern} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
 } -body {
     lappend r [test-store-dst names]
     test-store-src push test-store-dst *aa*
@@ -657,10 +715,10 @@ test [test-class]-push-async-1.2 {push-async, nothing} -setup {
 test [test-class]-push-async-1.3 {push-async, all} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
     setup-wall
     lappend r [lsort [test-store-src names]]
 } -body {
@@ -678,10 +736,10 @@ test [test-class]-push-async-1.3 {push-async, all} -setup {
 test [test-class]-push-async-1.4 {push-async, by pattern} -setup {
     new-store -src
     new-store -dst
-    test-store-src add S
-    test-store-src add A
-    test-store-src add R
-    test-store-src add C
+    test-store-src put-string S
+    test-store-src put-string A
+    test-store-src put-string R
+    test-store-src put-string C
     setup-wall
 } -body {
     lappend r [test-store-dst names]
@@ -727,10 +785,10 @@ test [test-class]-sync-1.2 {sync, nothing} -setup {
 test [test-class]-sync-1.3 {sync, all} -setup {
     new-store -a
     new-store -b
-    test-store-a add S
-    test-store-a add A
-    test-store-b add R
-    test-store-b add C
+    test-store-a put-string S
+    test-store-a put-string A
+    test-store-b put-string R
+    test-store-b put-string C
     lappend r [lsort [test-store-a names]]
     lappend r [lsort [test-store-b names]]
 } -body {
@@ -750,10 +808,10 @@ test [test-class]-sync-1.3 {sync, all} -setup {
 test [test-class]-sync-1.4 {sync, by pattern} -setup {
     new-store -a
     new-store -b
-    test-store-a add S
-    test-store-a add A
-    test-store-b add R
-    test-store-b add C
+    test-store-a put-string S
+    test-store-a put-string A
+    test-store-b put-string R
+    test-store-b put-string C
     lappend r [lsort [test-store-a names]]
     lappend r [lsort [test-store-b names]]
 } -body {
@@ -805,10 +863,10 @@ test [test-class]-sync-async-1.2 {sync-async, nothing} -setup {
 test [test-class]-sync-async-1.3 {sync-async, all} -setup {
     new-store -a
     new-store -b
-    test-store-a add S
-    test-store-a add A
-    test-store-b add R
-    test-store-b add C
+    test-store-a put-string S
+    test-store-a put-string A
+    test-store-b put-string R
+    test-store-b put-string C
     lappend r [lsort [test-store-a names]]
     lappend r [lsort [test-store-b names]]
     setup-wall
@@ -831,10 +889,10 @@ test [test-class]-sync-async-1.3 {sync-async, all} -setup {
 test [test-class]-sync-async-1.4 {sync-async, by pattern} -setup {
     new-store -a
     new-store -b
-    test-store-a add S
-    test-store-a add A
-    test-store-b add R
-    test-store-b add C
+    test-store-a put-string S
+    test-store-a put-string A
+    test-store-b put-string R
+    test-store-b put-string C
     lappend r [lsort [test-store-a names]]
     lappend r [lsort [test-store-b names]]
     setup-wall
