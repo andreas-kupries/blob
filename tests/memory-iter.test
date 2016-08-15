@@ -1,0 +1,30 @@
+# -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
+## (c) 2016 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## memory-iter.test:  tests for the blob::iter::memory package.
+
+kt check Tcl     8.5
+kt check tcltest 2
+
+kt require support TclOO
+kt require support sha1 2
+
+kt local   support blob::iter
+kt local   testing blob::iter::memory
+
+# # ## ### ##### ######## ############# #####################
+
+proc test-class {} { return blob::iter::memory }
+
+# # ## ### ##### ######## ############# #####################
+## Two testsuites, for the custom (instantiation) and shared APIs.
+
+kt source support/common.tcl
+kt source support/setup-memory.tcl
+kt source support/setup-memory-iter.tcl
+
+kt source parts/memory-iter.testsuite
+kt source parts/base-iter.testsuite
+
+# # ## ### ##### ######## ############# #####################
+cleanupTests

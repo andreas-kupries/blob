@@ -1,0 +1,713 @@
+## -*- tcl -*-
+## (c) 2013 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## Test suite for blob iterators, common parts across implementations.
+#
+## The external procedures 'already' and 'badmethod' are used to
+## generate implementation specific error messages. Implementations
+## have to be provided by the invoking implementation-specific
+## testsuite.
+#
+## The external procedures 'new-iter' and 'release-iter' are used to
+## create and destroy an instance of the store under test.
+
+# --------------*----------------
+# dispatch      | *
+# destroy       | *
+# --------------*---------------- content manipulation
+# add           | *
+# clear         | *
+# data!         | *
+# remove        | *
+# --------------*---------------- cursor manipulation
+# direction!    | *
+# next          | *
+# previous      | *
+# reset         | *
+# reverse       | *
+# to            | *
+# --------------*---------------- introspection
+# at            | *
+# data          | *
+# direction     | *
+# exists        | *
+# location      | *
+# size          | *
+# --------------*---------------- (de)serialization
+# -->           |  x todo actual copying
+# :=            |  x todo actual copying
+# --------------*----------------
+
+# # ## ### ##### ######## ############# #####################
+## dispatch
+
+test [test-class]-dispatch-1.0 {instance, no method} -setup {
+    new-iter
+} -body {
+    test-iter
+} -cleanup {
+    release-iter
+} -returnCodes error \
+    -result {wrong # args: should be "test-iter method ?arg ...?"}
+
+test [test-class]-dispatch-1.1 {instance, bad method name} -setup {
+    new-iter
+} -body {
+    test-iter foo
+} -cleanup {
+    release-iter
+} -returnCodes error \
+    -result [badmethod foo [iter-methods]]
+
+# # ## ### ##### ######## ############# #####################
+## destructor
+
+test [test-class]-destroy-1.0 {destroy, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter destroy X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter destroy"}
+
+test [test-class]-destroy-1.1 {destroy} -setup {
+    new-iter
+} -body {
+    release-iter
+    info commands ::test-iter
+} -result {}
+
+# # ## ### ##### ######## ############# #####################
+## add
+
+test [test-class]-add-1.0.0 {add, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter add
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter add uuid key"}
+
+test [test-class]-add-1.0.1 {add, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter add UUID
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter add uuid key"}
+
+test [test-class]-add-1.0.2 {add, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter add UUID KEY X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter add uuid key"}
+
+test [test-class]-add-1.1 {add, duplicate} -setup {
+    new-iter
+    test-iter add UUID KEY
+} -body {
+    test-iter add UUID KEY
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Duplicate UUID "UUID"}
+
+test [test-class]-add-1.2 {add} -setup {
+    new-iter
+} -body {
+    test-iter add UUID KEY
+    list [test-iter size] [test-iter exists UUID]
+} -cleanup {
+    release-iter
+} -result {1 1}
+
+# # ## ### ##### ######## ############# #####################
+## remove
+
+test [test-class]-remove-1.0 {remove, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter remove
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter remove uuid ..."}
+
+test [test-class]-remove-1.1 {remove} -setup {
+    new-iter
+    test-iter add UUID KEY
+} -body {
+    test-iter remove UUID
+    list [test-iter size] [test-iter exists UUID]
+} -cleanup {
+    release-iter
+} -result {0 0}
+
+# # ## ### ##### ######## ############# #####################
+## clear
+
+test [test-class]-clear-1.0 {clear, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter clear X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter clear"}
+
+test [test-class]-clear-1.1 {clear} -setup {
+    new-iter
+    test-iter add UUID KEY
+} -body {
+    test-iter clear
+    list [test-iter size] [test-iter exists UUID]
+} -cleanup {
+    release-iter
+} -result {0 0}
+
+# # ## ### ##### ######## ############# #####################
+## direction
+
+test [test-class]-direction-1.0 {direction, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter direction X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter direction"}
+
+test [test-class]-direction-1.1 {direction, default} -setup {
+    new-iter
+} -body {
+    test-iter direction
+} -cleanup {
+    release-iter
+} -result increasing
+
+test [test-class]-direction-1.2 {direction, reverted} -setup {
+    new-iter
+    test-iter reverse
+} -body {
+    test-iter direction
+} -cleanup {
+    release-iter
+} -result decreasing
+
+# # ## ### ##### ######## ############# #####################
+## direction!
+
+test [test-class]-direction!-1.0.0 {direction!, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter direction!
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter direction! dir"}
+
+test [test-class]-direction!-1.0.1 {direction!, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter direction! FOO X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter direction! dir"}
+
+test [test-class]-direction!-1.1 {direction!, invalid value} -setup {
+    new-iter
+} -body {
+    test-iter direction! FOO
+} -cleanup {
+    release-iter
+} -returnCodes error \
+    -result {Bad direction "FOO", expected decreasing, or increasing}
+
+test [test-class]-direction!-1.2 {direction!, no change} -setup {
+    new-iter
+} -body {
+    test-iter direction! increasing
+    test-iter direction
+} -cleanup {
+    release-iter
+} -result increasing
+
+test [test-class]-direction!-1.3 {direction!, reversal} -setup {
+    new-iter
+} -body {
+    test-iter direction! decreasing
+    test-iter direction
+} -cleanup {
+    release-iter
+} -result decreasing
+
+# # ## ### ##### ######## ############# #####################
+## exists
+
+test [test-class]-exists-1.0.0 {exists, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter exists
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter exists uuid"}
+
+test [test-class]-exists-1.0.1 {exists, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter exists FOO X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter exists uuid"}
+
+test [test-class]-exists-1.1.0 {exists, no} -setup {
+    new-iter
+} -body {
+    test-iter exists UUID
+} -cleanup {
+    release-iter
+} -result 0
+
+test [test-class]-exists-1.1.1 {exists, yes} -setup {
+    new-iter
+    test-iter add UUID KEY
+} -body {
+    test-iter exists UUID
+} -cleanup {
+    release-iter
+} -result 1
+
+# # ## ### ##### ######## ############# #####################
+## size
+
+test [test-class]-size-1.0 {size, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter size X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter size"}
+
+test [test-class]-size-1.1.0 {size, default} -setup {
+    new-iter
+} -body {
+    test-iter size
+} -cleanup {
+    release-iter
+} -result 0
+
+test [test-class]-size-1.1.1 {size} -setup {
+    new-iter
+    test-iter add UUID KEY
+} -body {
+    test-iter size
+} -cleanup {
+    release-iter
+} -result 1
+
+# # ## ### ##### ######## ############# #####################
+## data
+
+test [test-class]-data-1.0 {data, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter data X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter data"}
+
+test [test-class]-data-1.1.0 {data, default} -setup {
+    new-iter
+} -body {
+    test-iter data
+} -cleanup {
+    release-iter
+} -result {}
+
+test [test-class]-data-1.1.1 {data} -setup {
+    new-iter
+    test-iter add UUID KEY
+    test-iter add UUIX KEX
+} -body {
+    test-iter data
+} -cleanup {
+    release-iter
+} -result {{KEY UUID} {KEX UUIX}}
+
+# # ## ### ##### ######## ############# #####################
+## data!
+
+test [test-class]-data!-1.0.0 {data!, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter data!
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter data! tuples"}
+
+test [test-class]-data!-1.0.1 {data!, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter data! FOO X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter data! tuples"}
+
+test [test-class]-data!-1.1.0 {data!, duplicate} -setup {
+    new-iter
+    test-iter add UUID KEY
+    test-iter add UUIX KEX
+} -body {
+    test-iter data! {{FOO BAR} {KEX UUIX}}
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Duplicate UUID "UUIX"}
+
+test [test-class]-data!-1.1.1 {data!, duplicate, prevents commit} -setup {
+    new-iter
+    test-iter add UUID KEY
+    test-iter add UUIX KEX
+} -body {
+    catch { test-iter data! {{FOO BAR} {KEX UUIX}} }
+    test-iter data
+} -cleanup {
+    release-iter
+} -result {{KEY UUID} {KEX UUIX}}
+
+# # ## ### ##### ######## ############# #####################
+## location
+
+test [test-class]-location-1.0 {location, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter location X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter location"}
+
+test [test-class]-location-1.1.0 {location, default, start, empty} -setup {
+    new-iter
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {}
+
+test [test-class]-location-1.1.1 {location, default, start, not empty} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {baron 0D}
+
+test [test-class]-location-1.2 {location, middle} -setup {
+    new-iter
+    iter-fill
+    test-iter next 3
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {countess 04}
+
+test [test-class]-location-1.3 {location, beyond end} -setup {
+    new-iter
+    iter-fill
+    test-iter next [test-iter size]
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {}
+
+# # ## ### ##### ######## ############# #####################
+## reset
+
+test [test-class]-reset-1.0 {reset, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter reset X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter reset"}
+
+test [test-class]-reset-1.1 {reset} -setup {
+    new-iter
+    iter-fill
+    test-iter next 3
+} -body {
+    test-iter reset
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {baron 0D}
+
+# # ## ### ##### ######## ############# #####################
+## reverse
+
+test [test-class]-reverse-1.0 {reverse, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter reverse X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter reverse"}
+
+test [test-class]-reverse-1.1 {reverse} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter reverse
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {woman 02}
+
+# # ## ### ##### ######## ############# #####################
+## to
+
+test [test-class]-to-1.0.0 {to, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter to
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter to location"}
+
+test [test-class]-to-1.0.1 {to, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter to FOO X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter to location"}
+
+test [test-class]-to-1.1 {to, invalid location} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter to {badkey baduuid}
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad location "badkey baduuid"}
+
+test [test-class]-to-1.2 {to, good location} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter to {lady 00}
+} -cleanup {
+    release-iter
+} -result {}
+
+# # ## ### ##### ######## ############# #####################
+## at
+
+test [test-class]-at-1.0.0 {at, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter at
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter at n"}
+
+test [test-class]-at-1.0.1 {at, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter at 3 X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter at n"}
+
+test [test-class]-at-1.1.0 {at, bad size} -setup {
+    new-iter
+} -body {
+    test-iter at 0
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad size, expected integer > 0, got 0}
+
+test [test-class]-at-1.1.1 {at, bad size} -setup {
+    new-iter
+} -body {
+    test-iter at -3
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad size, expected integer > 0, got -3}
+
+test [test-class]-at-1.2.0 {at, start} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter at 5
+} -cleanup {
+    release-iter
+} -result {{baron 0D} {baroness 05} {count 0B} {countess 04} {dame 01}}
+
+test [test-class]-at-1.2.1 {at, middle} -setup {
+    new-iter
+    iter-fill
+    test-iter next 2
+} -body {
+    test-iter at 5
+} -cleanup {
+    release-iter
+} -result {{count 0B} {countess 04} {dame 01} {duchess 06} {duke 0C}}
+
+test [test-class]-at-1.2.1 {at, partial at end} -setup {
+    new-iter
+    iter-fill
+    test-iter next 18
+} -body {
+    test-iter at 5
+} -cleanup {
+    release-iter
+} -result {{queen 03} {woman 02}}
+
+# # ## ### ##### ######## ############# #####################
+## next
+
+test [test-class]-next-1.0.0 {next, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter next
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter next n"}
+
+test [test-class]-next-1.0.1 {next, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter next 3 X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter next n"}
+
+test [test-class]-next-1.1.0 {next, bad size} -setup {
+    new-iter
+} -body {
+    test-iter next 0
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad step, expected integer > 0, got 0}
+
+test [test-class]-next-1.1.1 {next, bad size} -setup {
+    new-iter
+} -body {
+    test-iter next -3
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad step, expected integer > 0, got -3}
+
+test [test-class]-next-1.2.0 {next, within index} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter next 5
+} -cleanup {
+    release-iter
+} -result true
+
+test [test-class]-next-1.2.1 {next, step over end} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter next 22
+} -cleanup {
+    release-iter
+} -result false
+
+# # ## ### ##### ######## ############# #####################
+## previous
+
+test [test-class]-previous-1.0.0 {previous, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter previous
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter previous n"}
+
+test [test-class]-previous-1.0.1 {previous, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter previous 3 X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter previous n"}
+
+test [test-class]-previous-1.1.0 {previous, bad size} -setup {
+    new-iter
+} -body {
+    test-iter previous 0
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad step, expected integer > 0, got 0}
+
+test [test-class]-previous-1.1.1 {previous, bad size} -setup {
+    new-iter
+} -body {
+    test-iter previous -3
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad step, expected integer > 0, got -3}
+
+test [test-class]-previous-1.2.0 {previous, within index} -setup {
+    new-iter
+    iter-fill
+    test-iter next 10
+} -body {
+    test-iter previous 5
+} -cleanup {
+    release-iter
+} -result true
+
+test [test-class]-previous-1.2.1 {previous, step over start} -setup {
+    new-iter
+    iter-fill
+    test-iter next 10
+} -body {
+    test-iter previous 22
+} -cleanup {
+    release-iter
+} -result false
+
+# # ## ### ##### ######## ############# #####################
+## -->
+
+test [test-class]--->-1.0.0 {-->, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter -->
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter --> dst"}
+
+test [test-class]--->-1.0.1 {-->, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter --> 3 X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter --> dst"}
+
+# # ## ### ##### ######## ############# #####################
+## :=
+
+test [test-class]-:=-1.0.0 {:=, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter :=
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter := src"}
+
+test [test-class]-:=-1.0.1 {:=, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter := 3 X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter := src"}
+
+# # ## ### ##### ######## ############# #####################
+return

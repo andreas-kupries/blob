@@ -1,0 +1,59 @@
+## -*- tcl -*-
+## (c) 2016 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## Test suite for memory iterators, custom parts.
+#
+## The external procedures 'already' and 'badmethod' are used to
+## generate implementation specific error messages. Implementations
+## have to be provided by the invoking implementation-specific
+## testsuite.
+#
+## The external procedures 'new-iter' and 'release-iter' are used to
+## create and destroy an instance of the iterator under test.
+
+# # ## ### ##### ######## ############# #####################
+
+test [test-class]-1.0 {new, wrong#args, too many} -body {
+    [test-class] new -dict X
+} -returnCodes error -result "wrong # args: should be \"[test-class] new ?sort?\""
+
+test [test-class]-1.1 {create, wrong#args, too many} -body {
+    [test-class] create foo -integer X
+} -returnCodes error -result "wrong # args: should be \"[test-class] create foo ?sort?\""
+
+test [test-class]-1.2 {constructor, create, existing command} -setup {
+    [test-class] create test-iter FOO
+} -body {
+    [test-class] create test-iter FOO
+} -cleanup {
+    test-iter destroy
+} -returnCodes error -result [already test-iter]
+
+test [test-class]-1.3 {constructor, create, existing command} -body {
+    [test-class] create set FOO
+} -returnCodes error -result [already set]
+
+test [test-class]-1.4 {constructor, create} -setup {
+    set result {}
+} -body {
+    lappend result [[test-class] create test-iter FOO]
+    lappend result [info commands ::test-iter]
+    lappend result [test-iter size]
+} -cleanup {
+    test-iter destroy
+    unset result
+} -result {::test-iter ::test-iter 0}
+
+test [test-class]-1.5 {constructor, new} -setup {
+    set result {}
+} -body {
+    lappend result [set foo [[test-class] new]]
+    lappend result [info commands ::$foo]
+    lappend result [$foo size]
+} -cleanup {
+    $foo destroy
+    unset result foo
+} -match glob -result {::oo::Obj* ::oo::Obj* 0}
+
+# # ## ### ##### ######## ############# #####################
+return
