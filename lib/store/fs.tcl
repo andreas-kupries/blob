@@ -25,6 +25,7 @@
 package require Tcl 8.5
 package require TclOO
 package require blob
+package require blob::fsbase
 package require debug
 package require debug::caller
 
@@ -39,27 +40,17 @@ debug prefix blob/fs {} ;# No prefix, arguments can be large
 ## Implementation
 
 oo::class create blob::fs {
-    superclass blob
+    superclass blob::fsbase blob
 
     # # ## ### ##### ######## #############
     ## State
-
-    variable mybasedir mycounter
-    # Name of the directory representing the blob store.
 
     # # ## ### ##### ######## #############
     ## Lifecycle.
 
     constructor {dir} {
-	my Check exists      $dir "does not exist" MISSING
-	my Check isdirectory $dir "expected a directory" FILE
-	my Check readable    $dir "not readable" DENIED WRITE
-	my Check writable    $dir "not writable" DENIED WRITE
-
-	set mybasedir $dir
-	set mycounter 0
-
-	next
+	next $dir ;# fsbase
+	#next      ;# blob
 	return
     }
 
@@ -68,17 +59,9 @@ oo::class create blob::fs {
 
     method PreferedPut {} { return path }
 
-    method TempFile {} {
-	while {1} {
-	    set result $mybasedir/T-[incr mycounter]-X
-	    if {[file exists $result]} continue
-	    return $result
-	}
-    }
-
     # put-string :- EnterString: uuid, blob --> ()
     method EnterString {uuid content} {
-	set dstpath [my P $uuid]
+	set dstpath [my PathOf $uuid]
 	if {[file exists $dstpath]} return
 	file mkdir [file dirname $dstpath]
 	fileutil::writeFile -translation binary \
@@ -88,7 +71,7 @@ oo::class create blob::fs {
 
     # put-file:- EnterFile: uuid, path --> ()
     method EnterFile {uuid path} {
-	set dstpath [my P $uuid]
+	set dstpath [my PathOf $uuid]
 	if {[file exists $dstpath]} return
 
 	file mkdir [file dirname $dstpath]
@@ -107,13 +90,13 @@ oo::class create blob::fs {
     # get-string: uuid --> blob
     method get-string {uuid} {
 	my Validate $uuid
-	return [my Cat [my P $uuid]]
+	return [my Cat [my PathOf $uuid]]
     }
 
     # get-channel: uuid --> channel
     method get-channel {uuid} {
 	my Validate $uuid
-	set path [my P $uuid]
+	set path [my PathOf $uuid]
 	set chan [open $path r]
 	fconfigure $chan -translation binary
 	return $chan
@@ -122,7 +105,7 @@ oo::class create blob::fs {
     # get-file: uuid --> path
     method get-file {uuid} {
 	my Validate $uuid
-	set path [my P $uuid]
+	set path [my PathOf $uuid]
 	set temp [my TempFile]
 	try {
 	    file link -hard $temp $path
@@ -138,7 +121,7 @@ puts |$o|
     # names () -> list(uuid)
     method Names {{pattern *}} {
 	set r {}
-	foreach e [glob -nocomplain -directory $mybasedir -tails */*/$pattern] {
+	foreach e [glob -nocomplain -directory [my base] -tails */*/$pattern] {
 	    lappend r [lindex [file split $e] end]
 	}
 	return $r
@@ -146,7 +129,7 @@ puts |$o|
 
     # exists: uuid -> boolean
     method exists {uuid} {
-	file exists [my P $uuid]
+	file exists [my PathOf $uuid]
     }
 
     # size () -> integer
@@ -157,7 +140,7 @@ puts |$o|
     # clear () -> ()
     # Remove all known mappings.
     method clear {} {
-	set dirs [glob -nocomplain -directory $mybasedir *]
+	set dirs [glob -nocomplain -directory [my base] *]
 	if {![llength $dirs]} return
 	file delete -force {*}$dirs
 	return
@@ -165,31 +148,8 @@ puts |$o|
 
     # delete: uuid -> ()
     method delete {uuid} {
-	file delete -force [my P $uuid]
+	file delete -force [my PathOf $uuid]
 	return
-    }
-
-    # # ## ### ##### ######## #############
-    ## API. Synchronization support
-
-    # # ## ### ##### ######## #############
-    ## Internals
-
-    method P {uuid} {
-	lappend path $mybasedir
-	lappend path [string range $uuid 0 1]
-	lappend path [string range $uuid 0 3]
-	lappend path $uuid
-	file join {*}$path
-    }
-
-    method Check {cmd dir text args} {
-	if {[file $cmd $dir]} return
-	my Error "Bad path $dir, $text" BAD PATH {*}$args
-    }
-
-    method PathError {text args} {
-	my Error "Bad path $text" BAD PATH {*}$args
     }
 
     # # ## ### ##### ######## #############

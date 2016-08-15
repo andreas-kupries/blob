@@ -9,7 +9,7 @@
 ## testsuite.
 #
 ## The external procedures 'new-store' and 'release-store' are used to
-## create and destroy aqn instance of the store under test.
+## create and destroy an instance of the store under test.
 
 # # ## ### ##### ######## ############# #####################
 

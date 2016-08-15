@@ -14,5 +14,9 @@ proc release-store {{suffix {}}} {
     return
 }
 
+# FS has an additional 'base' method. We re-use the generic definition
+# and simply edit the list it returned.
+proc methods {} [list return [linsert [methods] 0 base]]
+
 # # ## ### ##### ######## ############# #####################
 return

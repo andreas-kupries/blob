@@ -15,6 +15,37 @@ proc methods {} {
     return {clear delete destroy exists get-channel get-file get-string iexchange-async-chan iexchange-async-file iexchange-async-string iexchange-for-chan iexchange-for-file iexchange-for-string ihave-async-chan ihave-async-file ihave-async-string ihave-for-chan ihave-for-file ihave-for-string iwant-as-chan iwant-as-file iwant-as-string iwant-async-chan iwant-async-file iwant-async-string names new pull pull-async push push-async put-channel put-file put-string remove size store-to-file sync sync-async}
 }
 
+proc iter-methods {} {
+    return {--> := add at clear data data! destroy direction direction! exists location next previous remove reset reverse size to}
+}
+
+proc iter-fill {} {
+    # 20 entries, for sensible navigation testing
+    test-iter clear
+    test-iter data! {
+	{baron    0D}
+	{baroness 05}
+	{count    0B}
+	{countess 04}
+	{dame     01}
+	{duchess  06}
+	{duke     0C}
+	{emperor  0F}
+	{empress  07}
+	{graf     0A}
+	{heir     12}
+	{heiress  13}
+	{herr     09}
+	{king     0E}
+	{lady     00}
+	{lord     08}
+	{prince   10}
+	{princess 11}
+	{queen    03}
+	{woman    02}
+    }
+}
+
 proc setup-wall   {} { set   ::wall 0 }
 proc wait-wall    {} { vwait ::wall   }
 proc pass-wall    {} { set   ::wall 1 }
