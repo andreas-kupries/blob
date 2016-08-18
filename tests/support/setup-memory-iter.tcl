@@ -12,5 +12,7 @@ proc release-iter {{suffix {}}} {
     return
 }
 
+proc pre-add-entry {args} {}
+
 # # ## ### ##### ######## ############# #####################
 return

@@ -21,7 +21,7 @@ test [test-class]-1.1 {create, wrong#args, too many} -body {
     [test-class] create foo -integer X
 } -returnCodes error -result "wrong # args: should be \"[test-class] create foo ?sort?\""
 
-test [test-class]-1.2 {constructor, create, existing command} -setup {
+test [test-class]-1.2.0 {constructor, create, existing command} -setup {
     [test-class] create test-iter FOO
 } -body {
     [test-class] create test-iter FOO
@@ -29,11 +29,11 @@ test [test-class]-1.2 {constructor, create, existing command} -setup {
     test-iter destroy
 } -returnCodes error -result [already test-iter]
 
-test [test-class]-1.3 {constructor, create, existing command} -body {
+test [test-class]-1.2.1 {constructor, create, existing command} -body {
     [test-class] create set FOO
 } -returnCodes error -result [already set]
 
-test [test-class]-1.4 {constructor, create} -setup {
+test [test-class]-1.3.0 {constructor, create} -setup {
     set result {}
 } -body {
     lappend result [[test-class] create test-iter FOO]
@@ -44,7 +44,7 @@ test [test-class]-1.4 {constructor, create} -setup {
     unset result
 } -result {::test-iter ::test-iter 0}
 
-test [test-class]-1.5 {constructor, new} -setup {
+test [test-class]-1.3.1 {constructor, new} -setup {
     set result {}
 } -body {
     lappend result [set foo [[test-class] new]]

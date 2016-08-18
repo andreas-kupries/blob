@@ -46,7 +46,8 @@ oo::class create blob::iter::memory {
     constructor {{sort -ascii}} {
 	debug.blob/iter/memory {}
 	set mysort $sort      ;# how to sort the index
-	next ;# Common setup: Clearing the iterator
+	my clear
+	next
 	return
     }
 
@@ -58,7 +59,7 @@ oo::class create blob::iter::memory {
 	debug.blob/iter/memory {}
 	# Extend index
 	dict set myuuid $uuid $key
-	lappend mytable [list $key $uuid]
+	lappend mytable [list $uuid $key]
 	# Signal that we cannot assume proper order anymore.
 	set mysorted no
 	return
@@ -80,11 +81,13 @@ oo::class create blob::iter::memory {
 
 	debug.blob/iter/memory {@ $current @($pk)}
 
-	if {$uuid ne [lindex $pk 1]} {
+	if {$uuid ne [lindex $pk 0]} {
 	    debug.blob/iter/memory {not current}
 
-	    # Element is not current. Search for it.
-	    set pos [lsearch -glob $mytable [list * $uuid]]
+	    # Element is not current. Search for its physical location.
+	    # IDEA: Use a dict mapping from uuid to location
+	    #       - Refresh as part of sorting, and part of remove
+	    set pos [lsearch -glob $mytable [list $uuid *]]
 
 	    # Not found -- mytable and myuuid are out of sync!! Should panic
 	    if {$pos < 0} {
@@ -177,7 +180,6 @@ oo::class create blob::iter::memory {
 	incr current $n
 
 	set pk [lindex $mytable $current]
-
 	if {$pk == {}} {
 	    my ToBoundary end
 	    debug.blob/iter/memory {@$myploc@$myvloc}
@@ -198,7 +200,6 @@ oo::class create blob::iter::memory {
 	incr current -$n
 
 	set pk [lindex $mytable $current]
-
 	if {$pk == {}} {
 	    my ToBoundary start
 	    debug.blob/iter/memory {@$myploc@$myvloc}
@@ -210,52 +211,43 @@ oo::class create blob::iter::memory {
 	return true
     }
 
-    # to: tuple(key,uuid) --> ()
+    # to: pair('start',{})          --> ()
+    #     pair('end',{})
+    #     pair('at',pair(key,uuid))
     method to {location} {
 	debug.blob/iter/memory {}
 
-	# Note, order does not matter here, only if it is found.
-	set pos [lsearch -exact $mytable $location]
-	if {$pos < 0} {
-	    my Error "Bad location \"$location\"" INVALID LOCATION
+	if {[llength $location] != 2} {
+	    my Error "Bad location \"$location\", expected list of 2 elements" \
+		INVALID LOCATION SYNTAX
 	}
 
-	my To $location
+	set type [lindex $location 0]
+	switch -exact -- $type {
+	    at {
+		set pk [my PKvLoc [lindex $location 1]]
+		if {![my Has {*}$pk]} {
+		    my Error "Bad location \"$location\", not found" \
+			INVALID LOCATION UNKNOWN
+		}
+		my To $pk
+	    }
+	    start - end {
+		my ToBoundary $type
+	    }
+	    default {
+		my Error "Bad location type \"$type\", expected at, end, or start" \
+		    INVALID LOCATION TYPE
+	    }
+	}
 	return
     }
 
     # direction! (string) -> ()
-    # Set cursor direction
-    method direction! {dir} {
-	debug.blob/iter/memory {}
-	my ValidateDirection $dir
-	if {$dir eq $mydirection} {
-	    debug.blob/iter/memory {No change, nothing to do}
-	    return
-	}
-	# Change from current direction, apply
-	my reverse
-	return
-    }
+    # __Inherited__ Can't be done better locally
 
     # data!: (list(tuple(key,uuid)) --> ()
-    # Load whole index (bulk add)
-    method data! {tuples} {
-	debug.blob/iter/memory {}
-	# Validate data first, ...
-	foreach pair $tuples {
-	    lassign $pair key uuid
-	    if {[my exists $uuid]} {
-		my Error "Duplicate UUID \"$uuid\"" UUID DUPLICATE
-	    }
-	}
-	# ... then add if there are no conflicts
-	foreach pair $tuples {
-	    lassign $pair key uuid
-	    my Add $uuid $key
-	}
-	return
-    }
+    # __Inherited__ Can't be done better locally
 
     # # ## ### ##### ######## #############
 
@@ -283,19 +275,26 @@ oo::class create blob::iter::memory {
 
     # direction: () -> string
     method direction {} {
-	debug.blob/iter/memory {}
+	debug.blob/iter/memory {==> $mydirection}
 	return $mydirection
     }
 
-    # location: () -> tuple(key,uuid)
+    # location: () -> pair('start',{})
+    #              -> pair('end',{})
+    #              -> pair('at',pair(key,uuid))
     method location {} {
-	debug.blob/iter/memory {@l:($myvloc)}
-	debug.blob/iter/memory {@p:($myploc)}
-	set current [my CursorLocation]
-	return [lindex $mytable $current]
+	debug.blob/iter/memory {@l:($myvloc) -- @p:($myploc)}
+
+	set loc $myvloc
+	if {[lindex $myvloc 0] eq "at"} {
+	    set loc [list at [my PKvLoc [lindex $myvloc 1]]]
+	}
+
+	debug.blob/iter/memory {==> ($loc)}
+	return $loc
     }
 
-    # data: () -> list(tuple(key,uuid))
+    # data: () -> list(tuple(uuid,key))
     method data {} {
 	debug.blob/iter/memory {}
 	return $mytable
@@ -307,18 +306,18 @@ oo::class create blob::iter::memory {
     # Configuration:
     # - mysort    :: option (lsort)       :: How to sort the index, ordering
     # Data:
-    # - mytable   :: list(pair(key,uuid)) :: Index to iterate over
+    # - mytable   :: list(pair(uuid,key)) :: Index to iterate over
 	# - myuuid
     # - mysorted  :: bool                 :: Sorting status of mytable, true <=> sorted.
     # Iterator state:
     # - mydirection :: {"increasing","decreasing"} :: Direction of iteration
     # - myploc      :: integer                     :: Physical position, index into mytable
-    # - myvloc      :: pair(note,pair(key,uuid))   :: Logical position in the table
+    # - myvloc      :: pair(note,pair(uuid,key))   :: Logical position in the table
     #
     # The logical position can be:
     # - {start {}}      - virtual start
     # - {end {}}        - virtual end (after the table)
-    # - {el {key uuid}} - exact location
+    # - {el {uuid key}} - exact location (as a pk matching table structure)
     #
     # The physical position can be
     # - an empty string, or
@@ -333,6 +332,11 @@ oo::class create blob::iter::memory {
 
     # # ## ### ##### ######## #############
     # Internal helper methods
+
+    method PKvLoc {pair} {
+	lassign $pair a b
+	list $b $a
+    }
 
     method Take {n} {
 	debug.blob/iter/memory {}
@@ -352,7 +356,9 @@ oo::class create blob::iter::memory {
 	    switch -glob -- $myvloc {
 		{start *} { set myploc 0 }
 		{end *}   { set myploc [llength $mytable] }
-		{el *}    { set myploc [lsearch -exact $mytable [lindex $myvloc 1]] }
+		{at *}    {
+		    set myploc [lsearch -exact $mytable [lindex $myvloc 1]]
+		}
 	    }
 	} ;# Position is known/cached, simply return
 	return $myploc
@@ -366,8 +372,8 @@ oo::class create blob::iter::memory {
 	# in the proper order. Sorting is done inside out, uuid first,
 	# then key, given a final order of by key, then by uuid.
 
-	set mytable [lsort -$mydirection $mysort -index 0 \
-			 [lsort -$mydirection -ascii -index 1 \
+	set mytable [lsort -$mydirection $mysort -index 1 \
+			 [lsort -$mydirection -ascii -index 0 \
 			      $mytable]]
 
 	# Invalidate the physical position
@@ -382,12 +388,18 @@ oo::class create blob::iter::memory {
 	return
     }
 
-    method To {loc {phys {}}} {
+    method To {pk {phys {}}} {
 	debug.blob/iter/memory {}
-	set myvloc [list el $loc] ;# logical position via primary key
-	set myploc $phys          ;# physical position unknown by
-				   # default, caller may know and set
+	set myvloc [list at $pk] ;# logical position via primary key
+	set myploc $phys         ;# physical position unknown by
+				  # default, caller may know and set
 	return
+    }
+
+    method Has {uuid key} {
+	debug.blob/iter/memory {}
+	if {![dict exists $myuuid $uuid]} { return 0 }
+	return [expr {[dict get $myuuid $uuid] eq $key}]
     }
 
     # # ## ### ##### ######## #############
