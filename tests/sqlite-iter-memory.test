@@ -1,0 +1,32 @@
+# -*- tcl -*- tcl.tk//DSL tcltestx//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
+## (c) 2016 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## sqlite-iter.test:  tests for the blob::iter::sqlite package.
+
+kt check Tcl     8.5
+kt check tcltest 2
+
+kt require support TclOO
+kt require support sha1 2
+kt local   support blob
+kt local   support blob::sqlite
+kt local   support blob::iter
+
+kt local   testing blob::iter::sqlite
+
+# # ## ### ##### ######## ############# #####################
+
+proc test-class {} { return blob::iter::sqlite/memory }
+
+# # ## ### ##### ######## ############# #####################
+## Two testsuites, for the custom (instantiation) and shared APIs.
+
+kt source support/common.tcl
+kt source support/setup-sqlite-memory.tcl
+kt source support/setup-sqlite-iter.tcl
+
+kt source parts/sqlite-iter.testsuite
+kt source parts/base-iter.testsuite
+
+# # ## ### ##### ######## ############# #####################
+cleanupTests

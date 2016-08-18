@@ -1,0 +1,87 @@
+## -*- tcl -*-
+## (c) 2016 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## Test suite for sqlite iterators, custom parts.
+#
+## The external procedures 'already' and 'badmethod' are used to
+## generate implementation specific error messages. Implementations
+## have to be provided by the invoking implementation-specific
+## testsuite.
+#
+## The external procedures 'new-iter' and 'release-iter' are used to
+## create and destroy an instance of the iterator under test.
+
+# # ## ### ##### ######## ############# #####################
+
+test [test-class]-1.0.0 {new, wrong#args, not enough} -body {
+    [iter-class] new
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+
+test [test-class]-1.0.1 {new, wrong#args, not enough} -body {
+    [iter-class] new DB
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+
+test [test-class]-1.0.2 {new, wrong#args, not enough} -body {
+    [iter-class] new DB TABLE
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+
+test [test-class]-1.0.3 {new, wrong#args, too many} -body {
+    [iter-class] new DB TABLE ITERTABLE TEXT X
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+
+test [test-class]-1.1.0 {create, wrong#args, not enough} -body {
+    [iter-class] create foo
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+
+test [test-class]-1.1.1 {create, wrong#args, not enough} -body {
+    [iter-class] create foo DB
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+
+test [test-class]-1.1.2 {create, wrong#args, not enough} -body {
+    [iter-class] create foo DB TABLE
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+
+test [test-class]-1.1.3 {create, wrong#args, too many} -body {
+    [iter-class] create foo DB TABLE ITERTABLE TEXT X
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+
+test [test-class]-1.2.0 {constructor, create, existing command} -setup {
+    new-iter
+} -body {
+    [iter-class] create test-iter DB TABLE ITERTABLE
+} -cleanup {
+    release-iter
+} -returnCodes error -result [already test-iter]
+
+test [test-class]-1.2.1 {constructor, create, existing command} -body {
+    [iter-class] create set DB TABLE ITERTABLE
+} -returnCodes error -result [already set]
+
+test [test-class]-1.3.0 {constructor, create} -setup {
+    set result {}
+    new-store ;# ==> ::test-database
+} -body {
+    lappend result [[iter-class] create ::test-iter ::test-database blobs blobiter]
+    lappend result [info commands ::test-iter]
+    lappend result [test-iter size]
+} -cleanup {
+    ::test-iter destroy
+    release-store
+    unset result
+} -result {::test-iter ::test-iter 0}
+
+test [test-class]-1.3.1 {constructor, new} -setup {
+    set result {}
+    new-store ;# ==> ::test-database
+} -body {
+    lappend result [set foo [[iter-class] new ::test-database blobs blobiter]]
+    lappend result [info commands ::$foo]
+    lappend result [$foo size]
+} -cleanup {
+    $foo destroy
+    release-store
+    unset result foo
+} -match glob -result {::oo::Obj* ::oo::Obj* 0}
+
+# # ## ### ##### ######## ############# #####################
+return
