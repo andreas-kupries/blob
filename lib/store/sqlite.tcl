@@ -62,6 +62,7 @@ oo::class create blob::sqlite {
     ## Lifecycle.
 
     constructor {database table} {
+	debug.blob/sqlite {}
 	# Make the database available as a local command, under a
 	# fixed name. No need for an instance variable and resolution.
 	interp alias {} [self namespace]::DB {} $database
