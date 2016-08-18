@@ -28,12 +28,30 @@
 # - The internals indices of iterators maps arbitrary keys to blob
 #   uuids.
 #
-# - The combination (key, uuid) is considered as unique, i.e. the PK
-#   of the internal indices.
+# - A cursor position is fully specified by the 'key' we are at, and
+#   the 'uuid' under that key.
 #
-#   Because of that cursor positions are specified in terms of
-#   this. I.e. locations are returned as PK tuple, and must be
-#   provided as PK tuple also.
+#   Note that while uuids are unique, the keys are not. We can have
+#   multiple entries with the same key, and different uuids. That is
+#   why the cursor position requires the uuid as well, to disambiguate
+#   between entries with the same key.
+#
+# - The semantics of [at], [next], and [previous] with regard to the
+#   cursor position are this:
+#
+#   - The result of [at] includes the data for the cursor position
+#     itself, if it exists in the iterator.
+#
+#   - The operation [next] includes the cursor position in the count
+#     of elements to skip, if it exists in the iterator. After the
+#     operation the new cursor position is either on the first element
+#     after the skipped elements, or the virtual end (on overshot)
+#
+#   - The operation [previous] __excludes__ the cursor position from
+#     the count of elements to skip, if it exists in the
+#     iterator. After the operation the new cursor position is either
+#     on the first element of the new range, or the virtual start (on
+#     overshot).
 
 # # ## ### ##### ######## ############# #####################
 ## Requisites
@@ -59,7 +77,6 @@ oo::class create blob::iter {
 
     constructor {} {
 	debug.blob/iter {}
-	my clear
 	return
     }
 
@@ -67,7 +84,7 @@ oo::class create blob::iter {
     ## API. Content manipulation
 
     # add: (uuid key) --> ()
-    # Extend index
+    # Extend iterator with new element
     method add {uuid key} {
 	debug.blob/iter {}
 	if {[my exists $uuid]} {
@@ -80,7 +97,7 @@ oo::class create blob::iter {
     method Add {uuid key} { my API.error Add }
 
     # remove: (uuid...) --> ()
-    # Shrink index
+    # Take element out of the iterator
     method remove {uuid args} {
 	debug.blob/iter {}
 	foreach uuid [linsert $args 0 $uuid] {
@@ -96,12 +113,26 @@ oo::class create blob::iter {
     method Remove {uuid} { my API.error Remove }
 
     # clear: () --> ()
-    # Shrink index to nothing
+    # Shrink iterator to nothing
     method clear {} { my API.error clear }
 
-    # data!: (list(tuple(key,uuid)) --> ()
-    # Load whole index (bulk add)
-    method data! {tuples} { my API.error data! }
+    # data!: (list(tuple(uuid,key)) --> ()
+    # Load iterator with bulk data (bulk add)
+    method data! {tuples} {
+	debug.blob/iter {}
+	# Validate data first, ...
+	foreach pair $tuples {
+	    set uuid [lindex $pair 0]
+	    if {[my exists $uuid]} {
+		my Error "Duplicate UUID \"$uuid\"" UUID DUPLICATE
+	    }
+	}
+	# ... then add if there are no conflicts
+	foreach pair $tuples {
+	    my Add {*}$pair
+	}
+	return
+    }
 
     # # ## ### ##### ######## #############
     ## API. Cursor manipulation
@@ -129,13 +160,25 @@ oo::class create blob::iter {
     # (virtual) start. Further calls will return false too.
     method previous {n} { my API.error previous }
 
-    # to: tuple(key,uuid) --> ()
+    # to: pair('start',{})          --> ()
+    #     pair('end',{})
+    #     pair('at',pair(key,uuid))
     # Move the cursor to a specific location.
     method to {location} { my API.error to }
 
     # direction! (string) -> ()
     # Set cursor direction
-    method direction! {dir} { my API.error direction! }
+    method direction! {dir} {
+	debug.blob/iter {}
+	my ValidateDirection $dir
+	if {$dir eq [my direction]} {
+	    debug.blob/iter {No change, nothing to do}
+	    return
+	}
+	# Change from current direction, apply
+	my reverse
+	return
+    }
 
     # # ## ### ##### ######## #############
     ## API. Introspection
@@ -148,7 +191,7 @@ oo::class create blob::iter {
     # Return number of entries in the index
     method size {} { my API.error size }
 
-    # at: length --> list(uuid)
+    # at: length --> list(tuple(uuid,key))
     # Return elements of the index at the cursor position.
     method at {n} { my API.error at }
 
@@ -156,12 +199,14 @@ oo::class create blob::iter {
     # Query cursor for its direction
     method direction {} { my API.error direction }
 
-    # location: () -> tuple(key,uuid)
+    # location: () -> pair('start',{})
+    #              -> pair('end',{})
+    #              -> pair('at',pair(key,uuid))
     # Query cursor for current position.
     method location {} { my API.error location }
 
-    # data: () -> list(tuple(key,uuid))
-    # Query whole index
+    # data: () -> list(tuple(uuid,key))
+    # Query whole iterator
     method data {} { my API.error data }
 
     # # ## ### ##### ######## #############

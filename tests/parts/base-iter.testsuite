@@ -10,6 +10,10 @@
 #
 ## The external procedures 'new-iter' and 'release-iter' are used to
 ## create and destroy an instance of the store under test.
+##
+## The external procedure 'pre-add-entry' is used to perform
+## supporting actions needed by the iterator before it can add an
+## entry itself.
 
 # --------------*----------------
 # dispatch      | *
@@ -106,6 +110,7 @@ test [test-class]-add-1.0.2 {add, wrong#args, too many} -setup {
 
 test [test-class]-add-1.1 {add, duplicate} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
 } -body {
     test-iter add UUID KEY
@@ -116,6 +121,7 @@ test [test-class]-add-1.1 {add, duplicate} -setup {
 test [test-class]-add-1.2 {add} -setup {
     new-iter
 } -body {
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
     list [test-iter size] [test-iter exists UUID]
 } -cleanup {
@@ -135,6 +141,7 @@ test [test-class]-remove-1.0 {remove, wrong#args, not enough} -setup {
 
 test [test-class]-remove-1.1 {remove} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
 } -body {
     test-iter remove UUID
@@ -142,6 +149,10 @@ test [test-class]-remove-1.1 {remove} -setup {
 } -cleanup {
     release-iter
 } -result {0 0}
+
+#XXX error TODO:remove-interaction-with-at
+# Not interaction with location, as that can change, is implementation defined.
+# Or maybe not ... See if sqlite is easy to update the location
 
 # # ## ### ##### ######## ############# #####################
 ## clear
@@ -156,6 +167,7 @@ test [test-class]-clear-1.0 {clear, wrong#args, too many} -setup {
 
 test [test-class]-clear-1.1 {clear} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
 } -body {
     test-iter clear
@@ -267,6 +279,7 @@ test [test-class]-exists-1.1.0 {exists, no} -setup {
 
 test [test-class]-exists-1.1.1 {exists, yes} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
 } -body {
     test-iter exists UUID
@@ -295,6 +308,7 @@ test [test-class]-size-1.1.0 {size, default} -setup {
 
 test [test-class]-size-1.1.1 {size} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
 } -body {
     test-iter size
@@ -323,13 +337,15 @@ test [test-class]-data-1.1.0 {data, default} -setup {
 
 test [test-class]-data-1.1.1 {data} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
+    pre-add-entry UUIX KEX
     test-iter add UUIX KEX
 } -body {
     test-iter data
 } -cleanup {
     release-iter
-} -result {{KEY UUID} {KEX UUIX}}
+} -result {{UUID KEY} {UUIX KEX}}
 
 # # ## ### ##### ######## ############# #####################
 ## data!
@@ -352,24 +368,30 @@ test [test-class]-data!-1.0.1 {data!, wrong#args, too many} -setup {
 
 test [test-class]-data!-1.1.0 {data!, duplicate} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
+    pre-add-entry UUIX KEX
     test-iter add UUIX KEX
 } -body {
-    test-iter data! {{FOO BAR} {KEX UUIX}}
+    test-iter data! {{BAR FOO} {UUIX KEX}}
 } -cleanup {
     release-iter
 } -returnCodes error -result {Duplicate UUID "UUIX"}
 
 test [test-class]-data!-1.1.1 {data!, duplicate, prevents commit} -setup {
     new-iter
+    pre-add-entry UUID KEY
     test-iter add UUID KEY
+    pre-add-entry UUIX KEX
     test-iter add UUIX KEX
 } -body {
-    catch { test-iter data! {{FOO BAR} {KEX UUIX}} }
+    catch { test-iter data! {{BAR FOO} {UUIX KEX}} }
     test-iter data
 } -cleanup {
     release-iter
-} -result {{KEY UUID} {KEX UUIX}}
+} -result {{UUID KEY} {UUIX KEX}}
+
+#XXX error TODO:perform-bulk-data!
 
 # # ## ### ##### ######## ############# #####################
 ## location
@@ -382,22 +404,62 @@ test [test-class]-location-1.0 {location, wrong#args, too many} -setup {
     release-iter
 } -returnCodes error -result {wrong # args: should be "test-iter location"}
 
-test [test-class]-location-1.1.0 {location, default, start, empty} -setup {
+test [test-class]-location-1.1.0.0 {location, default, start, empty} -setup {
     new-iter
 } -body {
     test-iter location
 } -cleanup {
     release-iter
-} -result {}
+} -result {start {}}
 
-test [test-class]-location-1.1.1 {location, default, start, not empty} -setup {
+test [test-class]-location-1.1.0.1 {location, default, start, empty, step 1} -setup {
+    new-iter
+    test-iter next 1
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {end {}}
+
+test [test-class]-location-1.1.0.2 {location, default, start, empty, step 0} -setup {
+    new-iter
+    test-iter next 1
+    test-iter previous 1
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {start {}}
+
+test [test-class]-location-1.1.1.0 {location, default, start, not empty} -setup {
     new-iter
     iter-fill
 } -body {
     test-iter location
 } -cleanup {
     release-iter
-} -result {baron 0D}
+} -result {start {}}
+
+test [test-class]-location-1.1.1.1 {location, default, start, not empty, step 1} -setup {
+    new-iter
+    iter-fill
+    test-iter next 1
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {at {baroness 05}}
+
+test [test-class]-location-1.1.1.2 {location, default, start, not empty, step 0} -setup {
+    new-iter
+    iter-fill
+    test-iter next 1
+    test-iter previous 1
+} -body {
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {at {baron 0D}}
 
 test [test-class]-location-1.2 {location, middle} -setup {
     new-iter
@@ -407,7 +469,7 @@ test [test-class]-location-1.2 {location, middle} -setup {
     test-iter location
 } -cleanup {
     release-iter
-} -result {countess 04}
+} -result {at {countess 04}}
 
 test [test-class]-location-1.3 {location, beyond end} -setup {
     new-iter
@@ -417,7 +479,7 @@ test [test-class]-location-1.3 {location, beyond end} -setup {
     test-iter location
 } -cleanup {
     release-iter
-} -result {}
+} -result {end {}}
 
 # # ## ### ##### ######## ############# #####################
 ## reset
@@ -430,7 +492,7 @@ test [test-class]-reset-1.0 {reset, wrong#args, too many} -setup {
     release-iter
 } -returnCodes error -result {wrong # args: should be "test-iter reset"}
 
-test [test-class]-reset-1.1 {reset} -setup {
+test [test-class]-reset-1.1.0 {reset, location moves to start} -setup {
     new-iter
     iter-fill
     test-iter next 3
@@ -439,7 +501,19 @@ test [test-class]-reset-1.1 {reset} -setup {
     test-iter location
 } -cleanup {
     release-iter
-} -result {baron 0D}
+} -result {start {}}
+
+test [test-class]-reset-1.1.1 {reset, order is not affected} -setup {
+    new-iter
+    iter-fill
+    test-iter next 3
+    test-iter reverse
+} -body {
+    test-iter reset
+    test-iter direction
+} -cleanup {
+    release-iter
+} -result decreasing
 
 # # ## ### ##### ######## ############# #####################
 ## reverse
@@ -452,15 +526,17 @@ test [test-class]-reverse-1.0 {reverse, wrong#args, too many} -setup {
     release-iter
 } -returnCodes error -result {wrong # args: should be "test-iter reverse"}
 
-test [test-class]-reverse-1.1 {reverse} -setup {
+test [test-class]-reverse-1.1 {reverse makes end the start} -setup {
     new-iter
     iter-fill
 } -body {
     test-iter reverse
+    test-iter next 1      ;# step 0 to convert virtual to
+    test-iter previous 1  ;# physical location
     test-iter location
 } -cleanup {
     release-iter
-} -result {woman 02}
+} -result {at {woman 02}}
 
 # # ## ### ##### ######## ############# #####################
 ## to
@@ -481,23 +557,62 @@ test [test-class]-to-1.0.1 {to, wrong#args, too many} -setup {
     release-iter
 } -returnCodes error -result {wrong # args: should be "test-iter to location"}
 
-test [test-class]-to-1.1 {to, invalid location} -setup {
+test [test-class]-to-1.1.0 {to, invalid location, bad syntax, to short} -setup {
     new-iter
     iter-fill
 } -body {
-    test-iter to {badkey baduuid}
+    test-iter to foo
 } -cleanup {
     release-iter
-} -returnCodes error -result {Bad location "badkey baduuid"}
+} -returnCodes error -result {Bad location "foo", expected list of 2 elements}
 
-test [test-class]-to-1.2 {to, good location} -setup {
+test [test-class]-to-1.1.1 {to, invalid location, bad syntax, to long} -setup {
     new-iter
     iter-fill
 } -body {
-    test-iter to {lady 00}
+    test-iter to {foo ... X}
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad location "foo ... X", expected list of 2 elements}
+
+test [test-class]-to-1.1.2 {to, invalid location, bad type} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter to {foo ...}
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad location type "foo", expected at, end, or start}
+
+test [test-class]-to-1.1.3 {to, invalid location, unknown} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter to {at {badkey baduuid}}
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Bad location "at {badkey baduuid}", not found}
+
+test [test-class]-to-1.2.0 {to, good location} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter to {at {lady 00}}
 } -cleanup {
     release-iter
 } -result {}
+
+test [test-class]-to-1.2.1 {to, good location, persists} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter to {at {lady 00}}
+    test-iter location
+} -cleanup {
+    release-iter
+} -result {at {lady 00}}
+
+# XXX TODO: Check start|end handling as well, interaction with (at)
 
 # # ## ### ##### ######## ############# #####################
 ## at
@@ -534,16 +649,24 @@ test [test-class]-at-1.1.1 {at, bad size} -setup {
     release-iter
 } -returnCodes error -result {Bad size, expected integer > 0, got -3}
 
-test [test-class]-at-1.2.0 {at, start} -setup {
+test [test-class]-at-1.2.0 {at, start, empty} -setup {
+    new-iter
+} -body {
+    test-iter at 1
+} -cleanup {
+    release-iter
+} -result {}
+
+test [test-class]-at-1.2.1 {at, start, not empty} -setup {
     new-iter
     iter-fill
 } -body {
     test-iter at 5
 } -cleanup {
     release-iter
-} -result {{baron 0D} {baroness 05} {count 0B} {countess 04} {dame 01}}
+} -result {{0D baron} {05 baroness} {0B count} {04 countess} {01 dame}}
 
-test [test-class]-at-1.2.1 {at, middle} -setup {
+test [test-class]-at-1.2.2 {at, middle} -setup {
     new-iter
     iter-fill
     test-iter next 2
@@ -551,9 +674,9 @@ test [test-class]-at-1.2.1 {at, middle} -setup {
     test-iter at 5
 } -cleanup {
     release-iter
-} -result {{count 0B} {countess 04} {dame 01} {duchess 06} {duke 0C}}
+} -result {{0B count} {04 countess} {01 dame} {06 duchess} {0C duke}}
 
-test [test-class]-at-1.2.1 {at, partial at end} -setup {
+test [test-class]-at-1.2.3 {at, partial at end} -setup {
     new-iter
     iter-fill
     test-iter next 18
@@ -561,7 +684,10 @@ test [test-class]-at-1.2.1 {at, partial at end} -setup {
     test-iter at 5
 } -cleanup {
     release-iter
-} -result {{queen 03} {woman 02}}
+} -result {{03 queen} {02 woman}}
+
+# XXX at, (not)empty, end
+# XXX error TODO:at-in-reverse-mode-order:decreasing
 
 # # ## ### ##### ######## ############# #####################
 ## next

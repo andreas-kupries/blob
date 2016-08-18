@@ -20,30 +20,34 @@ proc iter-methods {} {
 }
 
 proc iter-fill {} {
-    # 20 entries, for sensible navigation testing
+    # 20 entries, enough for sensible testing of iterator navigation and paging
     test-iter clear
-    test-iter data! {
-	{baron    0D}
-	{baroness 05}
-	{count    0B}
-	{countess 04}
-	{dame     01}
-	{duchess  06}
-	{duke     0C}
-	{emperor  0F}
-	{empress  07}
-	{graf     0A}
-	{heir     12}
-	{heiress  13}
-	{herr     09}
-	{king     0E}
-	{lady     00}
-	{lord     08}
-	{prince   10}
-	{princess 11}
-	{queen    03}
-	{woman    02}
+    foreach {key uuid} {
+	baron    0D
+	baroness 05
+	count    0B
+	countess 04
+	dame     01
+	duchess  06
+	duke     0C
+	emperor  0F
+	empress  07
+	graf     0A
+	heir     12
+	heiress  13
+	herr     09
+	king     0E
+	lady     00
+	lord     08
+	prince   10
+	princess 11
+	queen    03
+	woman    02
+    } {
+	pre-add-entry $uuid $key
+	test-iter add $uuid $key
     }
+    return
 }
 
 proc setup-wall   {} { set   ::wall 0 }
