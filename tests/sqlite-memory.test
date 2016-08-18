@@ -13,6 +13,8 @@ kt require support sha1 2
 kt require support fileutil
 
 kt local   support blob
+kt local   support blob::table
+
 kt local   testing blob::sqlite
 
 # # ## ### ##### ######## ############# #####################

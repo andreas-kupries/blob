@@ -13,7 +13,7 @@
 # Meta require     {Tcl 8.5-}
 # Meta require     TclOO
 # Meta require     blob
-# Meta require     dbutil
+# Meta require     blob::table
 # Meta require     debug
 # Meta require     debug::caller
 # Meta require     sha1
@@ -29,7 +29,7 @@
 package require Tcl 8.5
 package require TclOO
 package require blob
-package require dbutil
+package require blob::table
 package require sha1 2
 package require sqlite3
 package require debug
@@ -178,17 +178,7 @@ oo::class create blob::sqlite {
 
 	set fqndb [self namespace]::DB
 
-	if {![dbutil initialize-schema $fqndb reason $table {{
-	    id   INTEGER PRIMARY KEY AUTOINCREMENT,
-	    uuid TEXT    UNIQUE      NOT NULL,
-	    data BLOB
-	} {
-	    {id   INTEGER 0 {} 1}
-	    {uuid TEXT    1 {} 0}
-	    {data BLOB    0 {} 0}
-	}}]} {
-	    my Error $reason BAD SCHEMA
-	}
+	blob::table::store $fqndb $table
 
 	# Generate the custom sql commands.
 	my Def sql_extend    { INSERT          INTO "<<table>>" VALUES (NULL, :uuid, @blob) }

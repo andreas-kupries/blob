@@ -12,6 +12,8 @@ kt require support dbutil
 kt require support sha1 2
 
 kt local   support blob
+kt local   support blob::table
+
 kt local   testing blob::sqlite
 
 # # ## ### ##### ######## ############# #####################

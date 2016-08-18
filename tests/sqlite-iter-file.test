@@ -7,8 +7,12 @@ kt check Tcl     8.5
 kt check tcltest 2
 
 kt require support TclOO
+kt require support sqlite3
+kt require support dbutil
 kt require support sha1 2
+
 kt local   support blob
+kt local   support blob::table
 kt local   support blob::sqlite
 kt local   support blob::iter
 

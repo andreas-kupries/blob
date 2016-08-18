@@ -15,6 +15,7 @@
 # Meta require     debug
 # Meta require     debug::caller
 # Meta require     blob::iter
+# Meta require     blob::table
 # Meta subject     {blob iterator} iterator sqlite
 # Meta summary     Blob iterator
 # @@ Meta End
@@ -24,8 +25,8 @@
 
 package require Tcl 8.5
 package require TclOO
-package require sqlite3
 package require blob::iter
+package require blob::table
 package require debug
 package require debug::caller
 
@@ -448,68 +449,8 @@ oo::class create blob::iter::sqlite {
 
 	set fqndb [self namespace]::DB
 
-	### ... Same as in store/sqlite.tcl ...
-	# Move into a shared base class
-	if {![dbutil initialize-schema $fqndb reason $table {{
-	      id   INTEGER PRIMARY KEY AUTOINCREMENT
-	    , uuid TEXT    UNIQUE      NOT NULL
-	    , data BLOB
-	} {
-	    {id   INTEGER 0 {} 1}
-	    {uuid TEXT    1 {} 0}
-	    {data BLOB    0 {} 0}
-	}}]} {
-	    my Error $reason BAD SCHEMA
-	}
-
-	# Iterator table, sibling to the blob table.
-	# - id is PK --> blob table -- uuid is UNIQUE indexed
-	# - key - indexed
-	if {![dbutil initialize-schema $fqndb reason $itertable \
-		  [string map $map {{
-		        id  INTEGER PRIMARY KEY -- <=> table.id
-		      , key <<type>> NOT NULL
-		  } {
-		      {id  INTEGER  0 {} 1}
-		      {key <<type>> 1 {} 0}
-		  } {
-		      key
-		  }}]]} {
-	    my Error $reason BAD SCHEMA
-	}
-
-	# Iterator status table. All iterators with the same type of
-	# key share a state table. The different states are separated
-	# by the <itertable>
-	if {![dbutil initialize-schema $fqndb reason blobiter_${type}_state \
-		  [string map $map {{
-		        id          INTEGER PRIMARY KEY AUTOINCREMENT
-		      , who         TEXT NOT NULL UNIQUE
-		      , increasing  INTEGER NOT NULL
-		      , cursor_code INTEGER NOT NULL
-		      , cursor_key  <<type>>
-		      , cursor_uuid TEXT
-		  } {
-		      {id          INTEGER  0 {} 1}
-		      {who         TEXT     1 {} 0}
-		      {increasing  INTEGER  1 {} 0}
-		      {cursor_code INTEGER  1 {} 0}
-		      {cursor_key  <<type>> 0 {} 0}
-		      {cursor_uuid TEXT     0 {} 0}
-	}}]]} {
-	    my Error $reason BAD SCHEMA
-	}
-
-	# Fill the state table with the initial iterator setup. This
-	# ensures that everything else can assume that this row
-	# exists. The uniqueness of the iterator table name also
-	# ensures that construction fails when trying to make multiple
-	# iterators attach to the same tables.
-	DB eval [string map $map {
-	    INSERT
-	    INTO blobiter_<<type>>_state
-	    VALUES (NULL, :itertable, 1, 1, NULL, NULL)
-	}]
+	blob::table::store $fqndb $table
+	blob::table::iter  $fqndb $itertable $type
 
 	# Generate the custom sql commands.
 	# . add entry to interator
@@ -554,7 +495,7 @@ oo::class create blob::iter::sqlite {
 	}
 
 	my Def sql_clear {
-	    DELETE FROM "<<iter>>"
+	    DELETE FROM <<iter>>
 	}
 
 	my Def sql_reset_state {
@@ -669,7 +610,7 @@ oo::class create blob::iter::sqlite {
 	# Similar to sql_forward. Differences:
 	# - Returns both key and uuid.
 	# - Looks for 'greater than' current position to get the entry
-	# - after the skipped range.
+	# - __after__ the skipped range.
 	my Def sql_next {
 	    SELECT B.uuid AS myuuid
 	    ,      I.key  AS mykey
@@ -685,7 +626,7 @@ oo::class create blob::iter::sqlite {
 	# Similar to sql_forward. Differences:
 	# - Returns both key and uuid.
 	# - Looks for 'less than' current position to get the entry
-	# - before the skipped range.
+	# - __before__ the skipped range.
 	my Def sql_previous {
 	    SELECT B.uuid AS myuuid
 	    ,      I.key  AS mykey
