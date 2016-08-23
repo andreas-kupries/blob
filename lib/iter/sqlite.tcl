@@ -86,26 +86,17 @@ oo::class create blob::iter::sqlite {
     # remove: (uuid) --> ()
     method Remove {uuid} {
 	debug.blob/iter/sqlite {}
-
-	# Note! While the sql_forward/backward commands automatically
-	# take the elements before/after the cursor, even if the
-	# cursor itself is not an element of the table anymore, not
-	# updating the cursor location when it removed leaves us with
-	# an invalid location. That would be bad on (de)serialization,
-	# as the destination will not accept it.
-	#
-	# Thus, if the removed entry is the current cursor location,
-	# move to the next entry as per the current direction.
-	if {($mycode == 2) && ($myuuid eq $uuid)} {
-	    my next 1
-	}
-
 	DB transaction {
 	    DB eval $sql_remove
 	}
 
 	debug.blob/iter/sqlite {/done}
 	return
+    }
+
+    method IsCurrent {uuid} {
+	debug.blob/iter/sqlite {}
+	return [expr {($mycode == 2) && ($myuuid eq $uuid)}]
     }
 
     # clear: () --> ()

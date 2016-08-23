@@ -125,12 +125,23 @@ oo::class create blob::iter {
 		debug.blob/iter {not found, ignored}
 		continue
 	    }
+	    # If the removed entry is for the current cursor location
+	    # we move forward to the location after the removed entry
+	    # in the chosen direction. This prevents the iterator from
+	    # possibly pointing to an invalid location after the
+	    # removal. It also means that the actual implementation of
+	    # Remove does not have to care about this possibility.
+	    if {[my IsCurrent $uuid]} {
+		my next 1
+	    }
 	    my Remove $uuid
 	}
 	return
     }
 
     method Remove {uuid} { my API.error Remove }
+
+    method IsCurrent {uuid} { my API.error IsCurrent }
 
     # clear: () --> ()
     # Shrink iterator to nothing

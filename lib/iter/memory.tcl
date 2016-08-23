@@ -67,73 +67,48 @@ oo::class create blob::iter::memory {
 
     # remove: (uuid) --> ()
     method Remove {uuid} {
-	# Keep it simple. As the removed element may be the current
-	# element, which requires an update to the cursor, which
-	# requires a sorted table we simply ensure it as sorted,
-	# always. Sorting only when actually needed, that will be
-	# quite complicated.
+	# The removed element is never at the current cursor location.
+	# Our caller (base class) has made sure. And while the actions
+	# it took (next 1) ensured that the table is sorted for that
+	# case, nothing was done if the element was not the current
+	# before.  Thus we cannot assume to be sorted.
 	debug.blob/iter/memory {}
 
 	dict unset myuuid $uuid
 
-	set current [my CursorLocation]
-	set pk      [lindex $mytable $current]
+	# Element is not current. Search for its physical location.
+	# IDEA: Use a dict mapping from uuid to location
+	#       - Refresh as part of sorting, and part of remove
+	set pos [lsearch -glob $mytable [list $uuid *]]
 
-	debug.blob/iter/memory {@ $current @($pk)}
-
-	if {$uuid ne [lindex $pk 0]} {
-	    debug.blob/iter/memory {not current}
-
-	    # Element is not current. Search for its physical location.
-	    # IDEA: Use a dict mapping from uuid to location
-	    #       - Refresh as part of sorting, and part of remove
-	    set pos [lsearch -glob $mytable [list $uuid *]]
-
-	    # Not found -- mytable and myuuid are out of sync!! Should panic
-	    if {$pos < 0} {
-		debug.blob/iter/memory {not found, ignored}
-		return
-	    }
-
-	    # Found. Remove.
-	    debug.blob/iter/memory {remove $pos}
-	    set mytable [lreplace $mytable $pos $pos]
-	    # TODO: implement K/take
-
-	    # Removal does not de-order the sorted table.
-	    # However if we removed before the current location, the
-	    # physical must be corrected.
-	    if {$pos < $current} {
-		debug.blob/iter/memory {adjust -1}
-		incr myploc -1
-	    }
-
-	    debug.blob/iter/memory {/done}
+	# Not found -- mytable and myuuid are out of sync!! Should panic
+	if {$pos < 0} {
+	    debug.blob/iter/memory {not found, ignored}
 	    return
 	}
 
-	debug.blob/iter/memory {current!}
-	# Removal of the current element. We know its physical
-	# position already, no further searching. The cursor moves to
-	# the next element. Which has moved into the same phyical
-	# location. Adjust the logical.
+	# Found. Remove.
+	debug.blob/iter/memory {remove $pos}
+	set mytable [lreplace $mytable $pos $pos]
+	# TODO: implement K/take
 
-	debug.blob/iter/memory {remove $current}
-	set mytable [lreplace $mytable $current $current]
-
-	set pk [lindex $mytable $current]
-	if {$pk == {}} {
-	    # New cursor location is beyond the end of the table.
-	    # I.e. we removed the last element of the index. Adjust
-	    # again.
-	    my ToBoundary end
-	} else {
-	    my To $pk $current
+	set current [my CursorLocation]
+	# Removal does not de-order the sorted table.
+	# However if we removed before the current location, the
+	# physical must be corrected.
+	if {$pos < $current} {
+	    debug.blob/iter/memory {adjust -1}
+	    incr myploc -1
 	}
 
-	debug.blob/iter/memory {new pk = ($pk)}
 	debug.blob/iter/memory {/done}
 	return
+    }
+
+    method IsCurrent {uuid} {
+	if {[lindex $myvloc 0]   ne "at" } { return 0 }
+	if {[lindex $myvloc 1 0] eq $uuid} { return 1 }
+	return 0
     }
 
     # clear: () --> ()
