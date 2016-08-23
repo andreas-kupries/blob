@@ -21,6 +21,17 @@
 # @@ Meta End
 
 # # ## ### ##### ######## ############# #####################
+## Limitation
+
+# Currently only able to order on the stored propery-value.
+# This is a problem where that value is just row-id, i.e. foreign key
+# reference into a separate table holding the actual values.
+# This situation will occur when the property values are interned, see
+# package Atom.
+
+# TODO: Resolve the limitation on sorting.
+
+# # ## ### ##### ######## ############# #####################
 ## Requisites
 
 package require Tcl 8.5
@@ -53,7 +64,7 @@ oo::class create blob::iter::sqlite {
 	interp alias {} [self namespace]::DB {} $db
 
 	# Configure the sql commands with the tables to use, and the
-	# type of the key column.
+	# type of the property_value column.
 	my InitializeSchema $table $itertable $type
 	my LoadState
 	next
@@ -63,8 +74,8 @@ oo::class create blob::iter::sqlite {
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # Add: (uuid key) --> ()
-    method Add {uuid key} {
+    # Add: (uuid property_value) --> ()
+    method Add {uuid pval} {
 	debug.blob/iter/sqlite {}
 	DB transaction {
 	    DB eval $sql_add
@@ -109,7 +120,7 @@ oo::class create blob::iter::sqlite {
     method reset {} {
 	debug.blob/iter/sqlite {}
 	set mycode       1
-	set mykey        {}
+	set mypval       {}
 	set myuuid       {}
 	my SaveState
 	return
@@ -212,7 +223,7 @@ oo::class create blob::iter::sqlite {
 
     # to: pair('start',{})          --> ()
     #     pair('end',{})
-    #     pair('at',pair(key,uuid))
+    #     pair('at',pair(property_value,uuid))
     method to {location} {
 	debug.blob/iter/sqlite {}
 
@@ -224,15 +235,13 @@ oo::class create blob::iter::sqlite {
 	set type [lindex $location 0]
 	switch -exact -- $type {
 	    at {
-		lassign [lindex $location 1] key uuid
+		lassign [lindex $location 1] pval uuid
 		set has [DB eval $sql_has]
 		if {!$has} {
 		    my Error "Bad location \"$location\", not found" \
 			INVALID LOCATION UNKNOWN
 		}
-		set mycode 2
-		set mykey  $key
-		set myuuid $uuid
+		my To $pval $uuid no
 	    }
 	    start - end {
 		my ToBoundary $type no
@@ -250,7 +259,7 @@ oo::class create blob::iter::sqlite {
     # direction! (string) -> ()
     # __Inherited__ TODO: Check if this can be done better locally with direct access
 
-    # data!: (list(tuple(key,uuid)) --> ()
+    # data!: (list(tuple(property_value,uuid)) --> ()
     # __Inherited__ TODO: Check if this can be done better locally with direct access
     #               Single loop, validate while entering, error is rollback, undo.
 
@@ -276,7 +285,7 @@ oo::class create blob::iter::sqlite {
 	return $size
     }
 
-    # at: length --> list(tuple(key,uuid))
+    # at: length --> list(tuple(property_value,uuid))
     method at {n} {
 	debug.blob/iter/sqlite {}
 	my ValidatePosInt $n SIZE
@@ -295,13 +304,13 @@ oo::class create blob::iter::sqlite {
 	if {$myincreasing} {
 	    DB transaction {
 		DB eval $sql_forward {
-		    lappend slice [list $uuid $key]
+		    lappend slice [list $uuid $pval]
 		}
 	    }
 	} else {
 	    DB transaction {
 		DB eval $sql_backward {
-		    lappend slice [list $uuid $key]
+		    lappend slice [list $uuid $pval]
 		}
 	    }
 	}
@@ -318,27 +327,27 @@ oo::class create blob::iter::sqlite {
 	return $dir
     }
 
-    # location: () -> tuple(key,uuid)
+    # location: () -> tuple(property_value,uuid)
     method location {} {
-	debug.blob/iter/sqlite {@l:($mycode ($mykey $myuuid))}
+	debug.blob/iter/sqlite {@l:($mycode ($mypval $myuuid))}
 
 	switch -exact -- $mycode {
 	    1 { set loc {start {}} }
 	    3 { set loc {end {}} }
-	    2 { set loc [list at [list $mykey $myuuid]] }
+	    2 { set loc [list at [list $mypval $myuuid]] }
 	}
 
 	debug.blob/iter/sqlite {==> ($loc)}
 	return $loc
     }
 
-    # data: () -> list(tuple(uuid,key))
+    # data: () -> list(tuple(uuid,property_value))
     method data {} {
 	debug.blob/iter/sqlite {}
 	set r {}
 	DB transaction {
 	    DB eval $sql_data {
-		lappend r [list $uuid $key]
+		lappend r [list $uuid $pval]
 	    }
 	}
 	return $r
@@ -349,15 +358,15 @@ oo::class create blob::iter::sqlite {
 
     # myincreasing - {0,1} - Sort order
     # mycode       - {1,2,3} - Cursor state
-    #                1 = start = cursor at virtual start, ignore key/uuid
-    #                2 = el    = cursor at specific key/uuid
-    #                3 = end   = cursor at virtual end, ignore key/uuid
-    # mykey        - 
-    # myuuid       - 
+    #                1 = start = cursor at virtual start, ignore pval/uuid
+    #                2 = el    = cursor at specific pval/uuid
+    #                3 = end   = cursor at virtual end, ignore pval/uuid
+    # mypval       - Primary cursor position:   property-value
+    # myuuid       - Secondary cursor position: blob uuid
 
     # Configuration:
     variable \
-	myincreasing mycode mykey myuuid \
+	myincreasing mycode mypval myuuid \
 	sql_add         \
 	sql_remove      \
 	sql_clear       \
@@ -378,6 +387,15 @@ oo::class create blob::iter::sqlite {
 
     # # ## ### ##### ######## #############
     # Internal helper methods
+
+    method To {pval uuid {save yes}} {
+	debug.blob/iter/sqlite {}
+	set mycode 2
+	set mypval $pval
+	set myuuid $uuid
+	if {$save} { my SaveState }
+	return
+    }
 
     method ToBoundary {s {save yes}} {
 	debug.blob/iter/sqlite {}
@@ -416,7 +434,7 @@ oo::class create blob::iter::sqlite {
 	}
 
 	set mycode 2
-	lassign $pos mykey myuuid
+	lassign $pos mypval myuuid
 	my SaveState
 	return true
     }
@@ -425,7 +443,7 @@ oo::class create blob::iter::sqlite {
 	debug.blob/iter/sqlite {}
 	set myincreasing 1
 	set mycode       1
-	set mykey        {}
+	set mypval       {}
 	set myuuid       {}
 	DB transaction {
 	    DB eval $sql_load_state
@@ -465,7 +483,7 @@ oo::class create blob::iter::sqlite {
 	# . <bulk extend iterator ?!>
 	#
 	# . test uuid for existence
-	# . test uuid+key for existence
+	# . test uuid+pval for existence
 	# . determine size of iterator
 	# . read slice forward
 	# . read slice backward
@@ -483,7 +501,7 @@ oo::class create blob::iter::sqlite {
 	    VALUES ((SELECT id
 		     FROM <<table>>
 		     WHERE uuid = :uuid),
-		    :key)
+		    :pval)
 	}
 
 	my Def sql_remove {
@@ -502,7 +520,7 @@ oo::class create blob::iter::sqlite {
 	    UPDATE blobiter_<<type>>_state
 	    SET increasing  = 1    -- order: increasing
 	    ,   cursor_code = 1    -- at virtual start
-	    ,   cursor_key  = NULL -- ignored due to code
+	    ,   cursor_pval = NULL -- ignored due to code
 	    ,   cursor_uuid = NULL -- ditto
 	    WHERE who = "<<iter>>"
 	}
@@ -510,7 +528,7 @@ oo::class create blob::iter::sqlite {
 	my Def sql_load_state {
 	    SELECT increasing  AS myincreasing
 	    ,      cursor_code AS mycode
-	    ,      cursor_key  AS mykey
+	    ,      cursor_pval AS mypval
 	    ,      cursor_uuid AS myuuid
 	    FROM blobiter_<<type>>_state
 	    WHERE who = "<<iter>>"
@@ -520,14 +538,14 @@ oo::class create blob::iter::sqlite {
 	    UPDATE blobiter_<<type>>_state
 	    SET increasing  = :myincreasing
 	    ,   cursor_code = :mycode
-	    ,   cursor_key  = :mykey
+	    ,   cursor_pval = :mypval
 	    ,   cursor_uuid = :myuuid
 	    WHERE who = "<<iter>>"
 	}
 
 	my Def sql_data {
 	    SELECT B.uuid AS uuid
-	    ,      I.key  AS key
+	    ,      I.pval AS pval
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
@@ -549,7 +567,7 @@ oo::class create blob::iter::sqlite {
 	    WHERE id = (SELECT id
 			FROM <<table>>
 			WHERE uuid = :uuid)
-	    AND   key = :key
+	    AND   pval = :pval
 	}
 
 	my Def sql_size {
@@ -558,84 +576,84 @@ oo::class create blob::iter::sqlite {
 
 	my Def sql_forward {
 	    SELECT B.uuid AS uuid
-	    ,      I.key  AS key
+	    ,      I.pval AS pval
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
-	    AND ((I.key >= :mykey) OR
-		 ((I.key = :mykey) AND (B.uuid >= :myuuid)))
-	    ORDER BY I.key ASC, B.uuid ASC
+	    AND ((I.pval >= :mypval) OR
+		 ((I.pval = :mypval) AND (B.uuid >= :myuuid)))
+	    ORDER BY I.pval ASC, B.uuid ASC
 	    LIMIT :n
 	}
 
 	my Def sql_backward {
 	    SELECT B.uuid AS uuid
-	    ,      I.key  AS key
+	    ,      I.pval  AS pval
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
-	    AND ((I.key <= :mykey) OR
-		 ((I.key = :mykey) AND (B.uuid <= :myuuid)))
-	    ORDER BY I.key DESC, B.uuid DESC
+	    AND ((I.pval <= :mypval) OR
+		 ((I.pval = :mypval) AND (B.uuid <= :myuuid)))
+	    ORDER BY I.pval DESC, B.uuid DESC
 	    LIMIT :n
 	}
 
 	my Def sql_min_entry {
 	    -- NOTE: Cannot use MIN in a simple form, as the command
             --       returns the MIN of each column independently.
-	    --       Could be done as MIN of key, followed by a
-            --       separate MIN of uuid within that key. Unclear
+	    --       Could be done as MIN of pval, followed by a
+            --       separate MIN of uuid within that pval. Unclear
             --       which of the forms (current and alternate) would
             --       be faster, and what indices will be required.
-	    SELECT I.key  AS key
+	    SELECT I.pval AS pval
 	    ,      B.uuid AS uuid
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
-	    ORDER BY key ASC, uuid ASC
+	    ORDER BY pval ASC, uuid ASC
 	    LIMIT 1
 	}
 
 	my Def sql_max_entry {
 	    -- NOTE: See sql_min_entry above for note.
-	    SELECT I.key  AS key
+	    SELECT I.pval AS pval
 	    ,      B.uuid AS uuid
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
-	    ORDER BY key DESC, uuid DESC
+	    ORDER BY pval DESC, uuid DESC
 	    LIMIT 1
 	}
 
 	# Similar to sql_forward. Differences:
-	# - Returns both key and uuid.
+	# - Returns both pval and uuid.
 	# - Looks for 'greater than' current position to get the entry
 	# - __after__ the skipped range.
 	my Def sql_next {
 	    SELECT B.uuid AS myuuid
-	    ,      I.key  AS mykey
+	    ,      I.pval AS mypval
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
-	    AND ((I.key > :mykey) OR
-		 ((I.key = :mykey) AND (B.uuid > :myuuid)))
-	    ORDER BY I.key ASC, B.uuid ASC
+	    AND ((I.pval > :mypval) OR
+		 ((I.pval = :mypval) AND (B.uuid > :myuuid)))
+	    ORDER BY I.pval ASC, B.uuid ASC
 	    LIMIT :n
 	}
 
 	# Similar to sql_forward. Differences:
-	# - Returns both key and uuid.
+	# - Returns both pval and uuid.
 	# - Looks for 'less than' current position to get the entry
 	# - __before__ the skipped range.
 	my Def sql_previous {
 	    SELECT B.uuid AS myuuid
-	    ,      I.key  AS mykey
+	    ,      I.pval AS mypval
 	    FROM <<table>> B
 	    ,    <<iter>>  I
 	    WHERE I.id = B.id
-	    AND ((I.key < :mykey) OR
-		 ((I.key = :mykey) AND (B.uuid < :myuuid)))
-	    ORDER BY I.key DESC, B.uuid DESC
+	    AND ((I.pval < :mypval) OR
+		 ((I.pval = :mypval) AND (B.uuid < :myuuid)))
+	    ORDER BY I.pval DESC, B.uuid DESC
 	    LIMIT :n
 	}
 
@@ -654,22 +672,22 @@ oo::class create blob::iter::sqlite {
 	set k 0
 	set pre 1
 	foreach item [lsort -index 0 [lsort -index 1 [my data]]] {
-	    lassign $item key uuid
+	    lassign $item pval uuid
 
-	    if {($key eq $mykey) && ($uuid eq $myuuid)} {
+	    if {($pval eq $mypval) && ($uuid eq $myuuid)} {
 		set mark *
 		set pre 0
 	    } else {
 		set mark { }
 	    }
 	    if {$pre &&
-		((($key eq $mykey) &&
+		((($pval eq $mypval) &&
 		  ([string compare $uuid $myuuid] > 0)) ||
-		 ([string compare $key $mykey] > 0))} {
-		puts [format "* --- %10s %s" $key $uuid]
+		 ([string compare $pval $mypval] > 0))} {
+		puts [format "* --- %10s %s" $pval $uuid]
 		set pre 0
 	    }
-	    puts [format "%s %3d %10s %s" $mark $k $key $uuid]
+	    puts [format "%s %3d %10s %s" $mark $k $pval $uuid]
 	    incr k
 	}
     }

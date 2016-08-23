@@ -66,20 +66,20 @@ proc ::blob::table::store {db table} {
 proc ::blob::table::iter {db table type} {
     debug.blob/table {}
     # Iterator content. Sibling to the blob store table.
-    # - id is PK --> blob table -- uuid is UNIQUE indexed
-    # - key - indexed
+    # - id   - is PK --> blob table -- uuid is UNIQUE indexed
+    # - pval - indexed, easy sorting
 
     lappend map <<type>> $type
 
     if {![dbutil initialize-schema $db reason $table \
 	      [string map $map {{
-		    id  INTEGER PRIMARY KEY -- <=> (blob-table).id
-		  , key <<type>> NOT NULL
+		    id   INTEGER PRIMARY KEY -- <=> (blob-table).id
+		  , pval <<type>> NOT NULL
 	      } {
-		  {id  INTEGER  0 {} 1}
-		  {key <<type>> 1 {} 0}
+		  {id   INTEGER  0 {} 1}
+		  {pval <<type>> 1 {} 0}
 	      } {
-		  key
+		  pval
 	      }}]]} {
 	Error $reason BAD SCHEMA
     }
@@ -93,14 +93,14 @@ proc ::blob::table::iter {db table type} {
 		  , who         TEXT NOT NULL UNIQUE
 		  , increasing  INTEGER NOT NULL
 		  , cursor_code INTEGER NOT NULL
-		  , cursor_key  <<type>>
+		  , cursor_pval <<type>>
 		  , cursor_uuid TEXT
 	      } {
 		  {id          INTEGER  0 {} 1}
 		  {who         TEXT     1 {} 0}
 		  {increasing  INTEGER  1 {} 0}
 		  {cursor_code INTEGER  1 {} 0}
-		  {cursor_key  <<type>> 0 {} 0}
+		  {cursor_pval <<type>> 0 {} 0}
 		  {cursor_uuid TEXT     0 {} 0}
 	      }}]]} {
 	Error $reason BAD SCHEMA

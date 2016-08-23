@@ -54,12 +54,12 @@ oo::class create blob::iter::memory {
     # # ## ### ##### ######## #############
     ## API. Implementation of inherited virtual methods.
 
-    # Add: (uuid key) --> ()
-    method Add {uuid key} {
+    # Add: (uuid property_value) --> ()
+    method Add {uuid property_value} {
 	debug.blob/iter/memory {}
 	# Extend index
-	dict set myuuid $uuid $key
-	lappend mytable [list $uuid $key]
+	dict set myuuid $uuid $property_value
+	lappend mytable [list $uuid $property_value]
 	# Signal that we cannot assume proper order anymore.
 	set mysorted no
 	return
@@ -213,7 +213,7 @@ oo::class create blob::iter::memory {
 
     # to: pair('start',{})          --> ()
     #     pair('end',{})
-    #     pair('at',pair(key,uuid))
+    #     pair('at',pair(property_value,uuid))
     method to {location} {
 	debug.blob/iter/memory {}
 
@@ -246,7 +246,7 @@ oo::class create blob::iter::memory {
     # direction! (string) -> ()
     # __Inherited__ Can't be done better locally
 
-    # data!: (list(tuple(key,uuid)) --> ()
+    # data!: (list(tuple(property_value,uuid)) --> ()
     # __Inherited__ Can't be done better locally
 
     # # ## ### ##### ######## #############
@@ -281,7 +281,7 @@ oo::class create blob::iter::memory {
 
     # location: () -> pair('start',{})
     #              -> pair('end',{})
-    #              -> pair('at',pair(key,uuid))
+    #              -> pair('at',pair(property_value,uuid))
     method location {} {
 	debug.blob/iter/memory {@l:($myvloc) -- @p:($myploc)}
 
@@ -294,7 +294,7 @@ oo::class create blob::iter::memory {
 	return $loc
     }
 
-    # data: () -> list(tuple(uuid,key))
+    # data: () -> list(tuple(uuid,property_value))
     method data {} {
 	debug.blob/iter/memory {}
 	return $mytable
@@ -306,18 +306,20 @@ oo::class create blob::iter::memory {
     # Configuration:
     # - mysort    :: option (lsort)       :: How to sort the index, ordering
     # Data:
-    # - mytable   :: list(pair(uuid,key)) :: Index to iterate over
-	# - myuuid
-    # - mysorted  :: bool                 :: Sorting status of mytable, true <=> sorted.
+    # - mytable   :: list(pair(uuid,property_value)) :: Index to iterate over
+    # - myuuid    :: dict (uuid -> property_value)   :: Fast existence checks
+    # - mysorted  :: bool                            :: Sorting status of mytable,
+    #                                                   true <=> sorted.
     # Iterator state:
-    # - mydirection :: {"increasing","decreasing"} :: Direction of iteration
-    # - myploc      :: integer                     :: Physical position, index into mytable
-    # - myvloc      :: pair(note,pair(uuid,key))   :: Logical position in the table
+    # - mydirection :: {"increasing","decreasing"}    :: Direction of iteration
+    # - myploc      :: integer                        :: Physical cursor position,
+    #                                                    index into mytable
+    # - myvloc      :: pair(note,pair(uuid,prop_val)) :: Logical cursor position
     #
     # The logical position can be:
     # - {start {}}      - virtual start
     # - {end {}}        - virtual end (after the table)
-    # - {el {uuid key}} - exact location (as a pk matching table structure)
+    # - {el {uuid property_value}} - exact location (as a pk matching table structure)
     #
     # The physical position can be
     # - an empty string, or
@@ -367,10 +369,11 @@ oo::class create blob::iter::memory {
     method EnsureSorted {} {
 	debug.blob/iter/memory {}
 	if {$mysorted} return
-	# Table was extended without regard to order. Resort now.
-	# We are taking direction into account here to get the table
-	# in the proper order. Sorting is done inside out, uuid first,
-	# then key, given a final order of by key, then by uuid.
+	# Table was extended without regard to order. Resort now.  We
+	# are taking direction into account here to get the table in
+	# the proper order. Sorting is done inside out, uuid first,
+	# then property_value, given a final order of by
+	# property_value, then by uuid.
 
 	set mytable [lsort -$mydirection $mysort -index 1 \
 			 [lsort -$mydirection -ascii -index 0 \
@@ -390,16 +393,16 @@ oo::class create blob::iter::memory {
 
     method To {pk {phys {}}} {
 	debug.blob/iter/memory {}
-	set myvloc [list at $pk] ;# logical position via primary key
+	set myvloc [list at $pk] ;# logical position via primary property_value
 	set myploc $phys         ;# physical position unknown by
 				  # default, caller may know and set
 	return
     }
 
-    method Has {uuid key} {
+    method Has {uuid property_value} {
 	debug.blob/iter/memory {}
 	if {![dict exists $myuuid $uuid]} { return 0 }
-	return [expr {[dict get $myuuid $uuid] eq $key}]
+	return [expr {[dict get $myuuid $uuid] eq $property_value}]
     }
 
     # # ## ### ##### ######## #############

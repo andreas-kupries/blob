@@ -90,7 +90,7 @@ test [test-class]-add-1.0.0 {add, wrong#args, not enough} -setup {
     test-iter add
 } -cleanup {
     release-iter
-} -returnCodes error -result {wrong # args: should be "test-iter add uuid key"}
+} -returnCodes error -result {wrong # args: should be "test-iter add uuid property_value"}
 
 test [test-class]-add-1.0.1 {add, wrong#args, not enough} -setup {
     new-iter
@@ -98,15 +98,15 @@ test [test-class]-add-1.0.1 {add, wrong#args, not enough} -setup {
     test-iter add UUID
 } -cleanup {
     release-iter
-} -returnCodes error -result {wrong # args: should be "test-iter add uuid key"}
+} -returnCodes error -result {wrong # args: should be "test-iter add uuid property_value"}
 
 test [test-class]-add-1.0.2 {add, wrong#args, too many} -setup {
     new-iter
 } -body {
-    test-iter add UUID KEY X
+    test-iter add uuid property_value X
 } -cleanup {
     release-iter
-} -returnCodes error -result {wrong # args: should be "test-iter add uuid key"}
+} -returnCodes error -result {wrong # args: should be "test-iter add uuid property_value"}
 
 test [test-class]-add-1.1 {add, duplicate} -setup {
     new-iter

@@ -23,18 +23,38 @@
 # @@ Meta End
 
 # # ## ### ##### ######## ############# #####################
+## TODOs
+
+# - Investigate ways of creating a deeper association between blob
+#   stores and iterators over them. Mainly to ensure that all blobs in
+#   a store have a value for the iterator properties, and none is
+#   forgotten.
+
+# # ## ### ##### ######## ############# #####################
 ##
 # Notes:
-# - The internals indices of iterators maps arbitrary keys to blob
-#   uuids.
 #
-# - A cursor position is fully specified by the 'key' we are at, and
-#   the 'uuid' under that key.
+# - An iterator stores, conceptually, a blob property by which blobs
+#   can be sorted and then iterated over in the resulting order.
 #
-#   Note that while uuids are unique, the keys are not. We can have
-#   multiple entries with the same key, and different uuids. That is
+#   As such each blob in the iterator has at most one property value
+#   associated with it, while converserly, a single property value may
+#   have multiple blobs associated with it.
+#
+#   In a sense the iterator is a table parallel to the blob-table, a
+#   sibling with the same primary key, the blob uuid. The 'at most' in
+#   the previous paragraph means that this table can have NULL values
+#   for the property column, although actually the entry will simply
+#   not exist.
+#
+# - For the sorting, done by the property value, and iteration this
+#   means that the position of the cursor is fully specified by the
+#   'value' we are at, plus the 'uuid' under that value.
+#
+#   Note that while uuids are unique, the values are not. We can have
+#   multiple entries with the same value, and different uuids. That is
 #   why the cursor position requires the uuid as well, to disambiguate
-#   between entries with the same key.
+#   between entries with the same value.
 #
 # - The semantics of [at], [next], and [previous] with regard to the
 #   cursor position are this:
@@ -83,18 +103,18 @@ oo::class create blob::iter {
     # # ## ### ##### ######## #############
     ## API. Content manipulation
 
-    # add: (uuid key) --> ()
+    # add: (uuid property_value) --> ()
     # Extend iterator with new element
-    method add {uuid key} {
+    method add {uuid property_value} {
 	debug.blob/iter {}
 	if {[my exists $uuid]} {
 	    my Error "Duplicate UUID \"$uuid\"" UUID DUPLICATE
 	}
-	my Add $uuid $key
+	my Add $uuid $property_value
 	return
     }
 
-    method Add {uuid key} { my API.error Add }
+    method Add {uuid property_value} { my API.error Add }
 
     # remove: (uuid...) --> ()
     # Take element out of the iterator
@@ -116,7 +136,7 @@ oo::class create blob::iter {
     # Shrink iterator to nothing
     method clear {} { my API.error clear }
 
-    # data!: (list(tuple(uuid,key)) --> ()
+    # data!: (list(tuple(uuid,property_value)) --> ()
     # Load iterator with bulk data (bulk add)
     method data! {tuples} {
 	debug.blob/iter {}
@@ -162,7 +182,7 @@ oo::class create blob::iter {
 
     # to: pair('start',{})          --> ()
     #     pair('end',{})
-    #     pair('at',pair(key,uuid))
+    #     pair('at',pair(property_value,uuid))
     # Move the cursor to a specific location.
     method to {location} { my API.error to }
 
@@ -191,7 +211,7 @@ oo::class create blob::iter {
     # Return number of entries in the index
     method size {} { my API.error size }
 
-    # at: length --> list(tuple(uuid,key))
+    # at: length --> list(tuple(uuid,property_value))
     # Return elements of the index at the cursor position.
     method at {n} { my API.error at }
 
@@ -201,11 +221,11 @@ oo::class create blob::iter {
 
     # location: () -> pair('start',{})
     #              -> pair('end',{})
-    #              -> pair('at',pair(key,uuid))
+    #              -> pair('at',pair(property_value,uuid))
     # Query cursor for current position.
     method location {} { my API.error location }
 
-    # data: () -> list(tuple(uuid,key))
+    # data: () -> list(tuple(uuid,property_value))
     # Query whole iterator
     method data {} { my API.error data }
 
