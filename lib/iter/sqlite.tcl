@@ -86,18 +86,23 @@ oo::class create blob::iter::sqlite {
     # remove: (uuid) --> ()
     method Remove {uuid} {
 	debug.blob/iter/sqlite {}
+
+	# Note! While the sql_forward/backward commands automatically
+	# take the elements before/after the cursor, even if the
+	# cursor itself is not an element of the table anymore, not
+	# updating the cursor location when it removed leaves us with
+	# an invalid location. That would be bad on (de)serialization,
+	# as the destination will not accept it.
+	#
+	# Thus, if the removed entry is the current cursor location,
+	# move to the next entry as per the current direction.
+	if {($mycode == 2) && ($myuuid eq $uuid)} {
+	    my next 1
+	}
+
 	DB transaction {
 	    DB eval $sql_remove
 	}
-	# Note! No need to update the saved cursor location.  The
-	# sql_forward/backward commands automatically take the
-	# elements before/after the cursor, even if the cursor itself
-	# is not an element of the table anymore. The LIMIT clause
-	# automatically stops retrieval when we have enough data.
-	#
-	# This is in contrast to the "memory" iterator which has to
-	# adjust the position because slicing is by direct access via
-	# offsets, which need compensation when elements go away.
 
 	debug.blob/iter/sqlite {/done}
 	return
@@ -665,33 +670,6 @@ oo::class create blob::iter::sqlite {
 	set $var [string map $map $sql]
 	return
     }
-
-    # Debug helper. Show entire iterator table, plus the location of
-    # the cursor.
-    method /SHOW {} {
-	set k 0
-	set pre 1
-	foreach item [lsort -index 0 [lsort -index 1 [my data]]] {
-	    lassign $item pval uuid
-
-	    if {($pval eq $mypval) && ($uuid eq $myuuid)} {
-		set mark *
-		set pre 0
-	    } else {
-		set mark { }
-	    }
-	    if {$pre &&
-		((($pval eq $mypval) &&
-		  ([string compare $uuid $myuuid] > 0)) ||
-		 ([string compare $pval $mypval] > 0))} {
-		puts [format "* --- %10s %s" $pval $uuid]
-		set pre 0
-	    }
-	    puts [format "%s %3d %10s %s" $mark $k $pval $uuid]
-	    incr k
-	}
-    }
-    #export /SHOW
 
     # # ## ### ##### ######## #############
 }

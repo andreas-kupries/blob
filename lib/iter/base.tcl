@@ -282,6 +282,62 @@ oo::class create blob::iter {
 	my Error "Unimplemented API $api" API MISSING $api
     }
 
+    # Debug helper. Show entire iterator table, plus the location of
+    # the cursor.
+    method /SHOW {} {
+	set k 0
+	set r {}
+
+	set data [lsort -index 1 [lsort -index 0 [my data]]]
+	lassign [my location] ctype cdetail
+
+	switch -exact -- $ctype {
+	    start {
+		lappend r "* --- start"
+		foreach item $data  {
+		    lassign $item uuid pval
+		    lappend r [format "  %3d %10s %s" $k $pval $uuid]
+		    incr k
+		}
+	    }
+	    end {
+		foreach item $data {
+		    lassign $item uuid pval
+		    lappend r [format "  %3d %10s %s" $k $pval $uuid]
+		    incr k
+		}
+		lappend r "* --- end"
+	    }
+	    at {
+		set pre 1
+		lassign $cdetail cpval cuuid
+		foreach item $data {
+		    lassign $item uuid pval
+		    if {($pval eq $cpval) && ($uuid eq $cuuid)} {
+			# Found cursor exactly
+			set mark *
+			set pre 0
+		    } else {
+			set mark { }
+		    }
+		    if {$pre &&
+			((($pval eq $cpval) &&
+			  ([string compare $uuid $cuuid] > 0)) ||
+			 ([string compare $pval $cpval] > 0))} {
+			# First time beyond cursor, show where it is missing.
+			# Should not happen.
+			lappend r [format "* --- %10s %s" $cpval $cuuid]
+			set pre 0
+		    }
+		    lappend r [format "%s %3d %10s %s" $mark $k $pval $uuid]
+		    incr k
+		}
+	    }
+	}
+	return [join $r \n]\n
+    }
+    #export /SHOW
+
     # # ## ### ##### ######## #############
 }
 

@@ -921,5 +921,148 @@ test [test-class]-:=-1.1.2 {:=, copy non-empty} -setup {
     release-iter -src
 } -result {decreasing {at {prince 10}} {{0D baron} {05 baroness} {0B count} {04 countess} {01 dame} {06 duchess} {0C duke} {0F emperor} {07 empress} {0A graf} {12 heir} {13 heiress} {09 herr} {0E king} {00 lady} {08 lord} {10 prince} {11 princess} {03 queen} {02 woman}}}
 
+
+return
+# # ## ### ##### ######## ############# #####################
+## /SHOW
+
+test [test-class]-/SHOW-1.0 {/SHOW, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter /SHOW X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter /SHOW"}
+
+test [test-class]-/SHOW-1.1.0 {/SHOW, empty} -setup {
+    new-iter
+} -body {
+    test-iter /SHOW
+} -cleanup {
+    release-iter
+} -result {* --- start
+}
+
+test [test-class]-/SHOW-1.1.1 {/SHOW, filled, defaults} -setup {
+    new-iter
+    iter-fill
+} -body {
+    test-iter /SHOW
+} -cleanup {
+    release-iter
+} -result {* --- start
+    0      baron 0D
+    1   baroness 05
+    2      count 0B
+    3   countess 04
+    4       dame 01
+    5    duchess 06
+    6       duke 0C
+    7    emperor 0F
+    8    empress 07
+    9       graf 0A
+   10       heir 12
+   11    heiress 13
+   12       herr 09
+   13       king 0E
+   14       lady 00
+   15       lord 08
+   16     prince 10
+   17   princess 11
+   18      queen 03
+   19      woman 02
+}
+
+test [test-class]-/SHOW-1.1.2 {/SHOW, filled, middle} -setup {
+    new-iter
+    iter-fill
+    test-iter next 4
+} -body {
+    test-iter /SHOW
+} -cleanup {
+    release-iter
+} -result {    0      baron 0D
+    1   baroness 05
+    2      count 0B
+    3   countess 04
+*   4       dame 01
+    5    duchess 06
+    6       duke 0C
+    7    emperor 0F
+    8    empress 07
+    9       graf 0A
+   10       heir 12
+   11    heiress 13
+   12       herr 09
+   13       king 0E
+   14       lady 00
+   15       lord 08
+   16     prince 10
+   17   princess 11
+   18      queen 03
+   19      woman 02
+}
+
+test [test-class]-/SHOW-1.1.3 {/SHOW, filled, end} -setup {
+    new-iter
+    iter-fill
+    test-iter next [test-iter size]
+} -body {
+    test-iter /SHOW
+} -cleanup {
+    release-iter
+} -result {    0      baron 0D
+    1   baroness 05
+    2      count 0B
+    3   countess 04
+    4       dame 01
+    5    duchess 06
+    6       duke 0C
+    7    emperor 0F
+    8    empress 07
+    9       graf 0A
+   10       heir 12
+   11    heiress 13
+   12       herr 09
+   13       king 0E
+   14       lady 00
+   15       lord 08
+   16     prince 10
+   17   princess 11
+   18      queen 03
+   19      woman 02
+* --- end
+}
+
+test [test-class]-/SHOW-1.1.4 {/SHOW, filled, removed} -setup {
+    new-iter
+    iter-fill
+    test-iter next 4
+    test-iter remove [lindex [test-iter location] 1 1]
+} -body {
+    test-iter /SHOW
+} -cleanup {
+    release-iter
+} -result {    0      baron 0D
+    1   baroness 05
+    2      count 0B
+    3   countess 04
+*   4    duchess 06
+    5       duke 0C
+    6    emperor 0F
+    7    empress 07
+    8       graf 0A
+    9       heir 12
+   10    heiress 13
+   11       herr 09
+   12       king 0E
+   13       lady 00
+   14       lord 08
+   15     prince 10
+   16   princess 11
+   17      queen 03
+   18      woman 02
+}
+
 # # ## ### ##### ######## ############# #####################
 return
