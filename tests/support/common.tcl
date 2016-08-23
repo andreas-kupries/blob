@@ -19,9 +19,9 @@ proc iter-methods {} {
     return {--> := add at clear data data! destroy direction direction! exists location next previous remove reset reverse size to}
 }
 
-proc iter-fill {} {
+proc iter-fill {{suffix {}}} {
     # 20 entries, enough for sensible testing of iterator navigation and paging
-    test-iter clear
+    test-iter$suffix clear
     foreach {key uuid} {
 	baron    0D
 	baroness 05
@@ -44,8 +44,8 @@ proc iter-fill {} {
 	queen    03
 	woman    02
     } {
-	pre-add-entry $uuid $key
-	test-iter add $uuid $key
+	pre-add-entry $uuid $key $suffix
+	test-iter$suffix add $uuid $key
     }
     return
 }
@@ -54,6 +54,10 @@ proc setup-wall   {} { set   ::wall 0 }
 proc wait-wall    {} { vwait ::wall   }
 proc pass-wall    {} { set   ::wall 1 }
 proc release-wall {} { unset ::wall   }
+
+proc sort-iter {data} {
+    return [lsort -index 1 [lsort -index 0 $data]]
+}
 
 # # ## ### ##### ######## ############# #####################
 return

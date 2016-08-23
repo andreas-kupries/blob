@@ -816,6 +816,49 @@ test [test-class]--->-1.0.1 {-->, wrong#args, too many} -setup {
     release-iter
 } -returnCodes error -result {wrong # args: should be "test-iter --> dst"}
 
+test [test-class]--->-1.1.0 {-->, return value} -setup {
+    new-iter -src
+    new-iter -dst
+} -body {
+    test-iter-src --> test-iter-dst
+} -cleanup {
+    release-iter -dst
+    release-iter -src
+} -result {}
+
+test [test-class]--->-1.1.1 {-->, copy empty} -setup {
+    new-iter -src
+    new-iter -dst
+    test-iter-src reverse
+} -body {
+    test-iter-src --> test-iter-dst
+    list [test-iter-dst direction] [test-iter-dst location] [test-iter-dst data]
+} -cleanup {
+    release-iter -dst
+    release-iter -src
+} -result {decreasing {start {}} {}}
+
+test [test-class]--->-1.1.2 {-->, copy non-empty} -setup {
+    new-iter -src
+    new-iter -dst
+    iter-fill -src
+    iter-fill -dst      ;# Fill the blob store of the destination
+    test-iter-dst clear ;# (pre-add-entry) and keep the dst iterator
+                        ;# itself empty. This is for iterators tightly
+                        ;# coupled to a store (Example: sqlite)
+    test-iter-src reverse
+    test-iter-src next 3
+} -body {
+    test-iter-src --> test-iter-dst
+    list \
+	[test-iter-dst direction] \
+	[test-iter-dst location] \
+	[sort-iter [test-iter-dst data]]
+} -cleanup {
+    release-iter -dst
+    release-iter -src
+} -result {decreasing {at {prince 10}} {{0D baron} {05 baroness} {0B count} {04 countess} {01 dame} {06 duchess} {0C duke} {0F emperor} {07 empress} {0A graf} {12 heir} {13 heiress} {09 herr} {0E king} {00 lady} {08 lord} {10 prince} {11 princess} {03 queen} {02 woman}}}
+
 # # ## ### ##### ######## ############# #####################
 ## :=
 
@@ -834,6 +877,49 @@ test [test-class]-:=-1.0.1 {:=, wrong#args, too many} -setup {
 } -cleanup {
     release-iter
 } -returnCodes error -result {wrong # args: should be "test-iter := src"}
+
+test [test-class]-:=-1.1.0 {:=, return value} -setup {
+    new-iter -src
+    new-iter -dst
+} -body {
+    test-iter-dst := test-iter-src
+} -cleanup {
+    release-iter -dst
+    release-iter -src
+} -result {}
+
+test [test-class]-:=-1.1.1 {:=, copy empty} -setup {
+    new-iter -src
+    new-iter -dst
+    test-iter-src reverse
+} -body {
+    test-iter-dst := test-iter-src
+    list [test-iter-dst direction] [test-iter-dst location] [test-iter-dst data]
+} -cleanup {
+    release-iter -dst
+    release-iter -src
+} -result {decreasing {start {}} {}}
+
+test [test-class]-:=-1.1.2 {:=, copy non-empty} -setup {
+    new-iter -src
+    new-iter -dst
+    iter-fill -src
+    iter-fill -dst      ;# Fill the blob store of the destination
+    test-iter-dst clear ;# (pre-add-entry) and keep the dst iterator
+                        ;# itself empty. This is for iterators tightly
+                        ;# coupled to a store (Example: sqlite)
+    test-iter-src reverse
+    test-iter-src next 3
+} -body {
+    test-iter-dst := test-iter-src
+    list \
+	[test-iter-dst direction] \
+	[test-iter-dst location] \
+	[sort-iter [test-iter-dst data]]
+} -cleanup {
+    release-iter -dst
+    release-iter -src
+} -result {decreasing {at {prince 10}} {{0D baron} {05 baroness} {0B count} {04 countess} {01 dame} {06 duchess} {0C duke} {0F emperor} {07 empress} {0A graf} {12 heir} {13 heiress} {09 herr} {0E king} {00 lady} {08 lord} {10 prince} {11 princess} {03 queen} {02 woman}}}
 
 # # ## ### ##### ######## ############# #####################
 return
