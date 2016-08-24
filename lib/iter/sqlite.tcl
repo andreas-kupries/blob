@@ -78,6 +78,10 @@ oo::class create blob::iter::sqlite {
     # Add: (uuid property_value) --> ()
     method Add {uuid pval} {
 	debug.blob/iter/sqlite {}
+
+	# TODO, MAYBE: Separate validation of value,
+	# TODO, MAYBE: to enable the generation of a
+	# TODO, MAYBE: nicer error message
 	DB transaction {
 	    DB eval $sql_add
 	}
@@ -147,6 +151,8 @@ oo::class create blob::iter::sqlite {
 	    my ToBoundary end
 	    return false
 	}
+
+	# (n > 0) ==> (count > 0) <=> (count is defined)
 
 	# Step forward (virtual), physical step direction is given by
 	# the chosen ordering.
@@ -473,8 +479,16 @@ oo::class create blob::iter::sqlite {
 	    lappend map <<PVAL>>    I.pval
 	    lappend map <<STABLE>>  {}
 	    lappend map <<SCLAUSE>> {}
+	    lappend map <<ENTER>>   :pval
 
 	} elseif {[regexp {^([^.]*)[.]([^.]*)$} $sidecar --> sidetable sidecolumn]} {
+	    if {($sidetable eq "") ||
+		($sidecolumn eq "")} {
+		my Error \
+		    "Bad sidecar \"$sidecar\", expected nothing or 'table.column'" \
+		    INVALID SIDECAR SPEC
+	    }
+
 	    # Sidcar present. With the actual property values held in
 	    # a sidecar the itertable's value is a FK-reference into
 	    # the sidecar, thus an int at its core. The ordering is
@@ -485,6 +499,16 @@ oo::class create blob::iter::sqlite {
 	    lappend map <<PVAL>>    V.$sidecolumn
 	    lappend map <<STABLE>>  ", $sidetable V"
 	    lappend map <<SCLAUSE>> "AND I.pval = V.id"
+	    lappend map <<ENTER>>   "(SELECT id 
+                                      FROM   $sidetable
+                                      WHERE  $sidecolumn = :pval)"
+	    # Note: There is no functional need for a separate
+	    # validation. If the value is missing the sidecar the
+	    # select should return NULL, which should then trigger the
+	    # NOT NULL constraint on pval in the iterator table.
+	    # --
+	    # However we might wish to do such even so, to generate a
+	    # nicer error message.
 	} else {
 	    my Error \
 		"Bad sidecar \"$sidecar\", expected nothing or 'table.column'" \
@@ -531,7 +555,7 @@ oo::class create blob::iter::sqlite {
 	    VALUES ((SELECT id
 		     FROM <<table>>
 		     WHERE uuid = :uuid),
-		    :pval)
+		    <<ENTER>>)
 	}
 
 	my Def sql_remove {
@@ -574,11 +598,11 @@ oo::class create blob::iter::sqlite {
 	}
 
 	my Def sql_data {
-	    SELECT B.uuid AS uuid
-	    ,      I.pval AS pval
+	    SELECT B.uuid   AS uuid
+	    ,      <<PVAL>> AS pval
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
+	    ,    <<iter>>  I   <<STABLE>>
+	    WHERE I.id = B.id  <<SCLAUSE>>
 	}
 
 	#my Def sql_add_bulk {}
@@ -593,11 +617,11 @@ oo::class create blob::iter::sqlite {
 
 	my Def sql_has {
 	    SELECT count(*)
-	    FROM <<iter>>
-	    WHERE id = (SELECT id
-			FROM <<table>>
-			WHERE uuid = :uuid)
-	    AND   pval = :pval
+	    FROM <<iter>> I                   <<STABLE>>
+	    WHERE I.id = (SELECT id
+			  FROM <<table>>
+			  WHERE uuid = :uuid) <<SCLAUSE>>
+	    AND   <<PVAL>> = :pval
 	}
 
 	my Def sql_size {
