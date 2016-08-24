@@ -20,6 +20,7 @@ proc test-class {} { return blob::iter::memory }
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
+kt source support/setup-iter.tcl
 kt source support/setup-memory-iter.tcl
 
 kt source parts/memory-iter.testsuite

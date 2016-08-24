@@ -26,6 +26,7 @@ proc test-class {} { return blob::iter::sqlite/memory }
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
+kt source support/setup-iter.tcl
 kt source support/setup-sqlite-memory.tcl
 kt source support/setup-sqlite-iter.tcl
 

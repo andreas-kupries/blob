@@ -12,7 +12,7 @@ proc release-iter {{suffix {}}} {
     return
 }
 
-proc pre-add-entry {args} {}
+# pre-add-entry - inherited no-op - setup-iter.tcl
 
 # # ## ### ##### ######## ############# #####################
 return
