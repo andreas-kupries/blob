@@ -38,8 +38,8 @@
 # location      | *
 # size          | *
 # --------------*---------------- (de)serialization
-# -->           |  x todo actual copying
-# :=            |  x todo actual copying
+# -->           | *
+# :=            | *
 # --------------*----------------
 
 # # ## ### ##### ######## ############# #####################
@@ -859,6 +859,26 @@ test [test-class]--->-1.1.2 {-->, copy non-empty} -setup {
     release-iter -src
 } -result {decreasing {at {prince 10}} {{0D baron} {05 baroness} {0B count} {04 countess} {01 dame} {06 duchess} {0C duke} {0F emperor} {07 empress} {0A graf} {12 heir} {13 heiress} {09 herr} {0E king} {00 lady} {08 lord} {10 prince} {11 princess} {03 queen} {02 woman}}}
 
+test [test-class]--->-1.2 {-->, API sequence} -setup {
+    new-iter
+    proc rec {cmd args} {
+	lappend ::log [info level 0]
+	return
+    }
+} -body {
+    test-iter --> rec
+    join [linsert $log 0 {}] \n
+} -cleanup {
+    unset log
+    rename rec {}
+    release-iter
+} -result {
+rec reset
+rec clear
+rec direction! increasing
+rec data! {}
+rec to {start {}}}
+
 # # ## ### ##### ######## ############# #####################
 ## :=
 
@@ -921,6 +941,29 @@ test [test-class]-:=-1.1.2 {:=, copy non-empty} -setup {
     release-iter -src
 } -result {decreasing {at {prince 10}} {{0D baron} {05 baroness} {0B count} {04 countess} {01 dame} {06 duchess} {0C duke} {0F emperor} {07 empress} {0A graf} {12 heir} {13 heiress} {09 herr} {0E king} {00 lady} {08 lord} {10 prince} {11 princess} {03 queen} {02 woman}}}
 
+test [test-class]-:=-1.2 {:=, API sequence} -setup {
+    new-iter
+    proc rec {cmd args} {
+	lappend ::log [info level 0]
+	# Fake results
+	switch -exact -- $cmd {
+	    direction { return increasing }
+	    data      { return {} }
+	    location  { return {start {}} }
+	    default   { return }
+	}
+    }
+} -body {
+    test-iter := rec
+    join [linsert $log 0 {}] \n
+} -cleanup {
+    unset log
+    rename rec {}
+    release-iter
+} -result {
+rec direction
+rec data
+rec location}
 
 return
 # # ## ### ##### ######## ############# #####################

@@ -15,35 +15,35 @@
 
 test [test-class]-1.0.0 {new, wrong#args, not enough} -body {
     [iter-class] new
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.0.1 {new, wrong#args, not enough} -body {
     [iter-class] new DB
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.0.2 {new, wrong#args, not enough} -body {
     [iter-class] new DB TABLE
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.0.3 {new, wrong#args, too many} -body {
-    [iter-class] new DB TABLE ITERTABLE TEXT X
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type?\""
+    [iter-class] new DB TABLE ITERTABLE TEXT SIDECAR X
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.1.0 {create, wrong#args, not enough} -body {
     [iter-class] create foo
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.1.1 {create, wrong#args, not enough} -body {
     [iter-class] create foo DB
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.1.2 {create, wrong#args, not enough} -body {
     [iter-class] create foo DB TABLE
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.1.3 {create, wrong#args, too many} -body {
-    [iter-class] create foo DB TABLE ITERTABLE TEXT X
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type?\""
+    [iter-class] create foo DB TABLE ITERTABLE TEXT SIDECAR X
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
 
 test [test-class]-1.2.0 {constructor, create, existing command} -setup {
     new-iter
