@@ -63,21 +63,34 @@ proc ::blob::table::store {db table} {
     return
 }
 
-proc ::blob::table::iter {db table type} {
+proc ::blob::table::iter {db table vtype otype} {
     debug.blob/table {}
     # Iterator content. Sibling to the blob store table.
     # - id   - is PK --> blob table -- uuid is UNIQUE indexed
     # - pval - indexed, easy sorting
 
-    lappend map <<type>> $type
+    # vtype is the type of the values in the iteration table.
+    # otype is the type of the values we are ordering by.
+
+    # When ordering is done on the values in the iteration table they
+    # are identical. However if the values for the ordering are stored
+    # in a separate table (See sqlite.tcl: sidecar), then they are
+    # not. In that case vtype is about the FK references to the
+    # sidecar in the iteration table, and otype to the actual type of
+    # the values, and thus also which state table to use. The cursor
+    # location uses the actual value from the sidecar to make the
+    # comparisons in the sql commands easier.
+
+    lappend map <<vtype>> $vtype
+    lappend map <<otype>> $otype
 
     if {![dbutil initialize-schema $db reason $table \
 	      [string map $map {{
 		    id   INTEGER PRIMARY KEY -- <=> (blob-table).id
-		  , pval <<type>> NOT NULL
+		  , pval <<vtype>> NOT NULL
 	      } {
-		  {id   INTEGER  0 {} 1}
-		  {pval <<type>> 1 {} 0}
+		  {id   INTEGER   0 {} 1}
+		  {pval <<vtype>> 1 {} 0}
 	      } {
 		  pval
 	      }}]]} {
@@ -87,21 +100,21 @@ proc ::blob::table::iter {db table type} {
     # Iterator status table. All iterators with the same type of key
     # share a state table. The different states are separated by the
     # <itertable>
-    if {![dbutil initialize-schema $db reason blobiter_${type}_state \
+    if {![dbutil initialize-schema $db reason blobiter_${otype}_state \
 	      [string map $map {{
 		    id          INTEGER PRIMARY KEY AUTOINCREMENT
 		  , who         TEXT NOT NULL UNIQUE
 		  , increasing  INTEGER NOT NULL
 		  , cursor_code INTEGER NOT NULL
-		  , cursor_pval <<type>>
+		  , cursor_pval <<otype>>
 		  , cursor_uuid TEXT
 	      } {
-		  {id          INTEGER  0 {} 1}
-		  {who         TEXT     1 {} 0}
-		  {increasing  INTEGER  1 {} 0}
-		  {cursor_code INTEGER  1 {} 0}
-		  {cursor_pval <<type>> 0 {} 0}
-		  {cursor_uuid TEXT     0 {} 0}
+		  {id          INTEGER   0 {} 1}
+		  {who         TEXT      1 {} 0}
+		  {increasing  INTEGER   1 {} 0}
+		  {cursor_code INTEGER   1 {} 0}
+		  {cursor_pval <<otype>> 0 {} 0}
+		  {cursor_uuid TEXT      0 {} 0}
 	      }}]]} {
 	Error $reason BAD SCHEMA
     }
@@ -113,7 +126,7 @@ proc ::blob::table::iter {db table type} {
     # attach to the same tables.
     $db eval [string map $map {
 	INSERT
-	INTO blobiter_<<type>>_state
+	INTO blobiter_<<otype>>_state
 	VALUES (NULL, :table, 1, 1, NULL, NULL)
     }]
     return

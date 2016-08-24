@@ -56,16 +56,17 @@ oo::class create blob::iter::sqlite {
     # # ## ### ##### ######## #############
     ## Lifecycle.
 
-    constructor {db table itertable {type TEXT}} {
+    constructor {db table itertable {type TEXT} {sidecar {}}} {
 	debug.blob/iter/sqlite {}
 
 	# Make the database available as a local command, under a
 	# fixed name. No need for an instance variable and resolution.
 	interp alias {} [self namespace]::DB {} $db
 
-	# Configure the sql commands with the tables to use, and the
-	# type of the property_value column.
-	my InitializeSchema $table $itertable $type
+	# Configure the sql commands with the tables to use, the type
+	# of the property_value column, and the sidecar for the
+	# values, if any (empty when no sidecar is to be used)
+	my InitializeSchema $table $itertable $type $sidecar
 	my LoadState
 	next
 	return
@@ -455,16 +456,49 @@ oo::class create blob::iter::sqlite {
 	return
     }
 
-    method InitializeSchema {table itertable type} {
+    method InitializeSchema {table itertable type sidecar} {
 	debug.blob/iter/sqlite {}
+
+	# sidecar syntax
+	# - ""             - No sidecar
+	# - "table.column" - Name of sidecar table and value column
+	# - *              - ERROR
+
+	if {$sidecar eq ""} {
+	    # No sidecar. Ordering is directly on the iteration table.
+	    # Value and ordering type are the same.
+	    set aside 0
+	    set vtype $type
+
+	    lappend map <<PVAL>>    I.pval
+	    lappend map <<STABLE>>  {}
+	    lappend map <<SCLAUSE>> {}
+
+	} elseif {[regexp {^([^.]*)[.]([^.]*)$} $sidecar --> sidetable sidecolumn]} {
+	    # Sidcar present. With the actual property values held in
+	    # a sidecar the itertable's value is a FK-reference into
+	    # the sidecar, thus an int at its core. The ordering is
+	    # the specified type.
+	    set aside 1
+	    set vtype INTEGER
+
+	    lappend map <<PVAL>>    V.$sidecolumn
+	    lappend map <<STABLE>>  ", $sidetable V"
+	    lappend map <<SCLAUSE>> "AND I.pval = V.id"
+	} else {
+	    my Error \
+		"Bad sidecar \"$sidecar\", expected nothing or 'table.column'" \
+		INVALID SIDECAR SPEC
+	}
+
 	lappend map <<table>> $table
 	lappend map <<iter>>  $itertable
-	lappend map <<type>>  $type
+	lappend map <<otype>> $type
 
 	set fqndb [self namespace]::DB
 
 	blob::table::store $fqndb $table
-	blob::table::iter  $fqndb $itertable $type
+	blob::table::iter  $fqndb $itertable $vtype $type
 
 	# Generate the custom sql commands.
 	# . add entry to interator
@@ -513,7 +547,7 @@ oo::class create blob::iter::sqlite {
 	}
 
 	my Def sql_reset_state {
-	    UPDATE blobiter_<<type>>_state
+	    UPDATE blobiter_<<otype>>_state
 	    SET increasing  = 1    -- order: increasing
 	    ,   cursor_code = 1    -- at virtual start
 	    ,   cursor_pval = NULL -- ignored due to code
@@ -526,12 +560,12 @@ oo::class create blob::iter::sqlite {
 	    ,      cursor_code AS mycode
 	    ,      cursor_pval AS mypval
 	    ,      cursor_uuid AS myuuid
-	    FROM blobiter_<<type>>_state
+	    FROM blobiter_<<otype>>_state
 	    WHERE who = "<<iter>>"
 	}
 
 	my Def sql_save_state {
-	    UPDATE blobiter_<<type>>_state
+	    UPDATE blobiter_<<otype>>_state
 	    SET increasing  = :myincreasing
 	    ,   cursor_code = :mycode
 	    ,   cursor_pval = :mypval
@@ -571,85 +605,93 @@ oo::class create blob::iter::sqlite {
 	}
 
 	my Def sql_forward {
-	    SELECT B.uuid AS uuid
-	    ,      I.pval AS pval
+	    SELECT B.uuid   AS uuid
+	    ,      <<PVAL>> AS pval
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
-	    AND ((I.pval >= :mypval) OR
-		 ((I.pval = :mypval) AND (B.uuid >= :myuuid)))
-	    ORDER BY I.pval ASC, B.uuid ASC
+	    ,    <<iter>>  I     <<STABLE>>
+	    WHERE I.id   = B.id  <<SCLAUSE>>
+	    AND ((<<PVAL>>  >= :mypval) OR
+		 ((<<PVAL>>  = :mypval) AND (B.uuid >= :myuuid)))
+	    ORDER BY <<PVAL>> ASC
+	    ,        B.uuid   ASC
 	    LIMIT :n
 	}
 
 	my Def sql_backward {
-	    SELECT B.uuid AS uuid
-	    ,      I.pval  AS pval
+	    SELECT B.uuid   AS uuid
+	    ,      <<PVAL>> AS pval
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
-	    AND ((I.pval <= :mypval) OR
-		 ((I.pval = :mypval) AND (B.uuid <= :myuuid)))
-	    ORDER BY I.pval DESC, B.uuid DESC
+	    ,    <<iter>>  I   <<STABLE>>
+	    WHERE I.id = B.id  <<SCLAUSE>>
+	    AND ((<<PVAL>>  <= :mypval) OR
+		 ((<<PVAL>>  = :mypval) AND (B.uuid <= :myuuid)))
+	    ORDER BY <<PVAL>> DESC
+	    ,        B.uuid   DESC
 	    LIMIT :n
 	}
 
+	# NOTE: Cannot use MIN in a simple form, as the command
+	#       returns the MIN of each column independently.
+	#       Could be done as MIN of pval, followed by a
+	#       separate MIN of uuid within that pval. Unclear
+	#       which of the forms (current and alternate) would
+	#       be faster, and what indices will be required.
 	my Def sql_min_entry {
-	    -- NOTE: Cannot use MIN in a simple form, as the command
-            --       returns the MIN of each column independently.
-	    --       Could be done as MIN of pval, followed by a
-            --       separate MIN of uuid within that pval. Unclear
-            --       which of the forms (current and alternate) would
-            --       be faster, and what indices will be required.
-	    SELECT I.pval AS pval
-	    ,      B.uuid AS uuid
+	    SELECT <<PVAL>> AS pval
+	    ,      B.uuid   AS uuid
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
-	    ORDER BY pval ASC, uuid ASC
+	    ,    <<iter>>  I   <<STABLE>>
+	    WHERE I.id = B.id  <<SCLAUSE>>
+	    ORDER BY <<PVAL>> ASC
+	    ,        B.uuid   ASC
 	    LIMIT 1
 	}
 
+	# NOTE: See sql_min_entry above for note.
 	my Def sql_max_entry {
-	    -- NOTE: See sql_min_entry above for note.
-	    SELECT I.pval AS pval
-	    ,      B.uuid AS uuid
+	    SELECT <<PVAL>> AS pval
+	    ,      B.uuid   AS uuid
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
-	    ORDER BY pval DESC, uuid DESC
+	    ,    <<iter>>  I   <<STABLE>>
+	    WHERE I.id = B.id  <<SCLAUSE>>
+	    ORDER BY <<PVAL>> DESC
+	    ,        B.uuid   DESC
 	    LIMIT 1
 	}
 
 	# Similar to sql_forward. Differences:
-	# - Returns both pval and uuid.
+	# - Returns to directly to object state (my{uuid,pval})
 	# - Looks for 'greater than' current position to get the entry
 	# - __after__ the skipped range.
+
 	my Def sql_next {
-	    SELECT B.uuid AS myuuid
-	    ,      I.pval AS mypval
+	    SELECT B.uuid   AS myuuid
+	    ,      <<PVAL>> AS mypval
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
-	    AND ((I.pval > :mypval) OR
-		 ((I.pval = :mypval) AND (B.uuid > :myuuid)))
-	    ORDER BY I.pval ASC, B.uuid ASC
+	    ,    <<iter>>  I     <<STABLE>>
+	    WHERE I.id   = B.id  <<SCLAUSE>>
+	    AND ((<<PVAL>>   > :mypval) OR
+		 ((<<PVAL>>  = :mypval) AND (B.uuid > :myuuid)))
+	    ORDER BY <<PVAL>> ASC
+	    ,        B.uuid   ASC
 	    LIMIT :n
 	}
 
 	# Similar to sql_forward. Differences:
-	# - Returns both pval and uuid.
+	# - Returns to directly to object state (my{uuid,pval})
 	# - Looks for 'less than' current position to get the entry
 	# - __before__ the skipped range.
+
 	my Def sql_previous {
-	    SELECT B.uuid AS myuuid
-	    ,      I.pval AS mypval
+	    SELECT B.uuid   AS myuuid
+	    ,      <<PVAL>> AS mypval
 	    FROM <<table>> B
-	    ,    <<iter>>  I
-	    WHERE I.id = B.id
-	    AND ((I.pval < :mypval) OR
-		 ((I.pval = :mypval) AND (B.uuid < :myuuid)))
-	    ORDER BY I.pval DESC, B.uuid DESC
+	    ,    <<iter>>  I   <<STABLE>>
+	    WHERE I.id = B.id  <<SCLAUSE>>
+	    AND ((<<PVAL>>   < :mypval) OR
+		 ((<<PVAL>>  = :mypval) AND (B.uuid < :myuuid)))
+	    ORDER BY <<PVAL>> DESC
+	    ,        B.uuid   DESC
 	    LIMIT :n
 	}
 
