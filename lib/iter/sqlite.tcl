@@ -23,6 +23,32 @@
 # # ## ### ##### ######## ############# #####################
 ## Limitation
 
+# In light of note (1) below an actual limitation is that using a
+# custom order requires use of a sidecar, because the user has only
+# control over the type of the data in the main table, nothing
+# else. Whereas with the sidecar the user controls the entire
+# definition of the sidecar table.
+
+# # ## ### ##### ######## ############# #####################
+## Notes
+
+# (1) By default all property-values are sorted in natural order for
+#     their type (INT, TEXT). To impose a custom order on TEXT data
+#     (define and) use a collation sequence.
+#
+#     The default sequences known to all databases are
+#     BINARY - (default) - memcmp(), ignore encodings
+#     NOCASE - Fold the ASCII uppercase to lowercase for comparison
+#              !! No full UTF folding.
+#     RTRIM  - See BINARY, plus ignore trailing ASCII space characters.
+#
+#     Anything beyond that has to be implement as either a
+#     C-extension, or as a Tcl procedure attached to the database with
+#     [DB collate $procname]
+#
+#     Relevant rules:
+#       https://www.sqlite.org/datatype3.html#collation
+
 # # ## ### ##### ######## ############# #####################
 ## Requisites
 
