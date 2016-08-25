@@ -23,12 +23,6 @@
 # # ## ### ##### ######## ############# #####################
 ## Limitation
 
-# In light of note (1) below an actual limitation is that using a
-# custom order requires use of a sidecar, because the user has only
-# control over the type of the data in the main table, nothing
-# else. Whereas with the sidecar the user controls the entire
-# definition of the sidecar table.
-
 # # ## ### ##### ######## ############# #####################
 ## Notes
 
@@ -48,6 +42,13 @@
 #
 #     Relevant rules:
 #       https://www.sqlite.org/datatype3.html#collation
+#
+#     With a sidecar the user has control over the value table, and
+#     thus can add the collation.
+#
+#     Without a sidecar, use option -collation to tell the iterator
+#     what to use.
+#
 
 # # ## ### ##### ######## ############# #####################
 ## Requisites
@@ -56,6 +57,7 @@ package require Tcl 8.5
 package require TclOO
 package require blob::iter
 package require blob::table
+package require blob::option
 package require debug
 package require debug::caller
 
@@ -74,8 +76,25 @@ oo::class create blob::iter::sqlite {
     # # ## ### ##### ######## #############
     ## Lifecycle.
 
-    constructor {db table itertable {type TEXT} {sidecar {}}} {
+    constructor {db args} {
 	debug.blob/iter/sqlite {}
+
+	# See if there is a way to make this a deeper part of the
+	# class definition, with auto-placement into the instance.
+	blob::option create [self namespace]::OPTION {
+	    {-blob-table   blob}
+	    {-iter-table   blobiter}
+	    {-type         TEXT}
+	    {-value-table  {}}
+	    {-value-column val}
+	    {-collation    {}}
+	}
+	# Notes:
+	# -value-table  - Default => Store values in iter table.
+	# -value-column - Name of column for values in the value-table  
+	#                 Ignored when operating without value-table	   
+	# -collation    - Custom ordering, with and without value-table.
+	OPTION configure $args
 
 	# Make the database available as a local command, under a
 	# fixed name. No need for an instance variable and resolution.
@@ -84,7 +103,7 @@ oo::class create blob::iter::sqlite {
 	# Configure the sql commands with the tables to use, the type
 	# of the property_value column, and the sidecar for the
 	# values, if any (empty when no sidecar is to be used)
-	my InitializeSchema $table $itertable $type $sidecar
+	my InitializeSchema
 	my LoadState
 	next
 	return
@@ -480,15 +499,22 @@ oo::class create blob::iter::sqlite {
 	return
     }
 
-    method InitializeSchema {table itertable type sidecar} {
+    method InitializeSchema {} {
 	debug.blob/iter/sqlite {}
+
+	set table      [OPTION cget -blob-table]
+	set itertable  [OPTION cget -iter-table]
+	set type       [OPTION cget -type]
+	set sidetable  [OPTION cget -value-table]
+	set sidecolumn [OPTION cget -value-column]
+	set collation  [OPTION cget -collation]
 
 	# sidecar syntax
 	# - ""             - No sidecar
 	# - "table.column" - Name of sidecar table and value column
 	# - *              - ERROR
 
-	if {$sidecar eq ""} {
+	if {$sidetable eq ""} {
 	    # No sidecar. Ordering is directly on the iteration table.
 	    # Value and ordering type are the same.
 	    set aside 0
@@ -499,11 +525,10 @@ oo::class create blob::iter::sqlite {
 	    lappend map <<SCLAUSE>> {}
 	    lappend map <<ENTER>>   :pval
 
-	} elseif {[regexp {^([^.]*)[.]([^.]*)$} $sidecar --> sidetable sidecolumn]} {
-	    if {($sidetable eq "") ||
-		($sidecolumn eq "")} {
+	} else {
+	    if {$sidecolumn eq ""} {
 		my Error \
-		    "Bad sidecar \"$sidecar\", expected nothing or 'table.column'" \
+		    "Bad name for value column in side table, must not be empty" \
 		    INVALID SIDECAR SPEC
 	    }
 
@@ -527,10 +552,6 @@ oo::class create blob::iter::sqlite {
 	    # --
 	    # However we might wish to do such even so, to generate a
 	    # nicer error message.
-	} else {
-	    my Error \
-		"Bad sidecar \"$sidecar\", expected nothing or 'table.column'" \
-		INVALID SIDECAR SPEC
 	}
 
 	lappend map <<table>> $table
@@ -540,7 +561,7 @@ oo::class create blob::iter::sqlite {
 	set fqndb [self namespace]::DB
 
 	blob::table::store $fqndb $table
-	blob::table::iter  $fqndb $itertable $vtype $type
+	blob::table::iter  $fqndb $itertable $vtype $type $collation
 
 	# Generate the custom sql commands.
 	# . add entry to interator

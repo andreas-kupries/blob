@@ -15,53 +15,47 @@
 
 test [test-class]-1.0.0 {new, wrong#args, not enough} -body {
     [iter-class] new
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] new db ...\""
 
-test [test-class]-1.0.1 {new, wrong#args, not enough} -body {
-    [iter-class] new DB
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
+test [test-class]-1.0.1 {new, bad option} -body {
+    [iter-class] new DB -foo bar
+} -returnCodes error -result "Unknown option \"-foo\""
 
-test [test-class]-1.0.2 {new, wrong#args, not enough} -body {
-    [iter-class] new DB TABLE
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
-
-test [test-class]-1.0.3 {new, wrong#args, too many} -body {
-    [iter-class] new DB TABLE ITERTABLE TEXT SIDECAR X
-} -returnCodes error -result "wrong # args: should be \"[iter-class] new db table itertable ?type? ?sidecar?\""
+# TODO Future: Test good option, bad values, when we have option validation
 
 test [test-class]-1.1.0 {create, wrong#args, not enough} -body {
     [iter-class] create foo
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
+} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db ...\""
 
 test [test-class]-1.1.1 {create, wrong#args, not enough} -body {
-    [iter-class] create foo DB
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
+    [iter-class] create foo DB -foo bar
+} -returnCodes error -result "Unknown option \"-foo\""
 
-test [test-class]-1.1.2 {create, wrong#args, not enough} -body {
-    [iter-class] create foo DB TABLE
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
-
-test [test-class]-1.1.3 {create, wrong#args, too many} -body {
-    [iter-class] create foo DB TABLE ITERTABLE TEXT SIDECAR X
-} -returnCodes error -result "wrong # args: should be \"[iter-class] create foo db table itertable ?type? ?sidecar?\""
+# TODO Future: Test good option, bad values, when we have option validation
 
 test [test-class]-1.2.0 {constructor, create, existing command} -setup {
     new-iter
 } -body {
-    [iter-class] create test-iter DB TABLE ITERTABLE
+    [iter-class] create test-iter DB \
+	-blob-table TABLE \
+	-iter-table ITERTABLE
 } -cleanup {
     release-iter
 } -returnCodes error -result [already test-iter]
 
 test [test-class]-1.2.1 {constructor, create, existing command} -body {
-    [iter-class] create set DB TABLE ITERTABLE
+    [iter-class] create set DB \
+	-blob-table TABLE \
+	-iter-table ITERTABLE
 } -returnCodes error -result [already set]
 
 test [test-class]-1.3.0 {constructor, create} -setup {
     set result {}
     new-store ;# ==> ::test-database
 } -body {
-    lappend result [[iter-class] create ::test-iter ::test-database blobs blobiter]
+    lappend result [[iter-class] create ::test-iter ::test-database \
+			-blob-table blobs \
+			-iter-table blobiter]
     lappend result [info commands ::test-iter]
     lappend result [test-iter size]
 } -cleanup {
@@ -74,7 +68,9 @@ test [test-class]-1.3.1 {constructor, new} -setup {
     set result {}
     new-store ;# ==> ::test-database
 } -body {
-    lappend result [set foo [[iter-class] new ::test-database blobs blobiter]]
+    lappend result [set foo [[iter-class] new ::test-database \
+				 -blob-table blobs \
+				 -iter-table blobiter]]
     lappend result [info commands ::$foo]
     lappend result [$foo size]
 } -cleanup {

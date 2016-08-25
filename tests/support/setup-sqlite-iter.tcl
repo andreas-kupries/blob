@@ -9,7 +9,9 @@ proc store-class {} { string map {::iter {}} [iter-class] }
 
 proc new-iter {{suffix {}}} {
     new-store $suffix             ;# ==> ::test-database$suffix blobs
-    [iter-class] create test-iter$suffix ::test-database$suffix blobs blobiter
+    [iter-class] create test-iter$suffix ::test-database$suffix \
+	-blob-table blobs \
+	-iter-table blobiter
     return
 }
 

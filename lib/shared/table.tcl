@@ -63,7 +63,7 @@ proc ::blob::table::store {db table} {
     return
 }
 
-proc ::blob::table::iter {db table vtype otype} {
+proc ::blob::table::iter {db table vtype otype collation} {
     debug.blob/table {}
     # Iterator content. Sibling to the blob store table.
     # - id   - is PK --> blob table -- uuid is UNIQUE indexed
@@ -84,10 +84,16 @@ proc ::blob::table::iter {db table vtype otype} {
     lappend map <<vtype>> $vtype
     lappend map <<otype>> $otype
 
+    if {$collation ne {}} {
+	lappend map <<coll>> "COLLATE $collation"
+    } else {
+	lappend map <<coll>> ""
+    }
+
     if {![dbutil initialize-schema $db reason $table \
 	      [string map $map {{
 		    id   INTEGER PRIMARY KEY -- <=> (blob-table).id
-		  , pval <<vtype>> NOT NULL
+		  , pval <<vtype>> NOT NULL <<coll>>
 	      } {
 		  {id   INTEGER   0 {} 1}
 		  {pval <<vtype>> 1 {} 0}
