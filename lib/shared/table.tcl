@@ -63,7 +63,7 @@ proc ::blob::table::store {db table} {
     return
 }
 
-proc ::blob::table::iter {db table vtype otype collation} {
+proc ::blob::table::iter {db blobtable table vtype otype collation} {
     debug.blob/table {}
     # Iterator content. Sibling to the blob store table.
     # - id   - is PK --> blob table -- uuid is UNIQUE indexed
@@ -81,6 +81,17 @@ proc ::blob::table::iter {db table vtype otype collation} {
     # location uses the actual value from the sidecar to make the
     # comparisons in the sql commands easier.
 
+    if {$blobtable ne {}} {
+	store $db $blobtable
+	# uuid is stored in the blob-table
+	lappend map <<uuid-definition>> {}
+    } else {
+	# uuid is stored directly in the iterator table.
+	# Make id auto-insert, and add an UUID column.
+	lappend map <<uuid-definition>> \
+	    "AUTOINCREMENT\n, uuid TEXT NOT NULL UNIQUE"
+    }
+
     lappend map <<vtype>> $vtype
     lappend map <<otype>> $otype
 
@@ -92,7 +103,7 @@ proc ::blob::table::iter {db table vtype otype collation} {
 
     if {![dbutil initialize-schema $db reason $table \
 	      [string map $map {{
-		    id   INTEGER PRIMARY KEY -- <=> (blob-table).id
+		    id   INTEGER PRIMARY KEY <<uuid-definition>>
 		  , pval <<vtype>> NOT NULL <<coll>>
 	      } {
 		  {id   INTEGER   0 {} 1}

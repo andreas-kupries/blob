@@ -454,7 +454,8 @@ oo::class create blob::iter::sqlite {
 	    start { set mycode 1 }
 	    end   { set mycode 3 }
 	    default {
-		my Error "Internal use of bad boundary value \"$s\"" INTERNAL BAD BOUNDARY
+		my Error "Internal use of bad boundary value \"$s\"" \
+		    INTERNAL BAD BOUNDARY
 	    }
 	}
 	if {$save} { my SaveState }
@@ -485,7 +486,7 @@ oo::class create blob::iter::sqlite {
 	}
 
 	set mycode 2
-	lassign $pos mypval myuuid
+	lassign $pos myuuid mypval
 	my SaveState
 	return true
     }
@@ -520,21 +521,18 @@ oo::class create blob::iter::sqlite {
 	set sidecolumn [OPTION cget -value-column]
 	set collation  [OPTION cget -collation]
 
-	# sidecar syntax
-	# - ""             - No sidecar
-	# - "table.column" - Name of sidecar table and value column
-	# - *              - ERROR
+	lappend map @iter@  $itertable
+	lappend map @otype@ $type
 
 	if {$sidetable eq ""} {
 	    # No sidecar. Ordering is directly on the iteration table.
 	    # Value and ordering type are the same.
-	    set aside 0
 	    set vtype $type
 
-	    lappend map <<PVAL>>    I.pval
-	    lappend map <<STABLE>>  {}
-	    lappend map <<SCLAUSE>> {}
-	    lappend map <<ENTER>>   :pval
+	    lappend map @property-value@ "I.pval"
+	    lappend map @side-table@     ""
+	    lappend map @side-link@      ""
+	    lappend map @new-p-value@    ":pval"
 
 	} else {
 	    if {$sidecolumn eq ""} {
@@ -543,36 +541,50 @@ oo::class create blob::iter::sqlite {
 		    INVALID SIDECAR SPEC
 	    }
 
-	    # Sidcar present. With the actual property values held in
-	    # a sidecar the itertable's value is a FK-reference into
-	    # the sidecar, thus an int at its core. The ordering is
-	    # the specified type.
-	    set aside 1
+	    # Sidecar present. With the actual property values held in
+	    # the sidecar S the itertable's value column becomes a
+	    # foreign key reference into S, i.e. a plain integer. The
+	    # ordering is of the specified type in the sidecar.
 	    set vtype INTEGER
 
-	    lappend map <<PVAL>>    V.$sidecolumn
-	    lappend map <<STABLE>>  ", $sidetable V"
-	    lappend map <<SCLAUSE>> "AND I.pval = V.id"
-	    lappend map <<ENTER>>   "(SELECT id 
-                                      FROM   $sidetable
-                                      WHERE  $sidecolumn = :pval)"
+	    lappend map @property-value@ "V.$sidecolumn"
+	    lappend map @side-table@     ", $sidetable V"
+	    lappend map @side-link@      "AND I.pval = V.id"
+	    lappend map @new-p-value@    \
+		"(SELECT id FROM $sidetable WHERE $sidecolumn = :pval)"
+
 	    # Note: There is no functional need for a separate
-	    # validation. If the value is missing the sidecar the
-	    # select should return NULL, which should then trigger the
-	    # NOT NULL constraint on pval in the iterator table.
-	    # --
-	    # However we might wish to do such even so, to generate a
-	    # nicer error message.
+	    # validation of incoming property values. If the value is
+	    # missing in the sidecar the SELECT above will return
+	    # NULL, which will then trigger the NOT NULL constraint on
+	    # the pval column in the iterator table when we try to
+	    # insert.
+	    #
+	    # -- However we might wish to do a separate validation
+	    #    even so, to generate a nicer/clearer error message.
 	}
 
-	lappend map <<table>> $table
-	lappend map <<iter>>  $itertable
-	lappend map <<otype>> $type
+	if {$table ne {}} {
+	    # Attached to a blob table, which stores the actual uuids.
+	    set finduuid "(SELECT id FROM $table WHERE uuid = :uuid)"
+	    lappend map @new-uuid@   "$finduuid"
+	    lappend map @match-uuid@ "id = $finduuid"
+	    lappend map @uuid@       "B.uuid"
+	    lappend map @blob-table@ ", $table B"
+	    lappend map @blob-link@  "I.id = B.id"
+	} else {
+	    # Autark. No connected blob table. The uuid is stored in
+	    # the iterator itself.
+	    lappend map @new-uuid@   "NULL, :uuid"
+	    lappend map @match-uuid@ "uuid = :uuid"
+	    lappend map @uuid@       "I.uuid"
+	    lappend map @blob-table@ ""
+	    lappend map @blob-link@  "1=1"
+	}
 
 	set fqndb [self namespace]::DB
 
-	blob::table::store $fqndb $table
-	blob::table::iter  $fqndb $itertable $vtype $type $collation
+	blob::table::iter  $fqndb $table $itertable $vtype $type $collation
 
 	# Generate the custom sql commands.
 	# . add entry to interator
@@ -597,36 +609,40 @@ oo::class create blob::iter::sqlite {
 	# x Move cursor forward
 	# x Move cursor backward
 	#
-	# Note: The iterator uses the blob <<table>> to find relevant UUIDs,
-	#       and thus avoiding the need for saving its own duplicate.
+	# Note: The iterator uses by default the @table@.uuid to
+	#       find relevant UUIDs, and thus avoids the need for
+	#       saving its own duplicates. This is called
+	#       "attached to @table@".
+	#
+	#       This can be disabled by setting -blob-table to "".
+	#       In that case the uuids are stored directly into the
+	#       iterator table. This is called "autark"
+	#
+	#       As a side point, it is possible to use an autark
+	#       iterator as the blob table another iterator can attach
+	#       to. This is possible because autark iterators use a
+	#       column "uuid" for the uuids, like a regular sqlite
+	#       blob store.
 
 	my Def sql_add {
-	    INSERT INTO <<iter>>
-	    VALUES ((SELECT id
-		     FROM <<table>>
-		     WHERE uuid = :uuid),
-		    <<ENTER>>)
+	    INSERT INTO @iter@ VALUES (@new-uuid@, @new-p-value@)
 	}
 
 	my Def sql_remove {
-	    DELETE
-	    FROM <<iter>>
-	    WHERE id = (SELECT id
-			FROM <<table>>
-			WHERE uuid = :uuid)
+	    DELETE FROM @iter@ WHERE @match-uuid@
 	}
 
 	my Def sql_clear {
-	    DELETE FROM <<iter>>
+	    DELETE FROM @iter@
 	}
 
 	my Def sql_reset_state {
-	    UPDATE blobiter_<<otype>>_state
+	    UPDATE blobiter_@otype@_state
 	    SET increasing  = 1    -- order: increasing
 	    ,   cursor_code = 1    -- at virtual start
 	    ,   cursor_pval = NULL -- ignored due to code
 	    ,   cursor_uuid = NULL -- ditto
-	    WHERE who = "<<iter>>"
+	    WHERE who = "@iter@"
 	}
 
 	my Def sql_load_state {
@@ -634,81 +650,70 @@ oo::class create blob::iter::sqlite {
 	    ,      cursor_code AS mycode
 	    ,      cursor_pval AS mypval
 	    ,      cursor_uuid AS myuuid
-	    FROM blobiter_<<otype>>_state
-	    WHERE who = "<<iter>>"
+	    FROM blobiter_@otype@_state
+	    WHERE who = "@iter@"
 	}
 
 	my Def sql_save_state {
-	    UPDATE blobiter_<<otype>>_state
+	    UPDATE blobiter_@otype@_state
 	    SET increasing  = :myincreasing
 	    ,   cursor_code = :mycode
 	    ,   cursor_pval = :mypval
 	    ,   cursor_uuid = :myuuid
-	    WHERE who = "<<iter>>"
+	    WHERE who = "@iter@"
 	}
 
 	my Def sql_data {
-	    SELECT B.uuid   AS uuid
-	    ,      <<PVAL>> AS pval
-	    FROM <<table>> B
-	    ,    <<iter>>  I   <<STABLE>>
-	    WHERE I.id = B.id  <<SCLAUSE>>
+	    SELECT @uuid@           AS uuid
+	    ,      @property-value@ AS pval
+	    FROM @iter@ I  @blob-table@  @side-table@
+	    WHERE	   @blob-link@   @side-link@
 	}
 
 	#my Def sql_add_bulk {}
 
 	my Def sql_exists {
-	    SELECT count(*)
-	    FROM <<iter>>
-	    WHERE id = (SELECT id
-			FROM <<table>>
-			WHERE uuid = :uuid)
+	    SELECT count(*) FROM @iter@ WHERE @match-uuid@
 	}
 
 	my Def sql_get {
-	    SELECT <<PVAL>>
-	    FROM <<iter>> I                   <<STABLE>>
-	    WHERE I.id = (SELECT id
-			  FROM <<table>>
-			  WHERE uuid = :uuid) <<SCLAUSE>>
+	    SELECT @property-value@
+	    FROM @iter@ I        @side-table@
+	    WHERE I.@match-uuid@ @side-link@
 	}
 
 	my Def sql_has {
 	    SELECT count(*)
-	    FROM <<iter>> I                   <<STABLE>>
-	    WHERE I.id = (SELECT id
-			  FROM <<table>>
-			  WHERE uuid = :uuid) <<SCLAUSE>>
-	    AND   <<PVAL>> = :pval
+	    FROM @iter@ I        @side-table@
+	    WHERE I.@match-uuid@ @side-link@
+	    AND   @property-value@ = :pval
 	}
 
 	my Def sql_size {
-	    SELECT count(*) FROM <<iter>>
+	    SELECT count(*) FROM @iter@
 	}
 
 	my Def sql_forward {
-	    SELECT B.uuid   AS uuid
-	    ,      <<PVAL>> AS pval
-	    FROM <<table>> B
-	    ,    <<iter>>  I     <<STABLE>>
-	    WHERE I.id   = B.id  <<SCLAUSE>>
-	    AND ((<<PVAL>>  >= :mypval) OR
-		 ((<<PVAL>>  = :mypval) AND (B.uuid >= :myuuid)))
-	    ORDER BY <<PVAL>> ASC
-	    ,        B.uuid   ASC
+	    SELECT @uuid@           AS uuid
+	    ,      @property-value@ AS pval
+	    FROM @iter@ I  @blob-table@  @side-table@
+	    WHERE	   @blob-link@ @side-link@
+	    AND ((@property-value@  >= :mypval) OR
+		 ((@property-value@  = :mypval) AND (@uuid@ >= :myuuid)))
+	    ORDER BY @property-value@ ASC
+	    ,        @uuid@           ASC
 	    LIMIT :n
 	}
 
 	my Def sql_backward {
-	    SELECT B.uuid   AS uuid
-	    ,      <<PVAL>> AS pval
-	    FROM <<table>> B
-	    ,    <<iter>>  I   <<STABLE>>
-	    WHERE I.id = B.id  <<SCLAUSE>>
-	    AND ((<<PVAL>>  <= :mypval) OR
-		 ((<<PVAL>>  = :mypval) AND (B.uuid <= :myuuid)))
-	    ORDER BY <<PVAL>> DESC
-	    ,        B.uuid   DESC
+	    SELECT @uuid@           AS uuid
+	    ,      @property-value@ AS pval
+	    FROM @iter@ I  @blob-table@ @side-table@
+	    WHERE	   @blob-link@  @side-link@
+	    AND ((@property-value@  <= :mypval) OR
+		 ((@property-value@  = :mypval) AND (@uuid@ <= :myuuid)))
+	    ORDER BY @property-value@ DESC
+	    ,        @uuid@           DESC
 	    LIMIT :n
 	}
 
@@ -719,25 +724,23 @@ oo::class create blob::iter::sqlite {
 	#       which of the forms (current and alternate) would
 	#       be faster, and what indices will be required.
 	my Def sql_min_entry {
-	    SELECT <<PVAL>> AS pval
-	    ,      B.uuid   AS uuid
-	    FROM <<table>> B
-	    ,    <<iter>>  I   <<STABLE>>
-	    WHERE I.id = B.id  <<SCLAUSE>>
-	    ORDER BY <<PVAL>> ASC
-	    ,        B.uuid   ASC
+	    SELECT @uuid@           AS uuid
+	    ,      @property-value@ AS pval
+	    FROM @iter@ I  @blob-table@ @side-table@
+	    WHERE	   @blob-link@  @side-link@
+	    ORDER BY @property-value@ ASC
+	    ,        @uuid@           ASC
 	    LIMIT 1
 	}
 
 	# NOTE: See sql_min_entry above for note.
 	my Def sql_max_entry {
-	    SELECT <<PVAL>> AS pval
-	    ,      B.uuid   AS uuid
-	    FROM <<table>> B
-	    ,    <<iter>>  I   <<STABLE>>
-	    WHERE I.id = B.id  <<SCLAUSE>>
-	    ORDER BY <<PVAL>> DESC
-	    ,        B.uuid   DESC
+	    SELECT @uuid@           AS uuid
+	    ,      @property-value@ AS pval
+	    FROM @iter@ I  @blob-table@ @side-table@
+	    WHERE	   @blob-link@  @side-link@
+	    ORDER BY @property-value@ DESC
+	    ,        @uuid@           DESC
 	    LIMIT 1
 	}
 
@@ -747,15 +750,14 @@ oo::class create blob::iter::sqlite {
 	# - __after__ the skipped range.
 
 	my Def sql_next {
-	    SELECT B.uuid   AS myuuid
-	    ,      <<PVAL>> AS mypval
-	    FROM <<table>> B
-	    ,    <<iter>>  I     <<STABLE>>
-	    WHERE I.id   = B.id  <<SCLAUSE>>
-	    AND ((<<PVAL>>   > :mypval) OR
-		 ((<<PVAL>>  = :mypval) AND (B.uuid > :myuuid)))
-	    ORDER BY <<PVAL>> ASC
-	    ,        B.uuid   ASC
+	    SELECT @uuid@           AS myuuid
+	    ,      @property-value@ AS mypval
+	    FROM @iter@ I  @blob-table@ @side-table@
+	    WHERE	   @blob-link@  @side-link@
+	    AND ((@property-value@   > :mypval) OR
+		 ((@property-value@  = :mypval) AND (@uuid@ > :myuuid)))
+	    ORDER BY @property-value@ ASC
+	    ,        @uuid@           ASC
 	    LIMIT :n
 	}
 
@@ -765,15 +767,14 @@ oo::class create blob::iter::sqlite {
 	# - __before__ the skipped range.
 
 	my Def sql_previous {
-	    SELECT B.uuid   AS myuuid
-	    ,      <<PVAL>> AS mypval
-	    FROM <<table>> B
-	    ,    <<iter>>  I   <<STABLE>>
-	    WHERE I.id = B.id  <<SCLAUSE>>
-	    AND ((<<PVAL>>   < :mypval) OR
-		 ((<<PVAL>>  = :mypval) AND (B.uuid < :myuuid)))
-	    ORDER BY <<PVAL>> DESC
-	    ,        B.uuid   DESC
+	    SELECT @uuid@           AS myuuid
+	    ,      @property-value@ AS mypval
+	    FROM @iter@ I  @blob-table@ @side-table@
+	    WHERE	   @blob-link@  @side-link@
+	    AND ((@property-value@   < :mypval) OR
+		 ((@property-value@  = :mypval) AND (@uuid@ < :myuuid)))
+	    ORDER BY @property-value@ DESC
+	    ,        @uuid@           DESC
 	    LIMIT :n
 	}
 

@@ -43,7 +43,7 @@ proc new-iter {{suffix {}}} {
 	;
     }
     [iter-class] create test-iter$suffix ::test-database$suffix \
-	-blob-table   blobs \
+	-blob-table   {}    \
 	-iter-table   iter  \
 	-value-table  aside \
 	-value-column str

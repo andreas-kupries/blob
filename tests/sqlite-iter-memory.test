@@ -1,4 +1,4 @@
-# -*- tcl -*- tcl.tk//DSL tcltestx//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
+# -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
 ## (c) 2016 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
 ## sqlite-iter.test:  tests for the blob::iter::sqlite package.
