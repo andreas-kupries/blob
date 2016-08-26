@@ -2,11 +2,14 @@
 ## (c) 2016 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
 
-rename new-iter {}
+proc iter-other {} {
+    return [list \
+		-value-table  aside \
+		-value-column str]
+}
 
-proc new-iter {{suffix {}}} {
-    new-store $suffix             ;# ==> ::test-database$suffix blobs
-    # Create the sidecar ...
+proc iter-hook {suffix} {
+    # Create and fill the sidecar ...
     ::test-database$suffix eval {
 	CREATE TABLE aside
 	( id  INTEGER PRIMARY KEY AUTOINCREMENT
@@ -42,11 +45,6 @@ proc new-iter {{suffix {}}} {
 	,      (22, "FOO")
 	;
     }
-    [iter-class] create test-iter$suffix ::test-database$suffix \
-	-blob-table   blobs \
-	-iter-table   iter  \
-	-value-table  aside \
-	-value-column str
     return
 }
 

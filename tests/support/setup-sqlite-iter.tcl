@@ -9,9 +9,11 @@ proc store-class {} { string map {::iter {}} [iter-class] }
 
 proc new-iter {{suffix {}}} {
     new-store $suffix             ;# ==> ::test-database$suffix blobs
+    iter-hook $suffix
     [iter-class] create test-iter$suffix ::test-database$suffix \
-	-blob-table blobs \
-	-iter-table blobiter
+	-blob-table [iter-blob-table] \
+	-iter-table blobiter \
+	{*}[iter-other]
     return
 }
 
@@ -21,14 +23,10 @@ proc release-iter {{suffix {}}} {
     return
 }
 
-proc pre-add-entry {uuid key {suffix {}}} {
-    # Add a fake entry to the blob table the iterator can then find
-    # when joining on the uuid. No actual data.
-    ::test-database$suffix eval {
-	INSERT INTO blobs VALUES (NULL,:uuid,:key)
-    }
-    return
-}
+# Hooks to modify the setup.
+proc iter-hook {suffix} {}
+proc iter-other {} {}
+proc iter-blob-table {} { return blobs }
 
 # # ## ### ##### ######## ############# #####################
 return

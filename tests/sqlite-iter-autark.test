@@ -1,8 +1,8 @@
 # -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
 ## (c) 2016 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
-## sqlite-iter.test:  tests for the blob::iter::sqlite package.
-## Variant: Autark iterator, not attached to a blob table/store.
+## Tests for the blob::iter::sqlite package.
+## - Autark iterator, no sidecar
 
 kt check Tcl     8.5
 kt check tcltest 2
@@ -27,8 +27,9 @@ proc test-class {} { return blob::iter::sqlite/autark }
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
+kt source support/setup-sqlite.tcl
 kt source support/setup-iter.tcl
-kt source support/setup-sqlite-memory.tcl
+kt source support/setup-sqlite-iter.tcl
 kt source support/setup-sqlite-iter-autark.tcl
 
 kt source parts/sqlite-iter.testsuite

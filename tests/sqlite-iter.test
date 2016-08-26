@@ -1,7 +1,8 @@
 # -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
 ## (c) 2016 Andreas Kupries
 # # ## ### ##### ######## ############# #####################
-## sqlite-iter.test:  tests for the blob::iter::sqlite package.
+## Tests for the blob::iter::sqlite package.
+## - Attached iterator, no sidecar
 
 kt check Tcl     8.5
 kt check tcltest 2
@@ -20,16 +21,16 @@ kt local   testing blob::iter::sqlite
 
 # # ## ### ##### ######## ############# #####################
 
-proc test-class {} { return blob::iter::sqlite/sidecar/file }
+proc test-class {} { return blob::iter::sqlite }
 
 # # ## ### ##### ######## ############# #####################
 ## Two testsuites, for the custom (instantiation) and shared APIs.
 
 kt source support/common.tcl
+kt source support/setup-sqlite.tcl
 kt source support/setup-iter.tcl
-kt source support/setup-sqlite-file.tcl
 kt source support/setup-sqlite-iter.tcl
-kt source support/setup-sqlite-iter-sidecar.tcl
+kt source support/setup-sqlite-iter-attached.tcl
 
 kt source parts/sqlite-iter.testsuite
 kt source parts/base-iter.testsuite
