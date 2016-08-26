@@ -16,8 +16,8 @@
 ## entry itself.
 
 # --------------*----------------
-# dispatch      | *
 # destroy       | *
+# dispatch      | *
 # --------------*---------------- content manipulation
 # add           | *
 # clear         | *
@@ -35,6 +35,7 @@
 # data          | *
 # direction     | *
 # exists        | *
+# get           | *
 # location      | *
 # size          | *
 # --------------*---------------- (de)serialization
@@ -286,6 +287,43 @@ test [test-class]-exists-1.1.1 {exists, yes} -setup {
 } -cleanup {
     release-iter
 } -result 1
+
+# # ## ### ##### ######## ############# #####################
+## get
+
+test [test-class]-get-1.0.0 {get, wrong#args, not enough} -setup {
+    new-iter
+} -body {
+    test-iter get
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter get uuid"}
+
+test [test-class]-get-1.0.1 {get, wrong#args, too many} -setup {
+    new-iter
+} -body {
+    test-iter get FOO X
+} -cleanup {
+    release-iter
+} -returnCodes error -result {wrong # args: should be "test-iter get uuid"}
+
+test [test-class]-get-1.1.0 {get, no} -setup {
+    new-iter
+} -body {
+    test-iter get UUID
+} -cleanup {
+    release-iter
+} -returnCodes error -result {Unknown UUID "UUID"}
+
+test [test-class]-get-1.1.1 {get, yes} -setup {
+    new-iter
+    pre-add-entry UUID KEY
+    test-iter add UUID KEY
+} -body {
+    test-iter get UUID
+} -cleanup {
+    release-iter
+} -result KEY
 
 # # ## ### ##### ######## ############# #####################
 ## size

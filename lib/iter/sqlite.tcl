@@ -305,6 +305,16 @@ oo::class create blob::iter::sqlite {
 
     # # ## ### ##### ######## #############
 
+    # Get: (uuid) --> property_value
+    method Get {uuid} {
+	debug.blob/iter/sqlite {}
+	DB transaction {
+	    set value [DB onecolumn $sql_get]
+	}
+	debug.blob/iter/sqlite {==> $value}
+	return $value
+    }
+
     # exists: (uuid) -> bool
     method exists {uuid} {
 	debug.blob/iter/sqlite {}
@@ -416,6 +426,7 @@ oo::class create blob::iter::sqlite {
 	sql_data        \
 	sql_add_bulk    \
 	sql_exists      \
+	sql_get         \
 	sql_has         \
 	sql_size        \
 	sql_forward     \
@@ -652,6 +663,14 @@ oo::class create blob::iter::sqlite {
 	    WHERE id = (SELECT id
 			FROM <<table>>
 			WHERE uuid = :uuid)
+	}
+
+	my Def sql_get {
+	    SELECT <<PVAL>>
+	    FROM <<iter>> I                   <<STABLE>>
+	    WHERE I.id = (SELECT id
+			  FROM <<table>>
+			  WHERE uuid = :uuid) <<SCLAUSE>>
 	}
 
 	my Def sql_has {

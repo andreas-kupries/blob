@@ -5,7 +5,7 @@
 proc pre-add-entry {args} {}
 
 proc iter-methods {} {
-    return {--> := add at clear data data! destroy direction direction! exists location next previous remove reset reverse size to}
+    return {--> := add at clear data data! destroy direction direction! exists get location next previous remove reset reverse size to}
 }
 
 proc iter-data {} {

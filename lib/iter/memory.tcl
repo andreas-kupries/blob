@@ -226,6 +226,12 @@ oo::class create blob::iter::memory {
 
     # # ## ### ##### ######## #############
 
+    # Get: (uuid) --> property_value
+    method Get {uuid} {
+	debug.blob/iter/memory {}
+	return [dict get $myuuid $uuid]
+    }
+
     # exists: (uuid) -> bool
     method exists {uuid} {
 	debug.blob/iter/memory {==> [dict exists $myuuid $uuid]}

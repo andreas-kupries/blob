@@ -107,9 +107,7 @@ oo::class create blob::iter {
     # Extend iterator with new element
     method add {uuid property_value} {
 	debug.blob/iter {}
-	if {[my exists $uuid]} {
-	    my Error "Duplicate UUID \"$uuid\"" UUID DUPLICATE
-	}
+	my ValidateUnknownUUID $uuid
 	my Add $uuid $property_value
 	return
     }
@@ -154,9 +152,7 @@ oo::class create blob::iter {
 	# Validate data first, ...
 	foreach pair $tuples {
 	    set uuid [lindex $pair 0]
-	    if {[my exists $uuid]} {
-		my Error "Duplicate UUID \"$uuid\"" UUID DUPLICATE
-	    }
+	    my ValidateUnknownUUID $uuid
 	}
 	# ... then add if there are no conflicts
 	foreach pair $tuples {
@@ -213,6 +209,16 @@ oo::class create blob::iter {
 
     # # ## ### ##### ######## #############
     ## API. Introspection
+
+    # get: (uuid) --> property_value
+    # Get value for uuid
+    method get {uuid} {
+	debug.blob/iter {}
+	my ValidateUUID $uuid
+	return [my Get $uuid]
+    }
+
+    method Get {uuid} { my API.error Get }
 
     # exists: (uuid) -> bool
     # Check if uuid is already known
@@ -281,6 +287,16 @@ oo::class create blob::iter {
 	if {$x in {increasing decreasing}} return
 	my Error "Bad direction \"$x\", expected decreasing, or increasing" \
 	    INVALID DIRECTION
+    }
+
+    method ValidateUUID {uuid} {
+	if {[my exists $uuid]} return
+	my Error "Unknown UUID \"$uuid\"" UUID UNKNOWN
+    }
+
+    method ValidateUnknownUUID {uuid} {
+	if {![my exists $uuid]} return
+	my Error "Duplicate UUID \"$uuid\"" UUID DUPLICATE
     }
 
     method Error {text args} {

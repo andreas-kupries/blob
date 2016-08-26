@@ -13,7 +13,7 @@ proc new-store {{suffix {}}} {
 proc release-store {{suffix {}}} {
     catch { test-store$suffix    destroy }
     catch { test-database$suffix close   }
-    file delete [file normalize _blob_[pid]_$suffix]
+    file delete -force [file normalize _blob_[pid]_$suffix]
     return
 }
 

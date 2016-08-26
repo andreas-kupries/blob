@@ -25,7 +25,7 @@ proc pre-add-entry {uuid key {suffix {}}} {
     # Add a fake entry to the blob table the iterator can then find
     # when joining on the uuid. No actual data.
     ::test-database$suffix eval {
-	INSERT INTO blobs VALUES (NULL,:uuid,NULL)
+	INSERT INTO blobs VALUES (NULL,:uuid,:key)
     }
     return
 }
