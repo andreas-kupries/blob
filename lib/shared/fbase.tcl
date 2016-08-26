@@ -58,7 +58,7 @@ oo::class create blob::fsbase {
 	my Check readable    $dir "not readable" DENIED WRITE
 	my Check writable    $dir "not writable" DENIED WRITE
 
-	set mybasedir $dir
+	set mybasedir [file normalize $dir]
 	set mycounter 0
 
 	next

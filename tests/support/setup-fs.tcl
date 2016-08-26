@@ -3,14 +3,14 @@
 # # ## ### ##### ######## ############# #####################
 
 proc new-store {{suffix {}}} {
-    file mkdir _blobfs_$suffix
-    [test-class] create test-store$suffix _blobfs_$suffix
+    file mkdir                            _blobfs_[pid]_$suffix
+    [test-class] create test-store$suffix _blobfs_[pid]_$suffix
     return
 }
 
 proc release-store {{suffix {}}} {
     test-store$suffix destroy
-    file delete -force _blobfs_$suffix
+    file delete -force _blobfs_[pid]_$suffix
     return
 }
 
