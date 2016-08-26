@@ -110,8 +110,8 @@ oo::class create blob::fs {
 	try {
 	    file link -hard $temp $path
 	} on error {e o} {
-# See if we can trap on a specific error
-puts |$o|
+	    # See if we can trap on a specific error
+	    # puts |$o|
 	    file copy -force -- $path $temp
 	}
 

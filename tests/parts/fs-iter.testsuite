@@ -1,0 +1,65 @@
+## -*- tcl -*-
+## (c) 2016 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## Test suite for fs iterators, custom parts.
+#
+## The external procedures 'already' and 'badmethod' are used to
+## generate implementation specific error messages. Implementations
+## have to be provided by the invoking implementation-specific
+## testsuite.
+#
+## The external procedures 'new-iter' and 'release-iter' are used to
+## create and destroy an instance of the iterator under test.
+
+# # ## ### ##### ######## ############# #####################
+
+test [test-class]-1.0 {new, wrong#args, too many} -body {
+    [test-class] new DIR -dict X
+} -returnCodes error -result "wrong # args: should be \"[test-class] new statedir ?sort?\""
+
+test [test-class]-1.1 {create, wrong#args, too many} -body {
+    [test-class] create foo DIR -integer X
+} -returnCodes error -result "wrong # args: should be \"[test-class] create foo statedir ?sort?\""
+
+test [test-class]-1.2.0 {constructor, create, existing command} -setup {
+    file mkdir FOO
+    [test-class] create test-iter FOO
+} -body {
+    [test-class] create test-iter FOO
+} -cleanup {
+    file delete -force FOO
+    test-iter destroy
+} -returnCodes error -result [already test-iter]
+
+test [test-class]-1.2.1 {constructor, create, existing command} -body {
+    [test-class] create set FOO
+} -returnCodes error -result [already set]
+
+test [test-class]-1.3.0 {constructor, create} -setup {
+    set result {}
+    file mkdir FOO
+} -body {
+    lappend result [[test-class] create test-iter FOO]
+    lappend result [info commands ::test-iter]
+    lappend result [test-iter size]
+} -cleanup {
+    file delete -force FOO
+    test-iter destroy
+    unset result
+} -result {::test-iter ::test-iter 0}
+
+test [test-class]-1.3.1 {constructor, new} -setup {
+    set result {}
+    file mkdir DIR
+} -body {
+    lappend result [set foo [[test-class] new DIR]]
+    lappend result [info commands ::$foo]
+    lappend result [$foo size]
+} -cleanup {
+    file delete -force DIR
+    $foo destroy
+    unset result foo
+} -match glob -result {::oo::Obj* ::oo::Obj* 0}
+
+# # ## ### ##### ######## ############# #####################
+return
