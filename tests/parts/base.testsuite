@@ -149,7 +149,7 @@ test [test-class]-get-channel-1.3 {get-channel, known} -setup {
     close $c
     unset c
     release-store
-} -result S
+} -result [blob-result 02aa629c8b16cd17a44f3a0efec2feed43937642]
 
 test [test-class]-get-channel-1.4 {get-channel, known} -setup {
     new-store
@@ -164,7 +164,7 @@ test [test-class]-get-channel-1.4 {get-channel, known} -setup {
     close $c
     unset c
     release-store
-} -result R
+} -result [blob-result 06576556d1ad802f247cad11ae748be47b70cd9c]
 
 # # ## ### ##### ######## ############# #####################
 ## get-file
@@ -203,7 +203,7 @@ test [test-class]-get-file-1.3 {get-file, known} -setup {
     file delete $path
     unset path
     release-store
-} -result S
+} -result [blob-result 02aa629c8b16cd17a44f3a0efec2feed43937642]
 
 test [test-class]-get-file-1.4 {get-file, known} -setup {
     new-store
@@ -218,7 +218,7 @@ test [test-class]-get-file-1.4 {get-file, known} -setup {
     file delete $path
     unset path
     release-store
-} -result R
+} -result [blob-result 06576556d1ad802f247cad11ae748be47b70cd9c]
 
 # # ## ### ##### ######## ############# #####################
 ## clear
@@ -435,7 +435,7 @@ test [test-class]-get-string-1.3 {get-string, known} -setup {
     test-store get-string 02aa629c8b16cd17a44f3a0efec2feed43937642
 } -cleanup {
     release-store
-} -result S
+} -result [blob-result 02aa629c8b16cd17a44f3a0efec2feed43937642]
 
 test [test-class]-get-string-1.4 {get-string, known} -setup {
     new-store
@@ -447,7 +447,7 @@ test [test-class]-get-string-1.4 {get-string, known} -setup {
     test-store get-string 06576556d1ad802f247cad11ae748be47b70cd9c
 } -cleanup {
     release-store
-} -result R
+} -result [blob-result 06576556d1ad802f247cad11ae748be47b70cd9c]
 
 # # ## ### ##### ######## ############# #####################
 ## size
@@ -478,6 +478,11 @@ test [test-class]-size-1.2 {size} -setup {
 } -cleanup {
     release-store
 } -result 2
+
+# # ## ### ##### ######## ############# #####################
+## Do not run (de)serialization tests for classes not truly supporting such
+## Example: statistics store.
+if {![serialize]} return
 
 # # ## ### ##### ######## ############# #####################
 ## Store synchronization: pull

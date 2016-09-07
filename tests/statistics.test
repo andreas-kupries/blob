@@ -1,0 +1,31 @@
+# -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
+## (c) 2013 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## statistics.test:  tests for the blob::statistics package.
+
+kt check Tcl     8.5
+kt check tcltest 2
+
+kt require support TclOO
+kt require support sha1 2
+kt require support fileutil
+kt require support tcl::chan::string
+
+kt local   support blob
+kt local   testing blob::statistics
+
+# # ## ### ##### ######## ############# #####################
+
+proc test-class {} { return blob::statistics }
+
+# # ## ### ##### ######## ############# #####################
+## Two testsuites, for the custom (instantiation) and shared APIs.
+
+kt source support/common.tcl
+kt source support/setup-statistics.tcl
+
+kt source parts/statistics.testsuite
+kt source parts/base.testsuite
+
+# # ## ### ##### ######## ############# #####################
+cleanupTests

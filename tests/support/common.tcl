@@ -20,5 +20,21 @@ proc wait-wall    {} { vwait ::wall   }
 proc pass-wall    {} { set   ::wall 1 }
 proc release-wall {} { unset ::wall   }
 
+proc blob-result {x} {
+    dict get {
+	02aa629c8b16cd17a44f3a0efec2feed43937642  S
+	06576556d1ad802f247cad11ae748be47b70cd9c  R
+    } $x
+}
+
+proc blob-results {args} {
+    foreach uuid $args {
+	lappend r $uuid [blob-result $uuid]
+    }
+    return $r
+}
+
+proc serialize {} { return 1 }
+
 # # ## ### ##### ######## ############# #####################
 return
