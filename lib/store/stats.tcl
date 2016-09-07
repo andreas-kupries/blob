@@ -49,11 +49,13 @@ oo::class create blob::statistics {
     # # ## ### ##### ######## #############
     ## State
 
-    variable mycount mysize mymin mymax
-    # mycount: dict (uuid -> count)
-    # mysize:  dict (uuid -> size)
-    # mymin:   int
-    # mymax:   int
+    variable mycount mysize mymin mymax myentered mystored
+    # mycount:   dict (uuid -> count)
+    # mysize:    dict (uuid -> size)
+    # mymin:     int
+    # mymax:     int
+    # myentered: int
+    # mystored:  int
 
     # # ## ### ##### ######## #############
     ## Lifecycle.
@@ -71,10 +73,14 @@ oo::class create blob::statistics {
 
     # put-string :- EnterString: uuid, blob --> ()
     method EnterString {uuid blob} {
+	set myentered {}
+	set mystored  {}
+
 	if {[dict exists $mycount $uuid]} {
 	    dict incr mycount $uuid
 	    return
 	}
+
 	set size [string length $blob]
 	dict set mycount $uuid 1
 	dict set mysize  $uuid $size
@@ -86,10 +92,14 @@ oo::class create blob::statistics {
 
     # put-file:- EnterFile: path --> ()
     method EnterFile {uuid path} {
+	set myentered {}
+	set mystored  {}
+
 	if {[dict exists $mycount $uuid]} {
 	    dict incr mycount $uuid
 	    return
 	}
+
 	set size [file size $path]
 	dict set mycount $uuid 1
 	dict set mysize  $uuid $size
@@ -124,10 +134,12 @@ oo::class create blob::statistics {
 
     # clear () -> ()
     method clear {} {
-	set mycount {}
-	set mysize  {}
-	set mymin   Inf
-	set mymax   0
+	set mycount   {}
+	set mysize    {}
+	set mymin     Inf
+	set mymax     0
+	set myentered {}
+	set mystored  {}
 	return
     }
 
@@ -145,19 +157,21 @@ oo::class create blob::statistics {
     method max {} { return $mymax }
 
     method bytes-entered {} {
-	set total 0
+	if {$myentered ne {}} { return $myentered }
+	set myentered 0
 	dict for {k count} $mycount {
-	    incr total [expr {$count * [dict get $mysize $k]}]
+	    incr myentered [expr {$count * [dict get $mysize $k]}]
 	}
-	return $total
+	return $myentered
     }
 
     method bytes-stored {} {
-	set total 0
+	if {$mystored ne {}} { return $mystored }
+	set mystored 0
 	dict for {k count} $mycount {
-	    incr total [dict get $mysize $k]
+	    incr mystored [dict get $mysize $k]
 	}
-	return $total
+	return $mystored
     }
 
     method average {} {
