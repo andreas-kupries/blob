@@ -1,0 +1,70 @@
+#!/usr/bin/env tclsh
+# -*- tcl -*-
+
+package require Tcl 8.5
+package require fileutil::traverse
+package require blob::statistics
+package require lambda
+package require linenoise
+
+#puts [join [info loaded] \n]
+#exit
+
+set every 1000
+
+proc p {x cent} {
+    format %.2f%% [expr {(double($x)*100)/$cent}]
+}
+
+proc ping {} {
+    global w n path
+    puts -nonewline \r\033\[2K\r[string range "$n $path" 0 $w]
+    flush stdout
+    return
+}
+
+proc show {} {
+    global n
+    puts -nonewline "\033\[H\033\[2J"
+    puts ""
+    puts ""
+    puts "Scanned: $n"
+    puts "Unique:  [BS size] ([p [BS size] $n])"
+    puts "Found:   [BS bytes-entered]"
+    puts "Actual:  [BS bytes-stored] ([p [BS bytes-stored] [BS bytes-entered]])"
+    puts "Min:     [BS min]"
+    puts "Average: [BS average]"
+    puts "Max:     [BS max]"
+
+    puts -nonewline "\033\[H"
+    flush stdout
+    return
+}
+
+proc down {x} {
+    puts -nonewline \033\[${x}B
+    flush stdout
+    return
+}
+
+set w [linenoise columns]
+incr w -2
+blob::statistics create BS
+set n 0
+
+foreach path $argv {
+    fileutil::traverse T $path -filter [lambda {path} {
+	file isfile $path
+    }]
+    T foreach path {
+	ping
+	BS put-file $path
+	incr n
+	if {$n % $every} continue
+	show
+    }
+}
+
+show
+down 8
+puts "\n"
