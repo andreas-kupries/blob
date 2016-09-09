@@ -108,7 +108,7 @@ oo::class create blob::memory {
     }
 
     # delete: uuid -> ()
-    method delete {uuid} {
+    method remove {uuid} {
 	dict unset mystore $uuid
 	return
     }

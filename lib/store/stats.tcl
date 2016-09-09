@@ -144,7 +144,7 @@ oo::class create blob::statistics {
     }
 
     # delete: uuid -> ()
-    method delete {uuid} {
+    method remove {uuid} {
 	dict unset mycount $uuid
 	dict unset mysize  $uuid
 	return

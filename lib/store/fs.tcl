@@ -147,7 +147,7 @@ oo::class create blob::fs {
     }
 
     # delete: uuid -> ()
-    method delete {uuid} {
+    method remove {uuid} {
 	file delete -force [my PathOf $uuid]
 	return
     }

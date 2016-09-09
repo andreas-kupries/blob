@@ -12,7 +12,7 @@ proc badmethod {m real} {
 }
 
 proc methods {} {
-    return {clear delete destroy exists get-channel get-file get-string iexchange-async-chan iexchange-async-file iexchange-async-string iexchange-for-chan iexchange-for-file iexchange-for-string ihave-async-chan ihave-async-file ihave-async-string ihave-for-chan ihave-for-file ihave-for-string iwant-as-chan iwant-as-file iwant-as-string iwant-async-chan iwant-async-file iwant-async-string names new pull pull-async push push-async put-channel put-file put-string remove size store-to-file sync sync-async}
+    return {clear destroy exists get-channel get-file get-string iexchange-async-chan iexchange-async-file iexchange-async-string iexchange-for-chan iexchange-for-file iexchange-for-string ihave-async-chan ihave-async-file ihave-async-string ihave-for-chan ihave-for-file ihave-for-string iwant-as-chan iwant-as-file iwant-as-string iwant-async-chan iwant-async-file iwant-async-string names new pull pull-async push push-async put-channel put-file put-string remove size store-to-file sync sync-async}
 }
 
 proc setup-wall   {} { set   ::wall 0 }

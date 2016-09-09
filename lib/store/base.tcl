@@ -31,8 +31,8 @@
 package require Tcl 8.5
 package require TclOO
 package require sha1 2            ; # tcllib
-package require fileutil          ; # tcllib
-package require oo::util          ; # tcllib
+package require fileutil          ; # tcllib - writeFile, tempfile, cat
+package require oo::util          ; # tcllib - mymethod
 package require debug
 package require debug::caller
 

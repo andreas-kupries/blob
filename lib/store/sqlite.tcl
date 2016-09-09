@@ -164,7 +164,7 @@ oo::class create blob::sqlite {
     }
 
     # delete: uuid -> ()
-    method delete {uuid} {
+    method remove {uuid} {
 	DB transaction {
 	    DB eval $sql_delete
 	}
