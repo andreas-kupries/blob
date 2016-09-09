@@ -66,7 +66,7 @@ oo::class create blob {
     method put-string {blob} {
 	debug.blob {[lreplace [info level 0] end end <BLOB:[string length $blob]>]}
 	set uuid  [my Uuid.blob $blob]
-	set myisnew [my EnterString $uuid $blob]
+	set myisnew [my enter-string $uuid $blob]
 
 	debug.blob {[debug caller] | ==> ($uuid)}
 	return $uuid
@@ -76,7 +76,7 @@ oo::class create blob {
     method put-file {path} {
 	debug.blob {[debug caller] | }
 	set uuid [my Uuid.path $path]
-	set myisnew [my EnterFile $uuid $path]
+	set myisnew [my enter-file $uuid $path]
 
 	debug.blob {[debug caller] | ==> ($uuid)}
 	return $uuid
@@ -87,7 +87,7 @@ oo::class create blob {
 	debug.blob {[debug caller] | }
 	set blob [read $chan]
 	set uuid  [my Uuid.blob $blob]
-	set myisnew [my EnterString $uuid $blob]
+	set myisnew [my enter-string $uuid $blob]
 
 	debug.blob {[debug caller] | ==> ($uuid)}
 	return $uuid
@@ -173,11 +173,11 @@ oo::class create blob {
     ## API. Abstract methods used in the generic code
     ## above. Implementation required.
 
-    # EnterString: uuid blob --> bool
-    method EnterString {uuid blob} { my API.error EnterString }
+    # enter-string: uuid blob --> bool
+    method enter-string {uuid blob} { my API.error enter-string }
 
-    # EnterFile: uuid path --> bool
-    method EnterFile {uuid path} { my API.error EnterFile }
+    # enter-file: uuid path --> bool
+    method enter-file {uuid path} { my API.error enter-file }
 
     # Names: ?pattern? --> list(uuid)
     method Names {{pattern *}} { my API.error Names }
@@ -259,7 +259,7 @@ oo::class create blob {
 	    my XFER.error $uuid $actual_uuid
 	}
 
-	my EnterString $uuid $blob
+	my enter-string $uuid $blob
 	return
     }
 
@@ -273,7 +273,7 @@ oo::class create blob {
 	    my XFER.error $uuid $actual_uuid
 	}
 
-	my EnterFile $uuid $path
+	my enter-file $uuid $path
 	file delete -- $path
 	return
     }
@@ -289,7 +289,7 @@ oo::class create blob {
 	    my XFER.error $uuid $actual_uuid
 	}
 
-	my EnterString $uuid $blob
+	my enter-string $uuid $blob
 	return
     }
 

@@ -71,8 +71,8 @@ oo::class create blob::statistics {
 
     method PreferedPut {} { return string }
 
-    # put-string :- EnterString: uuid, blob --> ()
-    method EnterString {uuid blob} {
+    # put-string :- enter-string: uuid, blob --> ()
+    method enter-string {uuid blob} {
 	set myentered {}
 	set mystored  {}
 
@@ -90,8 +90,8 @@ oo::class create blob::statistics {
 	return
     }
 
-    # put-file:- EnterFile: path --> ()
-    method EnterFile {uuid path} {
+    # put-file:- enter-file: path --> ()
+    method enter-file {uuid path} {
 	set myentered {}
 	set mystored  {}
 

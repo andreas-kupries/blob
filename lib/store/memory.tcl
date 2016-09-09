@@ -64,15 +64,15 @@ oo::class create blob::memory {
 
     method PreferedPut {} { return string }
 
-    # put-string :- EnterString: uuid, blob --> ()
-    method EnterString {uuid blob} {
+    # put-string :- enter-string: uuid, blob --> ()
+    method enter-string {uuid blob} {
 	if {[dict exists $mystore $uuid]} return
 	dict set mystore $uuid $blob
 	return
     }
 
-    # put-file:- EnterFile: path --> ()
-    method EnterFile {uuid path} {
+    # put-file:- enter-file: path --> ()
+    method enter-file {uuid path} {
 	if {[dict exists $mystore $uuid]} return
 	dict set mystore $uuid [my Cat $path]
 	return

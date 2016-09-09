@@ -79,8 +79,8 @@ oo::class create blob::sqlite {
 
     method PreferedPut {} { return path }
 
-    # put-string :- EnterString: uuid, blob --> ()
-    method EnterString {uuid blob} {
+    # put-string :- enter-string: uuid, blob --> ()
+    method enter-string {uuid blob} {
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size
@@ -91,8 +91,8 @@ oo::class create blob::sqlite {
 	return
     }
 
-    # put-file :- EnterFile: uuid, path --> ()
-    method EnterFile {uuid path} {
+    # put-file :- enter-file: uuid, path --> ()
+    method enter-file {uuid path} {
 	DB transaction {
 	    if {![DB exists $sql_toblob]} {
 		variable size

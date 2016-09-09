@@ -59,8 +59,8 @@ oo::class create blob::fs {
 
     method PreferedPut {} { return path }
 
-    # put-string :- EnterString: uuid, blob --> ()
-    method EnterString {uuid content} {
+    # put-string :- enter-string: uuid, blob --> ()
+    method enter-string {uuid content} {
 	set dstpath [my PathOf $uuid]
 	if {[file exists $dstpath]} return
 	file mkdir [file dirname $dstpath]
@@ -69,8 +69,8 @@ oo::class create blob::fs {
 	return
     }
 
-    # put-file:- EnterFile: uuid, path --> ()
-    method EnterFile {uuid path} {
+    # put-file:- enter-file: uuid, path --> ()
+    method enter-file {uuid path} {
 	set dstpath [my PathOf $uuid]
 	if {[file exists $dstpath]} return
 
