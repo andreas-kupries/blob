@@ -94,7 +94,7 @@ oo::class create blob::iter::sqlite {
 	# -value-column - Name of column for values in the value-table  
 	#                 Ignored when operating without value-table	   
 	# -collation    - Custom ordering, with and without value-table.
-	OPTION configure $args
+	OPTION configure-list $args
 
 	# Make the database available as a local command, under a
 	# fixed name. No need for an instance variable and resolution.

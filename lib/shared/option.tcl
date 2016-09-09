@@ -52,7 +52,14 @@ oo::class create blob::option {
 	return [dict get $myvalue $name]
     }
 
-    method configure {words} {
+    method configure {args} {
+	debug.blob/option {}
+	my configure-list $args
+	return
+    }
+
+    method configure-list {words} {
+	debug.blob/option {}
 	foreach {option value} $words {
 	    my Validate $option
 	    dict set myvalue $option $value
@@ -64,6 +71,7 @@ oo::class create blob::option {
     ## Lifecycle.
 
     constructor {spec} {
+	debug.blob/option {}
 	my Init
 	foreach def $spec { my Def {*}$def }
 	return
@@ -90,11 +98,13 @@ oo::class create blob::option {
     # # ## ### ##### ######## #############
 
     method Validate {name} {
+	debug.blob/option {}
 	if {[dict exists $mydef $name]} return
 	my Error "Unknown option \"$name\"" INVALID
     }
 
     method Error {text args} {
+	debug.blob/option {}
 	return -code error -errorcode [list BLOB OPTION {*}$args] $text
     }
 
