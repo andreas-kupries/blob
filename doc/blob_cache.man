@@ -1,0 +1,125 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[manpage_begin [vset LABEL_CACHE] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset PROJECT]::cache]
+[titledesc [vset TITLE_CACHE]]
+[description]
+[include parts/welcome.inc]
+
+This package provides a blob store which caches blobs and uuid
+existence information in memory, to be used as a frontend for some
+other blob store.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::cache] [method create] [arg obj] [arg backend] [opt [arg options]...]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[para] The [arg backend] is the instance command of the blob store the
+cache is sitting in front of. For information about the available
+options see section [sectref Options].
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset PROJECT]::cache] [method new] [arg backend] [opt [arg options]...]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[para] The [arg backend] is the instance command of the blob store the
+cache is sitting in front of. For information about the available
+options see section [sectref Options].
+
+[list_end]
+
+[subsection Options]
+
+[list_begin options]
+
+[opt_def -blob-limit uint]
+
+Maximal size of the blob cache, as number of entries (not amount of memory).
+The default size is [const 100].
+Setting an empty string as the value makes it unlimited.
+Setting it to [const 0] disables the blob-cache part of the instance.
+
+[opt_def -uuid-limit uint]
+
+Maximal size of the uuid cache (existence information), as number of entries.
+The default size is [const 10000].
+Setting an empty string as the value makes it unlimited.
+Setting it to [const 0] disables the uuid-cache part of the instance.
+
+[list_end]
+
+[include parts/api.inc]
+
+[section {Cache-specific API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method cget] [arg option]]
+
+This method returns the value of the named [arg option].  An error
+will be thrown if the [arg option] is not known.  For information
+about the available options see section [sectref Options].
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method configure] [opt [arg options]...]]
+
+This method takes a series of options and values and reconfigures the
+instance accordingly.  An error will be thrown if any of the specified
+options is not known.  For information about the available options see
+section [sectref Options].
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method blobs]]
+
+This methods returns the number of blobs currently loaded into the
+cache.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method blobs-loaded]]
+
+This method returns a list containing the uuids of the blobs currently
+loaded into the cache.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method blobs-lru]]
+
+This method returns a list containing the uuids of the blobs currently
+loaded into the cache, in order of last usage. In other words, the
+most recently used uuid is at the end of the list, and the least used
+uuid at the beginning.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method uuids]]
+
+This methods returns the number of uuid existence flags currently
+loaded into the cache.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method uuids-loaded]]
+
+This method returns a list containing the uuids for which existence
+flags are currently loaded into the cache.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method uuids-lru]]
+
+This method returns a list containing the uuids for which existence
+flags are currently loaded into the cache, in order of last usage. In
+other words, the most recently used uuid is at the end of the list,
+and the least used uuid at the beginning.
+
+[list_end]
+
+[include parts/feedback.inc]
+[manpage_end]

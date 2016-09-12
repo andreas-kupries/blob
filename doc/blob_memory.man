@@ -9,7 +9,7 @@
 [description]
 [include parts/welcome.inc]
 
-This package provides an in-memory storage for blobs.
+This package provides a blob store which holds the blobs in memory.
 
 [section {Class API}]
 

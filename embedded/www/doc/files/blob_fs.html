@@ -107,7 +107,7 @@
  ] <hr>
 <h1 class="title">blob::fs(n) 1 doc &quot;Blob. General content storage with deduplication&quot;</h1>
 <div id="name" class="section"><h2><a name="name">Name</a></h2>
-<p>blob::fs - Blob - Filesystem storage backend</p>
+<p>blob::fs - Blob - Filesystem store</p>
 </div>
 <div id="toc" class="section"><h2><a name="toc">Table Of Contents</a></h2>
 <ul class="toc">
@@ -116,7 +116,8 @@
 <li class="section"><a href="#section1">Description</a></li>
 <li class="section"><a href="#section2">Class API</a></li>
 <li class="section"><a href="#section3">Standard API</a></li>
-<li class="section"><a href="#section4">Bugs, Ideas, Feedback</a></li>
+<li class="section"><a href="#section4">Filesystem-specific API</a></li>
+<li class="section"><a href="#section5">Bugs, Ideas, Feedback</a></li>
 <li class="section"><a href="#keywords">Keywords</a></li>
 <li class="section"><a href="#copyright">Copyright</a></li>
 </ul>
@@ -149,13 +150,14 @@
 <li><a href="#19"><b class="cmd">&lt;instance&gt;</b> <b class="method">pull-async</b> <i class="arg">donecmd</i> <i class="arg">from</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
 <li><a href="#20"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync</b> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
 <li><a href="#21"><b class="cmd">&lt;instance&gt;</b> <b class="method">sync-async</b> <i class="arg">donecmd</i> <i class="arg">with</i> <span class="opt">?<i class="arg">uuids</i>?</span></a></li>
+<li><a href="#22"><b class="cmd">&lt;instance&gt;</b> <b class="method">base</b></a></li>
 </ul>
 </div>
 </div>
 <div id="section1" class="section"><h2><a name="section1">Description</a></h2>
 <p>Welcome to the Blob project, written by Andreas Kupries.</p>
 <p>For availability please read <i class="term"><a href="blob_howto_get_sources.html">Blob - How To Get The Sources</a></i>.</p>
-<p>This package provides a blob storage which uses a directory in a
+<p>This package provides a blob store which uses a directory in a
 filesystem to hold the blob contents.</p>
 </div>
 <div id="section2" class="section"><h2><a name="section2">Class API</a></h2>
@@ -318,7 +320,14 @@ provide the following methods to their users:</p>
 		additional arguments.</p></dd>
 </dl>
 </div>
-<div id="section4" class="section"><h2><a name="section4">Bugs, Ideas, Feedback</a></h2>
+<div id="section4" class="section"><h2><a name="section4">Filesystem-specific API</a></h2>
+<dl class="definitions">
+<dt><a name="22"><b class="cmd">&lt;instance&gt;</b> <b class="method">base</b></a></dt>
+<dd><p>This method returns the path to the base directory used by the blob
+store, as it was configured at construction time.</p></dd>
+</dl>
+</div>
+<div id="section5" class="section"><h2><a name="section5">Bugs, Ideas, Feedback</a></h2>
 <p>Both the package(s) and this documentation will undoubtedly contain
 bugs and other problems.
 Please report such at

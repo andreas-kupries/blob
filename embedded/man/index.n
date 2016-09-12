@@ -293,6 +293,9 @@ blob-introduction
 \fBfiles/blob_license\&.n\fR
 blob-license
 .TP
+\fBfiles/blob_cache\&.n\fR
+blob::cache
+.TP
 \fBfiles/blob_fs\&.n\fR
 blob::fs
 .TP
@@ -325,6 +328,9 @@ blob-introduction
 .TP
 \fBfiles/blob_license\&.n\fR
 blob-license
+.TP
+\fBfiles/blob_cache\&.n\fR
+blob::cache
 .TP
 \fBfiles/blob_fs\&.n\fR
 blob::fs
@@ -359,6 +365,9 @@ blob-introduction
 \fBfiles/blob_license\&.n\fR
 blob-license
 .TP
+\fBfiles/blob_cache\&.n\fR
+blob::cache
+.TP
 \fBfiles/blob_fs\&.n\fR
 blob::fs
 .TP
@@ -391,6 +400,9 @@ blob-introduction
 .TP
 \fBfiles/blob_license\&.n\fR
 blob-license
+.TP
+\fBfiles/blob_cache\&.n\fR
+blob::cache
 .TP
 \fBfiles/blob_fs\&.n\fR
 blob::fs
@@ -425,6 +437,9 @@ blob-introduction
 \fBfiles/blob_license\&.n\fR
 blob-license
 .TP
+\fBfiles/blob_cache\&.n\fR
+blob::cache
+.TP
 \fBfiles/blob_fs\&.n\fR
 blob::fs
 .TP
@@ -457,6 +472,9 @@ blob-introduction
 .TP
 \fBfiles/blob_license\&.n\fR
 blob-license
+.TP
+\fBfiles/blob_cache\&.n\fR
+blob::cache
 .TP
 \fBfiles/blob_fs\&.n\fR
 blob::fs

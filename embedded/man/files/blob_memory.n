@@ -273,7 +273,7 @@ Database Class:	\\fB\\$3\\fR
 ..
 .BS
 .SH NAME
-blob::memory \- Blob - In-memory storage backend
+blob::memory \- Blob - In-memory store
 .SH SYNOPSIS
 package require \fBTclx \fR
 .sp
@@ -328,7 +328,7 @@ Welcome to the Blob project, written by Andreas Kupries\&.
 .PP
 For availability please read \fIBlob - How To Get The Sources\fR\&.
 .PP
-This package provides an in-memory storage for blobs\&.
+This package provides a blob store which holds the blobs in memory\&.
 .SH "CLASS API"
 .TP
 \fB::blob::memory\fR \fBcreate\fR \fIobj\fR

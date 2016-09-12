@@ -1,9 +1,9 @@
 '\"
-'\" Generated from file 'blob_fs\&.man' by tcllib/doctools with format 'nroff'
+'\" Generated from file 'blob_cache\&.man' by tcllib/doctools with format 'nroff'
 '\" Copyright (c) 2013-2016 Andreas Kupries
 '\" Copyright (c) 2013-2016 Documentation, Andreas Kupries
 '\"
-.TH "blob::fs" n 1 doc "Blob\&. General content storage with deduplication"
+.TH "blob::cache" n 1 doc "Blob\&. General content storage with deduplication"
 .\" The -*- nroff -*- definitions below are for supplemental macros used
 .\" in Tcl/Tk manual entries.
 .\"
@@ -273,15 +273,15 @@ Database Class:	\\fB\\$3\\fR
 ..
 .BS
 .SH NAME
-blob::fs \- Blob - Filesystem store
+blob::cache \- Blob - Write-through cache
 .SH SYNOPSIS
 package require \fBTclx \fR
 .sp
-package require \fBblob::fs \fR
+package require \fBblob::cache \fR
 .sp
-\fB::blob::fs\fR \fBcreate\fR \fIobj\fR \fIbasedir\fR
+\fB::blob::cache\fR \fBcreate\fR \fIobj\fR \fIbackend\fR ?\fIoptions\fR\&.\&.\&.?
 .sp
-\fB::blob::fs\fR \fBnew\fR \fIbasedir\fR
+\fB::blob::cache\fR \fBnew\fR \fIbackend\fR ?\fIoptions\fR\&.\&.\&.?
 .sp
 \fB<instance>\fR \fBput-string\fR \fIblob\fR
 .sp
@@ -321,7 +321,21 @@ package require \fBblob::fs \fR
 .sp
 \fB<instance>\fR \fBsync-async\fR \fIdonecmd\fR \fIwith\fR ?\fIuuids\fR?
 .sp
-\fB<instance>\fR \fBbase\fR
+\fB<instance>\fR \fBcget\fR \fIoption\fR
+.sp
+\fB<instance>\fR \fBconfigure\fR ?\fIoptions\fR\&.\&.\&.?
+.sp
+\fB<instance>\fR \fBblobs\fR
+.sp
+\fB<instance>\fR \fBblobs-loaded\fR
+.sp
+\fB<instance>\fR \fBblobs-lru\fR
+.sp
+\fB<instance>\fR \fBuuids\fR
+.sp
+\fB<instance>\fR \fBuuids-loaded\fR
+.sp
+\fB<instance>\fR \fBuuids-lru\fR
 .sp
 .BE
 .SH DESCRIPTION
@@ -330,26 +344,41 @@ Welcome to the Blob project, written by Andreas Kupries\&.
 .PP
 For availability please read \fIBlob - How To Get The Sources\fR\&.
 .PP
-This package provides a blob store which uses a directory in a
-filesystem to hold the blob contents\&.
+This package provides a blob store which caches blobs and uuid
+existence information in memory, to be used as a frontend for some
+other blob store\&.
 .SH "CLASS API"
 .TP
-\fB::blob::fs\fR \fBcreate\fR \fIobj\fR \fIbasedir\fR
+\fB::blob::cache\fR \fBcreate\fR \fIobj\fR \fIbackend\fR ?\fIoptions\fR\&.\&.\&.?
 This constructor command creates a new instance \fIobj\fR
 of the class and returns the fully qualified name of that
 instance\&.
 .sp
-The \fIbasedir\fR is the path to the directory used to hold the
-blob contents\&. The exact structure maintained by the package is
-intentionally not documented\&.
+The \fIbackend\fR is the instance command of the blob store the
+cache is sitting in front of\&. For information about the available
+options see section \fBOptions\fR\&.
 .TP
-\fB::blob::fs\fR \fBnew\fR \fIbasedir\fR
+\fB::blob::cache\fR \fBnew\fR \fIbackend\fR ?\fIoptions\fR\&.\&.\&.?
 This constructor command creates a new instance of the class and
 returns the fully qualified name of that instance\&.
 .sp
-The \fIbasedir\fR is the path to the directory used to hold the
-blob contents\&. The exact structure maintained by the package is
-intentionally not documented\&.
+The \fIbackend\fR is the instance command of the blob store the
+cache is sitting in front of\&. For information about the available
+options see section \fBOptions\fR\&.
+.PP
+.SS OPTIONS
+.TP
+\fB-blob-limit\fR uint
+Maximal size of the blob cache, as number of entries (not amount of memory)\&.
+The default size is \fB100\fR\&.
+Setting an empty string as the value makes it unlimited\&.
+Setting it to \fB0\fR disables the blob-cache part of the instance\&.
+.TP
+\fB-uuid-limit\fR uint
+Maximal size of the uuid cache (existence information), as number of entries\&.
+The default size is \fB10000\fR\&.
+Setting an empty string as the value makes it unlimited\&.
+Setting it to \fB0\fR disables the uuid-cache part of the instance\&.
 .PP
 .SH "STANDARD API"
 As a derived class of \fBblob\fR instances of this class
@@ -517,11 +546,46 @@ through the event-loop, invoking the command prefix
 \fIdonecmd\fR when the operation completes, with no
 additional arguments\&.
 .PP
-.SH "FILESYSTEM-SPECIFIC API"
+.SH "CACHE-SPECIFIC API"
 .TP
-\fB<instance>\fR \fBbase\fR
-This method returns the path to the base directory used by the blob
-store, as it was configured at construction time\&.
+\fB<instance>\fR \fBcget\fR \fIoption\fR
+This method returns the value of the named \fIoption\fR\&.  An error
+will be thrown if the \fIoption\fR is not known\&.  For information
+about the available options see section \fBOptions\fR\&.
+.TP
+\fB<instance>\fR \fBconfigure\fR ?\fIoptions\fR\&.\&.\&.?
+This method takes a series of options and values and reconfigures the
+instance accordingly\&.  An error will be thrown if any of the specified
+options is not known\&.  For information about the available options see
+section \fBOptions\fR\&.
+.TP
+\fB<instance>\fR \fBblobs\fR
+This methods returns the number of blobs currently loaded into the
+cache\&.
+.TP
+\fB<instance>\fR \fBblobs-loaded\fR
+This method returns a list containing the uuids of the blobs currently
+loaded into the cache\&.
+.TP
+\fB<instance>\fR \fBblobs-lru\fR
+This method returns a list containing the uuids of the blobs currently
+loaded into the cache, in order of last usage\&. In other words, the
+most recently used uuid is at the end of the list, and the least used
+uuid at the beginning\&.
+.TP
+\fB<instance>\fR \fBuuids\fR
+This methods returns the number of uuid existence flags currently
+loaded into the cache\&.
+.TP
+\fB<instance>\fR \fBuuids-loaded\fR
+This method returns a list containing the uuids for which existence
+flags are currently loaded into the cache\&.
+.TP
+\fB<instance>\fR \fBuuids-lru\fR
+This method returns a list containing the uuids for which existence
+flags are currently loaded into the cache, in order of last usage\&. In
+other words, the most recently used uuid is at the end of the list,
+and the least used uuid at the beginning\&.
 .PP
 .SH "BUGS, IDEAS, FEEDBACK"
 Both the package(s) and this documentation will undoubtedly contain

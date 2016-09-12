@@ -172,8 +172,8 @@
 <li><a href="#41"><b class="cmd">&lt;instance&gt;</b> <b class="method">size</b></a></li>
 <li><a href="#42"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></li>
 <li><a href="#43"><b class="cmd">&lt;instance&gt;</b> <b class="method">PreferedPut</b></a></li>
-<li><a href="#44"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterString</b> <i class="arg">uuid</i> <i class="arg">blob</i></a></li>
-<li><a href="#45"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterFile</b> <i class="arg">uuid</i> <i class="arg">path</i></a></li>
+<li><a href="#44"><b class="cmd">&lt;instance&gt;</b> <b class="method">enter-string</b> <i class="arg">uuid</i> <i class="arg">blob</i></a></li>
+<li><a href="#45"><b class="cmd">&lt;instance&gt;</b> <b class="method">enter-file</b> <i class="arg">uuid</i> <i class="arg">path</i></a></li>
 <li><a href="#46"><b class="cmd">&lt;instance&gt;</b> <b class="method">Names</b> <span class="opt">?<i class="arg">pattern</i>?</span></a></li>
 <li><a href="#47"><b class="cmd">&lt;instance&gt;</b> <b class="method">TempFile</b></a></li>
 </ul>
@@ -280,7 +280,9 @@ use.</p>
 		the method.</p>
 <p><em>This is an abstract method. Derived classes have to implement it.</em></p></dd>
 <dt><a name="12"><b class="cmd">&lt;instance&gt;</b> <b class="method">names</b> <span class="opt">?<i class="arg">pattern</i>...?</span></a></dt>
-<dd></dd>
+<dd><p>This method determines the uuids of all blobs found in
+		the store which match one or more of the specified
+		glob patterns, and returns a list containing them.</p></dd>
 <dt><a name="13"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></dt>
 <dd><p>This method returns a boolean value indicating if the
 		blob <i class="arg">uuid</i> is known to the instance
@@ -403,10 +405,10 @@ use.</p>
 </div>
 <div id="section3" class="section"><h2><a name="section3">API to implement</a></h2>
 <p>This section lists and describes all the methods a derived class
-<em>has</em> to override to be a proper and functional blob storage.
+<em>has</em> to override to be a proper and functional blob store.
 This is not quite a subset of the methods listed in the
 <span class="sectref"><a href="#section2">Public API</a></span> above, because it also contains a number of
-private methods.</p>
+private and semi-private methods.</p>
 <dl class="definitions">
 	
 	
@@ -431,20 +433,37 @@ private methods.</p>
 		blobs between the two instances.</p>
 <p>The derived class has to implement it and return one
 		of <b class="const">string</b>, <b class="const">file</b> and <b class="const">chan</b>.</p></dd>
-<dt><a name="44"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterString</b> <i class="arg">uuid</i> <i class="arg">blob</i></a></dt>
+<dt><a name="44"><b class="cmd">&lt;instance&gt;</b> <b class="method">enter-string</b> <i class="arg">uuid</i> <i class="arg">blob</i></a></dt>
 <dd><p>This method is used by the standard method
 		<b class="method">put-string</b> to enter the <i class="arg">blob</i> with
 		<i class="arg">uuid</i> into the instance.</p>
 <p>The derived class has to implement it and return a
 		boolean value indicating whether the blob is new
-		(<b class="const">true</b>), or not (<b class="const">false</b>).</p></dd>
-<dt><a name="45"><b class="cmd">&lt;instance&gt;</b> <b class="method">EnterFile</b> <i class="arg">uuid</i> <i class="arg">path</i></a></dt>
+		(<b class="const">true</b>), or not (<b class="const">false</b>).</p>
+<p>This is a semi-private method. Public due to its name
+		nearly no user has a reason to use it directly, and
+		every reason not to, due to the danger of messing up
+		the internals of the store in question. In other
+		words, calling this method with an uuid and a blob
+		which does not match that uuid is a recipe for (likely
+		difficult to debug) failures.</p>
+<p>Then why making it public ? For the cases where it
+		actually <em>is</em> useful. Currently the only class in
+		the project which uses this API from the outside of a
+		store is <b class="package"><a href="blob_cache.html">blob::cache</a></b>. It uses the method to
+		hand incoming blobs directly through to the backend
+		without incurring the cost of re-computing the uuid,
+		which can be substantial.</p></dd>
+<dt><a name="45"><b class="cmd">&lt;instance&gt;</b> <b class="method">enter-file</b> <i class="arg">uuid</i> <i class="arg">path</i></a></dt>
 <dd><p>This method is used by the standard method
 		<b class="method">put-file</b> to enter the blob found in the file
 		at <i class="arg">path</i> with <i class="arg">uuid</i> into the instance.</p>
 <p>The derived class has to implement it and return a
 		boolean value indicating whether the blob is new
-		(<b class="const">true</b>), or not (<b class="const">false</b>).</p></dd>
+		(<b class="const">true</b>), or not (<b class="const">false</b>).</p>
+<p>This is a semi-private method. See the previous method
+		for an explanation on why it is public despite its
+		dangers.</p></dd>
 <dt><a name="46"><b class="cmd">&lt;instance&gt;</b> <b class="method">Names</b> <span class="opt">?<i class="arg">pattern</i>?</span></a></dt>
 <dd><p>This method is used by the standard method
 		<b class="method">names</b> to search the instance for blobs whose

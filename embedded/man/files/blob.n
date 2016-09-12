@@ -363,9 +363,9 @@ package require \fBcmdr \fR
 .sp
 \fB<instance>\fR \fBPreferedPut\fR
 .sp
-\fB<instance>\fR \fBEnterString\fR \fIuuid\fR \fIblob\fR
+\fB<instance>\fR \fBenter-string\fR \fIuuid\fR \fIblob\fR
 .sp
-\fB<instance>\fR \fBEnterFile\fR \fIuuid\fR \fIpath\fR
+\fB<instance>\fR \fBenter-file\fR \fIuuid\fR \fIpath\fR
 .sp
 \fB<instance>\fR \fBNames\fR ?\fIpattern\fR?
 .sp
@@ -493,6 +493,9 @@ the method\&.
 \fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
 .TP
 \fB<instance>\fR \fBnames\fR ?\fIpattern\fR\&.\&.\&.?
+This method determines the uuids of all blobs found in
+the store which match one or more of the specified
+glob patterns, and returns a list containing them\&.
 .TP
 \fB<instance>\fR \fBexists\fR \fIuuid\fR
 This method returns a boolean value indicating if the
@@ -634,10 +637,10 @@ without any additional arguments\&.
 .PP
 .SH "API TO IMPLEMENT"
 This section lists and describes all the methods a derived class
-\fIhas\fR to override to be a proper and functional blob storage\&.
+\fIhas\fR to override to be a proper and functional blob store\&.
 This is not quite a subset of the methods listed in the
 \fBPublic API\fR above, because it also contains a number of
-private methods\&.
+private and semi-private methods\&.
 .TP
 \fB<instance>\fR \fBget-string\fR \fIuuid\fR
 .TP
@@ -663,7 +666,7 @@ blobs between the two instances\&.
 The derived class has to implement it and return one
 of \fBstring\fR, \fBfile\fR and \fBchan\fR\&.
 .TP
-\fB<instance>\fR \fBEnterString\fR \fIuuid\fR \fIblob\fR
+\fB<instance>\fR \fBenter-string\fR \fIuuid\fR \fIblob\fR
 This method is used by the standard method
 \fBput-string\fR to enter the \fIblob\fR with
 \fIuuid\fR into the instance\&.
@@ -671,8 +674,24 @@ This method is used by the standard method
 The derived class has to implement it and return a
 boolean value indicating whether the blob is new
 (\fBtrue\fR), or not (\fBfalse\fR)\&.
+.sp
+This is a semi-private method\&. Public due to its name
+nearly no user has a reason to use it directly, and
+every reason not to, due to the danger of messing up
+the internals of the store in question\&. In other
+words, calling this method with an uuid and a blob
+which does not match that uuid is a recipe for (likely
+difficult to debug) failures\&.
+.sp
+Then why making it public ? For the cases where it
+actually \fIis\fR useful\&. Currently the only class in
+the project which uses this API from the outside of a
+store is \fBblob::cache\fR\&. It uses the method to
+hand incoming blobs directly through to the backend
+without incurring the cost of re-computing the uuid,
+which can be substantial\&.
 .TP
-\fB<instance>\fR \fBEnterFile\fR \fIuuid\fR \fIpath\fR
+\fB<instance>\fR \fBenter-file\fR \fIuuid\fR \fIpath\fR
 This method is used by the standard method
 \fBput-file\fR to enter the blob found in the file
 at \fIpath\fR with \fIuuid\fR into the instance\&.
@@ -680,6 +699,10 @@ at \fIpath\fR with \fIuuid\fR into the instance\&.
 The derived class has to implement it and return a
 boolean value indicating whether the blob is new
 (\fBtrue\fR), or not (\fBfalse\fR)\&.
+.sp
+This is a semi-private method\&. See the previous method
+for an explanation on why it is public despite its
+dangers\&.
 .TP
 \fB<instance>\fR \fBNames\fR ?\fIpattern\fR?
 This method is used by the standard method

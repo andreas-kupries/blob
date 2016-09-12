@@ -291,14 +291,17 @@ doc
 \fBblob-license\fR
 \fIfiles/blob_license\&.n\fR: Blob - License
 .TP
+\fBblob::cache\fR
+\fIfiles/blob_cache\&.n\fR: Blob - Write-through cache
+.TP
 \fBblob::fs\fR
-\fIfiles/blob_fs\&.n\fR: Blob - Filesystem storage backend
+\fIfiles/blob_fs\&.n\fR: Blob - Filesystem store
 .TP
 \fBblob::memory\fR
-\fIfiles/blob_memory\&.n\fR: Blob - In-memory storage backend
+\fIfiles/blob_memory\&.n\fR: Blob - In-memory store
 .TP
 \fBblob::sqlite\fR
-\fIfiles/blob_sqlite\&.n\fR: Blob - Sqlite storage backend
+\fIfiles/blob_sqlite\&.n\fR: Blob - Sqlite store
 .TP
 \fBblob_development\fR
 \fIfiles/blob_howto_development\&.n\fR: Blob - The Developer's Guide

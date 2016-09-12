@@ -9,7 +9,7 @@
 [description]
 [include parts/welcome.inc]
 
-This package provides a blob storage which uses a table in an sqlite3
+This package provides a blob store which uses a table in an sqlite3
 database to hold the blob contents.
 
 [para] Note and remember that sqlite databases may exist only in

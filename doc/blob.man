@@ -156,6 +156,10 @@ use.
 	[comment {- - -- --- ----- -------- -------------}]
 	[call [cmd <instance>] [method names] [opt [arg pattern]...]]
 
+		This method determines the uuids of all blobs found in
+		the store which match one or more of the specified
+		glob patterns, and returns a list containing them.
+
 	[comment {- - -- --- ----- -------- -------------}]
 	[call [cmd <instance>] [method exists] [arg uuid]]
 
@@ -310,10 +314,10 @@ use.
 [section {API to implement}]
 
 This section lists and describes all the methods a derived class
-[emph has] to override to be a proper and functional blob storage.
+[emph has] to override to be a proper and functional blob store.
 This is not quite a subset of the methods listed in the
 [sectref {Public API}] above, because it also contains a number of
-private methods.
+private and semi-private methods.
 
 [list_begin definitions]
 	[comment {- - -- --- ----- -------- -------------}]
@@ -341,7 +345,7 @@ private methods.
 		of [const string], [const file] and [const chan].
 
 	[comment {- - -- --- ----- -------- -------------}]
-	[call [cmd <instance>] [method EnterString] [arg uuid] [arg blob]]
+	[call [cmd <instance>] [method enter-string] [arg uuid] [arg blob]]
 
 		This method is used by the standard method
 		[method put-string] to enter the [arg blob] with
@@ -351,8 +355,24 @@ private methods.
 		boolean value indicating whether the blob is new
 		([const true]), or not ([const false]).
 
+	[para]	This is a semi-private method. Public due to its name
+		nearly no user has a reason to use it directly, and
+		every reason not to, due to the danger of messing up
+		the internals of the store in question. In other
+		words, calling this method with an uuid and a blob
+		which does not match that uuid is a recipe for (likely
+		difficult to debug) failures.
+
+	[para]	Then why making it public ? For the cases where it
+		actually [emph is] useful. Currently the only class in
+		the project which uses this API from the outside of a
+		store is [package blob::cache]. It uses the method to
+		hand incoming blobs directly through to the backend
+		without incurring the cost of re-computing the uuid,
+		which can be substantial.
+
 	[comment {- - -- --- ----- -------- -------------}]
-	[call [cmd <instance>] [method EnterFile] [arg uuid] [arg path]]
+	[call [cmd <instance>] [method enter-file] [arg uuid] [arg path]]
 
 		This method is used by the standard method
 		[method put-file] to enter the blob found in the file
@@ -361,6 +381,10 @@ private methods.
 	[para]	The derived class has to implement it and return a
 		boolean value indicating whether the blob is new
 		([const true]), or not ([const false]).
+
+	[para]	This is a semi-private method. See the previous method
+		for an explanation on why it is public despite its
+		dangers.
 
 	[comment {- - -- --- ----- -------- -------------}]
 	[call [cmd <instance>] [method Names] [opt [arg pattern]]]

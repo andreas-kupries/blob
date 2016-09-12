@@ -8,9 +8,10 @@
 
 [comment {- Custom documents & titles - - -- --- ----- --------}]
 [vset TITLE_BLOB          "[vset PTITLE] - Base class, common API"]
-[vset TITLE_FS            "[vset PTITLE] - Filesystem storage backend"]
-[vset TITLE_MEMORY        "[vset PTITLE] - In-memory storage backend"]
-[vset TITLE_SQLITE        "[vset PTITLE] - Sqlite storage backend"]
+[vset TITLE_FS            "[vset PTITLE] - Filesystem store"]
+[vset TITLE_MEMORY        "[vset PTITLE] - In-memory store"]
+[vset TITLE_SQLITE        "[vset PTITLE] - Sqlite store"]
+[vset TITLE_CACHE         "[vset PTITLE] - Write-through cache"]
 
 [comment {- Miscellanea ............. - - -- --- ----- --------}]
 [vset LABEL_INTRO         [vset PROJECT]-introduction]
@@ -24,3 +25,4 @@
 [vset LABEL_FS            [vset PROJECT]::fs]
 [vset LABEL_MEMORY        [vset PROJECT]::memory]
 [vset LABEL_SQLITE        [vset PROJECT]::sqlite]
+[vset LABEL_CACHE         [vset PROJECT]::cache]

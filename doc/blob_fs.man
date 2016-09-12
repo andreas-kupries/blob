@@ -9,7 +9,7 @@
 [description]
 [include parts/welcome.inc]
 
-This package provides a blob storage which uses a directory in a
+This package provides a blob store which uses a directory in a
 filesystem to hold the blob contents.
 
 [section {Class API}]
@@ -39,6 +39,17 @@ intentionally not documented.
 [list_end]
 
 [include parts/api.inc]
+
+[section {Filesystem-specific API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method base]]
+
+This method returns the path to the base directory used by the blob
+store, as it was configured at construction time.
+
+[list_end]
 
 [include parts/feedback.inc]
 [manpage_end]
