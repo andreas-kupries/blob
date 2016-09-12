@@ -112,17 +112,23 @@ oo::class create blob::cache {
     # get-string: uuid --> blob
     method get-string {uuid} {
 	debug.blob/cache {[debug caller] | }
-	my Validate   $uuid
-	my EnsureData $uuid
-	return [dict get $mydata $uuid]
+	my Validate $uuid
+	set limit [OPTION cget -blob-limit]
+	if {($limit ne {}) && !$limit} {
+	    return [BACKEND get-string $uuid]
+	}
+	return [my EnsureData $uuid $limit]
     }
 
     # get-channel: uuid --> channel
     method get-channel {uuid} {
 	debug.blob/cache {}
 	my Validate $uuid
-	my EnsureData $uuid
-	return [tcl::chan::string [dict get $mydata $uuid]]
+	set limit [OPTION cget -blob-limit]
+	if {($limit ne {}) && !$limit} {
+	    return [BACKEND get-channel $uuid
+	}
+	return [tcl::chan::string [my EnsureData $uuid $limit]]
     }
 
     # names () -> list(uuid)
@@ -134,8 +140,11 @@ oo::class create blob::cache {
     # exists: string -> boolean
     method exists {uuid} {
 	debug.blob/cache {[debug caller] | }
-	my EnsureExists $uuid
-	return [dict get $myhas $uuid]
+	set limit [OPTION cget -uuid-limit]
+	if {($limit ne {}) && !$limit} {
+	    return [BACKEND exists $uuid]
+	}
+	return [my EnsureExists $uuid $limit]
     }
 
     # size () -> integer
@@ -204,13 +213,17 @@ oo::class create blob::cache {
 
     method Push {var uuid value limit} {
 	debug.blob/cache {[debug caller] | }
+
+	# Bail out immediately if the relevant cache is disabled.
+	if {$limit == 0} return
+
 	upvar 1 $var store ${var}log log
 
 	set known [dict exists $store $uuid]
 	dict set store $uuid $value
 
-	# Early bailout for unlimited cache.
-	# No need to maintain the log.
+	# Bail out early for an unlimited cache.
+	# We must not maintain the LRU log.
 	if {$limit eq {}} return
 
 	# Limited cache, maintain an LRU log, may drop value from the
@@ -246,28 +259,28 @@ oo::class create blob::cache {
 	return
     }
 
-    method EnsureData {uuid} {
+    method EnsureData {uuid limit} {
 	debug.blob/cache {[debug caller] | }
 	if {![dict exists $mydata $uuid]} {
 	    my Push mydata $uuid \
 		[BACKEND get-string $uuid] \
-		[OPTION cget -blob-limit]
+		$limit
 	} else {
 	    my Ref mydata $uuid
 	}
-	return
+	return [dict get $mydata $uuid]
     }
 
-    method EnsureExists {uuid} {
+    method EnsureExists {uuid limit} {
 	debug.blob/cache {[debug caller] | }
 	if {![dict exists $myhas $uuid]} {
 	    my Push myhas $uuid \
 		[BACKEND exists $uuid] \
-		[OPTION cget -uuid-limit]
+		$limit
 	} else {
 	    my Ref myhas $uuid
 	}
-	return
+	return [dict get $myhas $uuid]
     }
 
     method DropData {uuid} {

@@ -168,6 +168,22 @@ test [test-class]-2.1.4 {put-*, uuid cache, delete keeps uuids in cache} -setup 
     unset result
 } -result {4 {32096c2e0eff33d844ee6d675407ace18289357d 50c9e8d5fc98727b4bbc93cf5d64a68db647f04f 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b ae4f281df5a5d0ff3cad6371f76d5c29b6d953ec} {50c9e8d5fc98727b4bbc93cf5d64a68db647f04f ae4f281df5a5d0ff3cad6371f76d5c29b6d953ec 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b 32096c2e0eff33d844ee6d675407ace18289357d}}
 
+test [test-class]-2.1.5 {put-*, uuid cache, disabled} -setup {
+    set result {}
+    new-store
+    test-store configure -uuid-limit 0
+    test-store put-string A
+    test-store put-string B
+    test-store put-string C
+    test-store put-string D
+} -body {
+    lappend result [test-store uuids]
+    lappend result [lsort [test-store uuids-loaded]]
+    lappend result [test-store uuids-lru]
+} -cleanup {
+    release-store
+    unset result
+} -result {0 {} {}}
 
 test [test-class]-3.0 {get-*, uuid cache, also loaded} -setup {
     set result {}
@@ -287,6 +303,27 @@ test [test-class]-3.1.4 {get-*, blob cache, delete drops blobs from cache} -setu
     test-store remove ae4f281df5a5d0ff3cad6371f76d5c29b6d953ec
     test-store remove 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
     test-store remove 32096c2e0eff33d844ee6d675407ace18289357d
+} -body {
+    lappend result [test-store blobs]
+    lappend result [lsort [test-store blobs-loaded]]
+    lappend result [test-store blobs-lru]
+} -cleanup {
+    release-store
+    unset result
+} -result {0 {} {}}
+
+test [test-class]-3.1.5 {get-*, blob cache, disabled} -setup {
+    set result {}
+    new-store
+    test-store configure -blob-limit 0
+    test-memory-store put-string A
+    test-memory-store put-string B
+    test-memory-store put-string C
+    test-memory-store put-string D
+    test-store get-string 6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
+    test-store get-string ae4f281df5a5d0ff3cad6371f76d5c29b6d953ec
+    test-store get-string 32096c2e0eff33d844ee6d675407ace18289357d
+    test-store get-string 50c9e8d5fc98727b4bbc93cf5d64a68db647f04f
 } -body {
     lappend result [test-store blobs]
     lappend result [lsort [test-store blobs-loaded]]
