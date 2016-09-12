@@ -126,7 +126,7 @@ oo::class create blob::cache {
 	my Validate $uuid
 	set limit [OPTION cget -blob-limit]
 	if {($limit ne {}) && !$limit} {
-	    return [BACKEND get-channel $uuid
+	    return [BACKEND get-channel $uuid]
 	}
 	return [tcl::chan::string [my EnsureData $uuid $limit]]
     }
