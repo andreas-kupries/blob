@@ -1,0 +1,32 @@
+# -*- tcl -*- tcl.tk//DSL tcltest//EN//2.0 tcl.tk//DSL tcltest//EN//2.0
+## (c) 2016 Andreas Kupries
+# # ## ### ##### ######## ############# #####################
+## cache.test:  tests for the blob::cache package.
+
+kt check Tcl     8.5
+kt check tcltest 2
+
+kt require support TclOO
+kt require support sha1 2
+kt require support fileutil
+kt require support tcl::chan::string
+
+kt local   support blob
+kt local   support blob::memory ;# -- backend
+kt local   testing blob::cache
+
+# # ## ### ##### ######## ############# #####################
+
+proc test-class {} { return blob::cache }
+
+# # ## ### ##### ######## ############# #####################
+## Two testsuites, for the custom (instantiation) and shared APIs.
+
+kt source support/common.tcl
+kt source support/setup-cache.tcl
+
+kt source parts/cache.testsuite
+kt source parts/base.testsuite
+
+# # ## ### ##### ######## ############# #####################
+cleanupTests

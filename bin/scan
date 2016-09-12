@@ -60,8 +60,8 @@ foreach path $argv {
 	ping
 	BS put-file $path
 	incr n
-	if {$n % $every} continue
-	show
+	#if {$n % $every} continue
+	#show
     }
 }
 
