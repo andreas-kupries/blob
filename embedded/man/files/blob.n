@@ -275,7 +275,7 @@ Database Class:	\\fB\\$3\\fR
 .SH NAME
 blob \- Blob - Base class, common API
 .SH SYNOPSIS
-package require \fBcmdr \fR
+package require \fBblob \fR
 .sp
 \fB<instance>\fR \fBput-string\fR \fIblob\fR
 .sp

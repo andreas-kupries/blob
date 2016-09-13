@@ -1,0 +1,646 @@
+'\"
+'\" Generated from file 'blob_iter\&.man' by tcllib/doctools with format 'nroff'
+'\" Copyright (c) 2013-2016 Andreas Kupries
+'\" Copyright (c) 2013-2016 Documentation, Andreas Kupries
+'\"
+.TH "blob::iter" n 1 doc "Blob\&. General content storage with deduplication"
+.\" The -*- nroff -*- definitions below are for supplemental macros used
+.\" in Tcl/Tk manual entries.
+.\"
+.\" .AP type name in/out ?indent?
+.\"	Start paragraph describing an argument to a library procedure.
+.\"	type is type of argument (int, etc.), in/out is either "in", "out",
+.\"	or "in/out" to describe whether procedure reads or modifies arg,
+.\"	and indent is equivalent to second arg of .IP (shouldn't ever be
+.\"	needed;  use .AS below instead)
+.\"
+.\" .AS ?type? ?name?
+.\"	Give maximum sizes of arguments for setting tab stops.  Type and
+.\"	name are examples of largest possible arguments that will be passed
+.\"	to .AP later.  If args are omitted, default tab stops are used.
+.\"
+.\" .BS
+.\"	Start box enclosure.  From here until next .BE, everything will be
+.\"	enclosed in one large box.
+.\"
+.\" .BE
+.\"	End of box enclosure.
+.\"
+.\" .CS
+.\"	Begin code excerpt.
+.\"
+.\" .CE
+.\"	End code excerpt.
+.\"
+.\" .VS ?version? ?br?
+.\"	Begin vertical sidebar, for use in marking newly-changed parts
+.\"	of man pages.  The first argument is ignored and used for recording
+.\"	the version when the .VS was added, so that the sidebars can be
+.\"	found and removed when they reach a certain age.  If another argument
+.\"	is present, then a line break is forced before starting the sidebar.
+.\"
+.\" .VE
+.\"	End of vertical sidebar.
+.\"
+.\" .DS
+.\"	Begin an indented unfilled display.
+.\"
+.\" .DE
+.\"	End of indented unfilled display.
+.\"
+.\" .SO ?manpage?
+.\"	Start of list of standard options for a Tk widget. The manpage
+.\"	argument defines where to look up the standard options; if
+.\"	omitted, defaults to "options". The options follow on successive
+.\"	lines, in three columns separated by tabs.
+.\"
+.\" .SE
+.\"	End of list of standard options for a Tk widget.
+.\"
+.\" .OP cmdName dbName dbClass
+.\"	Start of description of a specific option.  cmdName gives the
+.\"	option's name as specified in the class command, dbName gives
+.\"	the option's name in the option database, and dbClass gives
+.\"	the option's class in the option database.
+.\"
+.\" .UL arg1 arg2
+.\"	Print arg1 underlined, then print arg2 normally.
+.\"
+.\" .QW arg1 ?arg2?
+.\"	Print arg1 in quotes, then arg2 normally (for trailing punctuation).
+.\"
+.\" .PQ arg1 ?arg2?
+.\"	Print an open parenthesis, arg1 in quotes, then arg2 normally
+.\"	(for trailing punctuation) and then a closing parenthesis.
+.\"
+.\"	# Set up traps and other miscellaneous stuff for Tcl/Tk man pages.
+.if t .wh -1.3i ^B
+.nr ^l \n(.l
+.ad b
+.\"	# Start an argument description
+.de AP
+.ie !"\\$4"" .TP \\$4
+.el \{\
+.   ie !"\\$2"" .TP \\n()Cu
+.   el          .TP 15
+.\}
+.ta \\n()Au \\n()Bu
+.ie !"\\$3"" \{\
+\&\\$1 \\fI\\$2\\fP (\\$3)
+.\".b
+.\}
+.el \{\
+.br
+.ie !"\\$2"" \{\
+\&\\$1	\\fI\\$2\\fP
+.\}
+.el \{\
+\&\\fI\\$1\\fP
+.\}
+.\}
+..
+.\"	# define tabbing values for .AP
+.de AS
+.nr )A 10n
+.if !"\\$1"" .nr )A \\w'\\$1'u+3n
+.nr )B \\n()Au+15n
+.\"
+.if !"\\$2"" .nr )B \\w'\\$2'u+\\n()Au+3n
+.nr )C \\n()Bu+\\w'(in/out)'u+2n
+..
+.AS Tcl_Interp Tcl_CreateInterp in/out
+.\"	# BS - start boxed text
+.\"	# ^y = starting y location
+.\"	# ^b = 1
+.de BS
+.br
+.mk ^y
+.nr ^b 1u
+.if n .nf
+.if n .ti 0
+.if n \l'\\n(.lu\(ul'
+.if n .fi
+..
+.\"	# BE - end boxed text (draw box now)
+.de BE
+.nf
+.ti 0
+.mk ^t
+.ie n \l'\\n(^lu\(ul'
+.el \{\
+.\"	Draw four-sided box normally, but don't draw top of
+.\"	box if the box started on an earlier page.
+.ie !\\n(^b-1 \{\
+\h'-1.5n'\L'|\\n(^yu-1v'\l'\\n(^lu+3n\(ul'\L'\\n(^tu+1v-\\n(^yu'\l'|0u-1.5n\(ul'
+.\}
+.el \}\
+\h'-1.5n'\L'|\\n(^yu-1v'\h'\\n(^lu+3n'\L'\\n(^tu+1v-\\n(^yu'\l'|0u-1.5n\(ul'
+.\}
+.\}
+.fi
+.br
+.nr ^b 0
+..
+.\"	# VS - start vertical sidebar
+.\"	# ^Y = starting y location
+.\"	# ^v = 1 (for troff;  for nroff this doesn't matter)
+.de VS
+.if !"\\$2"" .br
+.mk ^Y
+.ie n 'mc \s12\(br\s0
+.el .nr ^v 1u
+..
+.\"	# VE - end of vertical sidebar
+.de VE
+.ie n 'mc
+.el \{\
+.ev 2
+.nf
+.ti 0
+.mk ^t
+\h'|\\n(^lu+3n'\L'|\\n(^Yu-1v\(bv'\v'\\n(^tu+1v-\\n(^Yu'\h'-|\\n(^lu+3n'
+.sp -1
+.fi
+.ev
+.\}
+.nr ^v 0
+..
+.\"	# Special macro to handle page bottom:  finish off current
+.\"	# box/sidebar if in box/sidebar mode, then invoked standard
+.\"	# page bottom macro.
+.de ^B
+.ev 2
+'ti 0
+'nf
+.mk ^t
+.if \\n(^b \{\
+.\"	Draw three-sided box if this is the box's first page,
+.\"	draw two sides but no top otherwise.
+.ie !\\n(^b-1 \h'-1.5n'\L'|\\n(^yu-1v'\l'\\n(^lu+3n\(ul'\L'\\n(^tu+1v-\\n(^yu'\h'|0u'\c
+.el \h'-1.5n'\L'|\\n(^yu-1v'\h'\\n(^lu+3n'\L'\\n(^tu+1v-\\n(^yu'\h'|0u'\c
+.\}
+.if \\n(^v \{\
+.nr ^x \\n(^tu+1v-\\n(^Yu
+\kx\h'-\\nxu'\h'|\\n(^lu+3n'\ky\L'-\\n(^xu'\v'\\n(^xu'\h'|0u'\c
+.\}
+.bp
+'fi
+.ev
+.if \\n(^b \{\
+.mk ^y
+.nr ^b 2
+.\}
+.if \\n(^v \{\
+.mk ^Y
+.\}
+..
+.\"	# DS - begin display
+.de DS
+.RS
+.nf
+.sp
+..
+.\"	# DE - end display
+.de DE
+.fi
+.RE
+.sp
+..
+.\"	# SO - start of list of standard options
+.de SO
+'ie '\\$1'' .ds So \\fBoptions\\fR
+'el .ds So \\fB\\$1\\fR
+.SH "STANDARD OPTIONS"
+.LP
+.nf
+.ta 5.5c 11c
+.ft B
+..
+.\"	# SE - end of list of standard options
+.de SE
+.fi
+.ft R
+.LP
+See the \\*(So manual entry for details on the standard options.
+..
+.\"	# OP - start of full description for a single option
+.de OP
+.LP
+.nf
+.ta 4c
+Command-Line Name:	\\fB\\$1\\fR
+Database Name:	\\fB\\$2\\fR
+Database Class:	\\fB\\$3\\fR
+.fi
+.IP
+..
+.\"	# CS - begin code excerpt
+.de CS
+.RS
+.nf
+.ta .25i .5i .75i 1i
+..
+.\"	# CE - end code excerpt
+.de CE
+.fi
+.RE
+..
+.\"	# UL - underline word
+.de UL
+\\$1\l'|0\(ul'\\$2
+..
+.\"	# QW - apply quotation marks to word
+.de QW
+.ie '\\*(lq'"' ``\\$1''\\$2
+.\"" fix emacs highlighting
+.el \\*(lq\\$1\\*(rq\\$2
+..
+.\"	# PQ - apply parens and quotation marks to word
+.de PQ
+.ie '\\*(lq'"' (``\\$1''\\$2)\\$3
+.\"" fix emacs highlighting
+.el (\\*(lq\\$1\\*(rq\\$2)\\$3
+..
+.\"	# QR - quoted range
+.de QR
+.ie '\\*(lq'"' ``\\$1''\\-``\\$2''\\$3
+.\"" fix emacs highlighting
+.el \\*(lq\\$1\\*(rq\\-\\*(lq\\$2\\*(rq\\$3
+..
+.\"	# MT - "empty" string
+.de MT
+.QW ""
+..
+.BS
+.SH NAME
+blob::iter \- Blob - Iterator base class, common API
+.SH SYNOPSIS
+package require \fBblob::iter \fR
+.sp
+\fB<instance>\fR \fBadd\fR \fIuuid\fR \fIproperty_value\fR
+.sp
+\fB<instance>\fR \fBremove\fR \fIuuid\fR\&.\&.\&.
+.sp
+\fB<instance>\fR \fBclear\fR
+.sp
+\fB<instance>\fR \fBdata!\fR \fItuples\fR
+.sp
+\fB<instance>\fR \fBreset\fR
+.sp
+\fB<instance>\fR \fBreverse\fR
+.sp
+\fB<instance>\fR \fBnext\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBprevious\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBto\fR \fIlocation\fR
+.sp
+\fB<instance>\fR \fBdirection!\fR \fIdirection\fR
+.sp
+\fB<instance>\fR \fBget\fR \fIuuid\fR
+.sp
+\fB<instance>\fR \fBexists\fR \fIuuid\fR
+.sp
+\fB<instance>\fR \fBsize\fR
+.sp
+\fB<instance>\fR \fBat\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBdirection\fR
+.sp
+\fB<instance>\fR \fBlocation\fR
+.sp
+\fB<instance>\fR \fBdata\fR
+.sp
+\fB<instance>\fR \fB-->\fR \fIdst\fR
+.sp
+\fB<instance>\fR \fB:=\fR \fIsrc\fR
+.sp
+\fB<instance>\fR \fBclear\fR
+.sp
+\fB<instance>\fR \fBreset\fR
+.sp
+\fB<instance>\fR \fBreverse\fR
+.sp
+\fB<instance>\fR \fBnext\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBprevious\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBto\fR \fIlocation\fR
+.sp
+\fB<instance>\fR \fBdirection!\fR \fIdirection\fR
+.sp
+\fB<instance>\fR \fBexists\fR \fIuuid\fR
+.sp
+\fB<instance>\fR \fBsize\fR
+.sp
+\fB<instance>\fR \fBat\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBdirection\fR
+.sp
+\fB<instance>\fR \fBlocation\fR
+.sp
+\fB<instance>\fR \fBdata\fR
+.sp
+\fB<instance>\fR \fBAdd\fR \fIuuid\fR \fIvalue\fR
+.sp
+\fB<instance>\fR \fBGet\fR \fIuuid\fR
+.sp
+\fB<instance>\fR \fBRemove\fR \fIuuid\fR
+.sp
+\fB<instance>\fR \fBIsCurrent\fR \fIuuid\fR
+.sp
+.BE
+.SH DESCRIPTION
+.PP
+Welcome to the Blob project, written by Andreas Kupries\&.
+.PP
+For availability please read \fIBlob - How To Get The Sources\fR\&.
+.PP
+While this package, from its name, looks like the public entrypoint of
+iterators over blob stores, it is \fInot\fR\&. This package is
+internal, providing the base class for all the others implementing
+actual iterator backends\&.
+.PP
+The following sections are of interest only to developers
+intending to extend or modify the system, then\&. Everybody else can
+skip this document\&.
+.SH "PUBLIC API"
+This section lists and describes all the public methods of a proper
+and functional blob iterator\&. Some of them may have to be implemented
+by the derived class for a specific kind of storage\&.
+.PP
+Note further that not all of the public methods are for general
+use\&.
+.TP
+\fB<instance>\fR \fBadd\fR \fIuuid\fR \fIproperty_value\fR
+This method associates the \fIproperty_value\fR with
+the blob specified by its \fIuuid\fR\&. The result of
+the method is the empty string\&. An error is thrown if
+the uuid is already associated with a value\&. This
+means that each uuid can only be associated with a
+single value, although each value can have multiple
+uuids associated with it\&.
+.TP
+\fB<instance>\fR \fBremove\fR \fIuuid\fR\&.\&.\&.
+This method removes the specified \fIuuid\fRs from the
+iterator\&. The result of the method is the empty
+string\&. Unknown uuids are ignored\&. If a removed uuid
+is the \fIcurrent\fR uuid the iterator is stepped
+forward to the next entry in sequence, as per the
+iterator's direction and ordering configuration\&.
+.TP
+\fB<instance>\fR \fBclear\fR
+This method removes all uuid from the iterator\&. After
+the call the instance is empty\&. The result of the
+method is the empty string\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBdata!\fR \fItuples\fR
+This method is a bulk variant of \fBadd\fR, see
+above\&. It expects a list of (uuid,value) pairs as
+argument and makes the necessary associations\&.
+.sp
+The result of the method is the empty string\&. An error
+is thrown if any of the specified uuids is already
+associated with a value, \fIbefore\fR any changes are
+made\&.
+.TP
+\fB<instance>\fR \fBreset\fR
+This method resets the cursor of the iterator to the
+start position (as per the direction/ordering of the
+iterator)\&. The result of the method is an empty
+string\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBreverse\fR
+This method reverses the direction of the iterator\&.
+The result of the method is an empty string\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBnext\fR \fIn\fR
+This method moves the cursor forward by \fIn\fR
+entries, in the current direction\&. The result of the
+method is a boolean value which indicates if the step
+moved beyond the end of the iterator (\fBtrue\fR),
+or not (\fBfalse\fR)\&.
+The step-length \fIn\fR must be an integer > 0\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBprevious\fR \fIn\fR
+This method moves the cursor backward by \fIn\fR
+entries, against the current direction\&. The result of
+the method is a boolean value which indicates if the
+step moved before the start of the iterator
+(\fBtrue\fR), or not (\fBfalse\fR)\&.
+The step-length \fIn\fR must be an integer > 0\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBto\fR \fIlocation\fR
+This method moves the cursor of the iterator to the
+specified absolute \fIlocation\fR\&. See method
+\fBlocation\fR below for the method which returns
+such locations, and their format\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBdirection!\fR \fIdirection\fR
+This method sets the direction of iterator relative to
+the sorting order of the values\&. The possible
+arguments are \fBincreasing\fR and
+\fBdescreasing\fR\&. The result of the method is the
+empty string\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBget\fR \fIuuid\fR
+This method locates the value associated with
+\fIuuid\fR and returns it as its result\&.
+An error is thrown if \fIuuid\fR is not known to the
+instance\&.
+.TP
+\fB<instance>\fR \fBexists\fR \fIuuid\fR
+This method returns a boolean value indicating if the
+\fIuuid\fR is known to the iterator (\fBtrue\fR), or
+not (\fBfalse\fR)\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBsize\fR
+This method determines the number of uuid/value
+associations stored in the iterator and returns that
+number as the result of the method\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBat\fR \fIn\fR
+This method takes the \fIn\fR entries of the iterator
+starting at the cursor and going forward, and retrurns
+them as its result\&. The result is a list of entries,
+each entry represented by a (uuid,value) pair\&. The
+entries are stored in the order they were taken from
+the iterator\&.
+.sp
+The cursor is \fInot\fR moved\&. This is the
+responsibility of the methods \fBnext\fR and
+\fBprevious\fR\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBdirection\fR
+This method determines the current direction of the
+iterator relative to the sort order and returns it as
+its result\&. The two possible results are
+\fBincreasing\fR and \fBdecreasing\fR
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBlocation\fR
+This method determines the location of the cursor and
+returns it as its result\&. The format of the result is
+a pair of values, a location code, and details, in
+this order\&. The possible location codes are
+.RS
+.TP
+\fBstart\fR
+The cursor is before the start of the content\&.
+The detail value is the empty string\&.
+.TP
+\fBend\fR
+The cursor is behind the end of the content\&.
+The detail value is the empty string\&.
+.TP
+\fBat\fR
+The cursor is at a specific entry in the
+iterator\&. The detail value specifies that
+entry\&. It is a pair denoting the current
+property value, and the uuid, in this order\&.
+.RE
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fBdata\fR
+This method retrieves the iterator content and returns
+it as a list of (uuid,value)-pairs\&. This is the same
+format as taken by method \fBdata!\fR as input\&.
+.sp
+\fIThis is an abstract method\&. Derived classes have to implement it\&.\fR
+.TP
+\fB<instance>\fR \fB-->\fR \fIdst\fR
+This method copies the contents of the instance to the
+iterator instance \fIdst\fR\&. Any preexisting content
+of the destination instance is replaced with the
+information from this iterator\&.
+The targeted instance has to support the methods
+\fBreset\fR, \fBclear\fR, \fBdirection!\fR,
+\fBdata!\fR, and \fBto\fR\&.
+The result of the method is the empty string\&.
+.TP
+\fB<instance>\fR \fB:=\fR \fIsrc\fR
+This method copies the contents of iterator \fIsrc\fR
+to this iterator\&. Any preexisting content of this
+iterator is replaced with the information from the
+source\&. The source instance has to support the methods
+\fBdirection\fR, \fBdata\fR, and
+\fBlocation\fR\&.
+The result of the method is the empty string\&.
+.PP
+.SH "API TO IMPLEMENT"
+This section lists and describes all the methods a derived class
+\fIhas\fR to override to be a proper and functional blob store\&.
+This is not quite a subset of the methods listed in the
+\fBPublic API\fR above, because it also contains a number of
+private and semi-private methods\&.
+.TP
+\fB<instance>\fR \fBclear\fR
+.TP
+\fB<instance>\fR \fBreset\fR
+.TP
+\fB<instance>\fR \fBreverse\fR
+.TP
+\fB<instance>\fR \fBnext\fR \fIn\fR
+.TP
+\fB<instance>\fR \fBprevious\fR \fIn\fR
+.TP
+\fB<instance>\fR \fBto\fR \fIlocation\fR
+.TP
+\fB<instance>\fR \fBdirection!\fR \fIdirection\fR
+.TP
+\fB<instance>\fR \fBexists\fR \fIuuid\fR
+.TP
+\fB<instance>\fR \fBsize\fR
+.TP
+\fB<instance>\fR \fBat\fR \fIn\fR
+.TP
+\fB<instance>\fR \fBdirection\fR
+.TP
+\fB<instance>\fR \fBlocation\fR
+.TP
+\fB<instance>\fR \fBdata\fR
+These are the public methods a derived class has to
+implement to become a functional blob store\&. Their
+detailed descriptions can be found in section
+\fBPublic API\fR above\&.
+.TP
+\fB<instance>\fR \fBAdd\fR \fIuuid\fR \fIvalue\fR
+This method is used by the standard implementation of
+method \fBadd\fR to associates the \fIvalue\fR with
+the blob specified by its \fIuuid\fR\&.
+The method does not have to concern itself with
+validation of its \fIuuid\fR argument\&. This has been
+done already by the caller\&.
+.sp
+The derived class has to implement it and return an
+empty string\&.
+.TP
+\fB<instance>\fR \fBGet\fR \fIuuid\fR
+This method is used by the standard implementation of
+method \fBget\fR to locate the value associated
+with \fIuuid\fR\&.
+The method does not have to concern itself with
+validation of its \fIuuid\fR argument\&. This has been
+done already by the caller\&.
+.sp
+The derived class has to implement it and return the
+value associated with the \fIuuid\fR\&.
+.TP
+\fB<instance>\fR \fBRemove\fR \fIuuid\fR
+This method is used by the standard implementation of
+method \fBremove\fR to remove the \fIuuid\fR and
+its value from the iterator\&.
+The method does not have to concern itself with
+validation of its \fIuuid\fR argument\&. This has been
+done already by the caller\&.
+.sp
+The derived class has to implement it and return the
+empty string\&.
+.TP
+\fB<instance>\fR \fBIsCurrent\fR \fIuuid\fR
+This method is used by the standard implementation of
+method \fBremove\fR to determine if the \fIuuid\fR
+is at the current location of the cursor\&.
+.sp
+The derived class has to implement it and return a
+boolean value\&. \fBtrue\fR if \fIuuid\fR is at the
+current cursor lcoation, and \fBfalse\fR otherwise\&.
+.PP
+.SH "BUGS, IDEAS, FEEDBACK"
+Both the package(s) and this documentation will undoubtedly contain
+bugs and other problems\&.
+Please report such at
+\fIBlob Tickets\fR [https:/core\&.tcl\&.tk/akupries/blob]\&.
+.PP
+Please also report any ideas you may have for enhancements of
+either package(s) and/or documentation\&.
+.SH KEYWORDS
+blob, blob storage, content deduplication, content storage, deduplication, storage
+.SH COPYRIGHT
+.nf
+Copyright (c) 2013-2016 Andreas Kupries
+Copyright (c) 2013-2016 Documentation, Andreas Kupries
+
+.fi

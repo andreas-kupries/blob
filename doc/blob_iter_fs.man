@@ -1,0 +1,56 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[vset CLASS [vset PROJECT]::iter::fs]
+[manpage_begin [vset LABEL_ITER_FS] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset CLASS]]
+[titledesc [vset TITLE_ITER_FS]]
+[description]
+[include parts/welcome.inc]
+
+This package provides a blob iterator which uses a directory in a
+filesystem to hold the associations.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset CLASS]] [method create] [arg obj] [arg basedir]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[para] The [arg basedir] is the path to the directory used to hold the
+associations. The exact structure maintained by the package is
+intentionally not documented.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset CLASS]] [method new] [arg basedir]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[para] The [arg basedir] is the path to the directory used to hold the
+associations. The exact structure maintained by the package is
+intentionally not documented.
+
+[list_end]
+
+[include parts/iter_api.inc]
+
+[section {Filesystem-specific API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd <instance>] [method base]]
+
+This method returns the path to the base directory used by the blob
+iterator, as it was configured at construction time.
+
+[list_end]
+
+[include parts/feedback.inc]
+[manpage_end]

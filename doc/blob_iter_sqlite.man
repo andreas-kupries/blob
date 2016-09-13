@@ -1,0 +1,153 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[vset CLASS [vset PROJECT]::iter::sqlite]
+[manpage_begin [vset LABEL_ITER_SQLITE] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset CLASS]]
+[titledesc [vset TITLE_ITER_SQLITE]]
+[description]
+[include parts/welcome.inc]
+
+This package provides a blob iterator which uses tables in an sqlite3
+database to hold the associations.
+
+[para] Note and remember that sqlite databases may exist only in
+memory and not just with a backing file as usual. This is another way
+of getting an in-memory string storage.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset CLASS]] [method create] [arg obj] [arg db] [opt [arg options]...]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[para] Please see section [sectref Options] for information about the
+available configuration options.
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset CLASS]] [method new] [arg db] [opt [arg options]...]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[para] Please see section [sectref Options] for information about the
+available configuration options.
+
+[list_end]
+
+[section Options]
+
+The iterator constructor takes a number of options with which to
+configure the behaviour of the new instance. These are:
+
+[list_begin options]
+	[opt_def -blob-table string]
+
+		This option names the table in which to find the
+		mapping from uuids to blob contents. This is used by
+		the iterator to validate uuids, and further to avoid
+		having to store its own copy of the uuids in
+		question. They are instead stored as the integer
+		foreign key to the blob table.
+
+		It is assumed that the blob table has the columns
+		[const id], and [const uuid].
+
+	[para]	The default value is [const blob].
+
+	[para]	If the blob table is set to the empty strng the
+		iterator will configure itself to store the uuids in
+		its own [option -iter-table], see below, instead of
+		using a foreign key.
+
+	[para]	The table will be created if it does not exist.  If it
+		exists its schema will be verified instead and an
+		error thrown if the schema is not as expected.
+
+		This uses the same schema as the blob stores created
+		by package [package [vset PROJECT]::sqlite].
+
+	[opt_def -iter-table string]
+
+		This option names the table used by the iterator to
+		store the mapping from uuid to property value.
+
+	[para]	The uuid is either stored as a integer foreign key
+		reference, or directly, depending on the value given
+		to option [option -blob-table]. See above for the
+		details.
+
+	[para]	The default of this option is [const blobiter]
+
+	[para]	The table will be created if it does not exist.  If it
+		exists its schema will be verified instead and an
+		error thrown if the schema is not as expected.
+
+	[opt_def -type string]
+
+		This option specifies the sqlite type to use for the
+		storage of property values.
+
+	[para]	The default value of this option is [const TEXT].
+
+	[opt_def -value-table string]
+
+		This option names a table used by the iterator to
+		store the values associated with uuids, if any.
+
+	[para]	The default value of this option is the empty string,
+		causing the iterator to store the values in the
+		[option -iter-table] itself.
+
+	[para]	Setting a non-empty string on the other hand causes
+		storage of the values in the named table instead, and
+		the [option -iter-table] uses an integer foreign key
+		to reference it there.
+
+		The main effect of using such a [term sidecar] is the
+		ability to reduce the amount of space needed to store
+		values, especially if the number of different values
+		is expected to be small.
+
+	[opt_def -value-column string]
+
+		This option provides the name of the column in the
+		[option -value-table] used to store the values. The
+		option's value is ignored if no value table is
+		specified (empty string).
+
+	[para]	The default value of this option is [const val].
+
+	[opt_def -collation string]
+
+		This option specifies the name of collation to use for
+		the ordering of values.
+
+	[para]	The option's value is ignored when a
+		[option -value-table] is specified, as the user has
+		full control over the definition of that table,
+		including the collation applied to the
+		[option -value-column].
+
+	[para]	The default value of this option is the empty string,
+		indicating that the standard collation of sqlite
+		([const BINARY]) is to be used.
+
+	[para]	The main use of this option is to impose a custom
+		ordering on the values associated with uuids, and thus
+		influence how they are stepped through by the
+		iterator.
+
+[list_end]
+
+[include parts/iter_api.inc]
+
+[include parts/feedback.inc]
+[manpage_end]
+

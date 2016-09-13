@@ -1,0 +1,338 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[manpage_begin [vset LABEL_ITER_BLOB] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require [vset PROJECT]::iter]
+[titledesc [vset TITLE_ITER_BLOB]]
+[description]
+[include parts/welcome.inc]
+
+While this package, from its name, looks like the public entrypoint of
+iterators over blob stores, it is [emph not]. This package is
+internal, providing the base class for all the others implementing
+actual iterator backends.
+
+[para] The following sections are of interest only to developers
+intending to extend or modify the system, then. Everybody else can
+skip this document.
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[section {Public API}]
+
+This section lists and describes all the public methods of a proper
+and functional blob iterator. Some of them may have to be implemented
+by the derived class for a specific kind of storage.
+
+[para] Note further that not all of the public methods are for general
+use.
+
+[list_begin definitions]
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method add] [arg uuid] [arg property_value]]
+
+		This method associates the [arg property_value] with
+		the blob specified by its [arg uuid]. The result of
+		the method is the empty string. An error is thrown if
+		the uuid is already associated with a value. This
+		means that each uuid can only be associated with a
+		single value, although each value can have multiple
+		uuids associated with it.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method remove] [arg uuid]...]
+
+		This method removes the specified [arg uuid]s from the
+		iterator. The result of the method is the empty
+		string. Unknown uuids are ignored. If a removed uuid
+		is the [term current] uuid the iterator is stepped
+		forward to the next entry in sequence, as per the
+		iterator's direction and ordering configuration.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method clear]]
+
+		This method removes all uuid from the iterator. After
+		the call the instance is empty. The result of the
+		method is the empty string.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method data!] [arg tuples]]
+
+		This method is a bulk variant of [method add], see
+		above. It expects a list of (uuid,value) pairs as
+		argument and makes the necessary associations.
+
+	[para]	The result of the method is the empty string. An error
+		is thrown if any of the specified uuids is already
+		associated with a value, [emph before] any changes are
+		made.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method reset]]
+
+		This method resets the cursor of the iterator to the
+		start position (as per the direction/ordering of the
+		iterator). The result of the method is an empty
+		string.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method reverse]]
+
+		This method reverses the direction of the iterator.
+		The result of the method is an empty string.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method next] [arg n]]
+
+		This method moves the cursor forward by [arg n]
+		entries, in the current direction. The result of the
+		method is a boolean value which indicates if the step
+		moved beyond the end of the iterator ([const true]),
+		or not ([const false]).
+
+		The step-length [arg n] must be an integer > 0.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method previous] [arg n]]
+
+		This method moves the cursor backward by [arg n]
+		entries, against the current direction. The result of
+		the method is a boolean value which indicates if the
+		step moved before the start of the iterator
+		([const true]), or not ([const false]).
+
+		The step-length [arg n] must be an integer > 0.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method to] [arg location]]
+
+		This method moves the cursor of the iterator to the
+		specified absolute [arg location]. See method
+		[method location] below for the method which returns
+		such locations, and their format.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method direction!] [arg direction]]
+
+		This method sets the direction of iterator relative to
+		the sorting order of the values. The possible
+		arguments are [const increasing] and
+		[const descreasing]. The result of the method is the
+		empty string.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method get] [arg uuid]]
+
+		This method locates the value associated with
+		[arg uuid] and returns it as its result.
+
+		An error is thrown if [arg uuid] is not known to the
+		instance.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method exists] [arg uuid]]
+
+		This method returns a boolean value indicating if the
+		[arg uuid] is known to the iterator ([const true]), or
+		not ([const false]).
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method size]]
+
+		This method determines the number of uuid/value
+		associations stored in the iterator and returns that
+		number as the result of the method.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method at] [arg n]]
+
+		This method takes the [arg n] entries of the iterator
+		starting at the cursor and going forward, and retrurns
+		them as its result. The result is a list of entries,
+		each entry represented by a (uuid,value) pair. The
+		entries are stored in the order they were taken from
+		the iterator.
+
+	[para]	The cursor is [emph not] moved. This is the
+		responsibility of the methods [method next] and
+		[method previous].
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method direction]]
+
+		This method determines the current direction of the
+		iterator relative to the sort order and returns it as
+		its result. The two possible results are
+		[const increasing] and [const decreasing]
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method location]]
+
+		This method determines the location of the cursor and
+		returns it as its result. The format of the result is
+		a pair of values, a location code, and details, in
+		this order. The possible location codes are
+
+		[list_begin definitions]
+		[def [const start]]
+			The cursor is before the start of the content.
+			The detail value is the empty string.
+		[def [const end]]
+			The cursor is behind the end of the content.
+			The detail value is the empty string.
+		[def [const at]]
+			The cursor is at a specific entry in the
+			iterator. The detail value specifies that
+			entry. It is a pair denoting the current
+			property value, and the uuid, in this order.
+		[list_end]
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method data]]
+
+		This method retrieves the iterator content and returns
+		it as a list of (uuid,value)-pairs. This is the same
+		format as taken by method [method data!] as input.
+
+	[para]	[emph {This is an abstract method. Derived classes have to implement it.}]
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method -->] [arg dst]]
+
+		This method copies the contents of the instance to the
+		iterator instance [arg dst]. Any preexisting content
+		of the destination instance is replaced with the
+		information from this iterator.
+
+		The targeted instance has to support the methods
+		[method reset], [method clear], [method direction!],
+		[method data!], and [method to].
+
+		The result of the method is the empty string.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method :=] [arg src]]
+
+		This method copies the contents of iterator [arg src]
+		to this iterator. Any preexisting content of this
+		iterator is replaced with the information from the
+		source. The source instance has to support the methods
+		[method direction], [method data], and
+		[method location].
+
+		The result of the method is the empty string.
+[list_end]
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[section {API to implement}]
+
+This section lists and describes all the methods a derived class
+[emph has] to override to be a proper and functional blob store.
+This is not quite a subset of the methods listed in the
+[sectref {Public API}] above, because it also contains a number of
+private and semi-private methods.
+
+[list_begin definitions]
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method clear]]
+	[call [cmd <instance>] [method reset]]
+	[call [cmd <instance>] [method reverse]]
+	[call [cmd <instance>] [method next] [arg n]]
+	[call [cmd <instance>] [method previous] [arg n]]
+	[call [cmd <instance>] [method to] [arg location]]
+	[call [cmd <instance>] [method direction!] [arg direction]]
+	[call [cmd <instance>] [method exists] [arg uuid]]
+	[call [cmd <instance>] [method size]]
+	[call [cmd <instance>] [method at] [arg n]]
+	[call [cmd <instance>] [method direction]]
+	[call [cmd <instance>] [method location]]
+	[call [cmd <instance>] [method data]]
+
+		These are the public methods a derived class has to
+		implement to become a functional blob store. Their
+		detailed descriptions can be found in section
+		[sectref {Public API}] above.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method Add] [arg uuid] [arg value]]
+
+		This method is used by the standard implementation of
+		method [method add] to associates the [arg value] with
+		the blob specified by its [arg uuid].
+
+		The method does not have to concern itself with
+		validation of its [arg uuid] argument. This has been
+		done already by the caller.
+
+	[para]	The derived class has to implement it and return an
+		empty string.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method Get] [arg uuid]]
+
+		This method is used by the standard implementation of
+		method [method get] to locate the value associated
+		with [arg uuid].
+
+		The method does not have to concern itself with
+		validation of its [arg uuid] argument. This has been
+		done already by the caller.
+
+	[para]	The derived class has to implement it and return the
+		value associated with the [arg uuid].
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method Remove] [arg uuid]]
+
+		This method is used by the standard implementation of
+		method [method remove] to remove the [arg uuid] and
+		its value from the iterator.
+
+		The method does not have to concern itself with
+		validation of its [arg uuid] argument. This has been
+		done already by the caller.
+
+	[para]	The derived class has to implement it and return the
+		empty string.
+
+	[comment {- - -- --- ----- -------- -------------}]
+	[call [cmd <instance>] [method IsCurrent] [arg uuid]]
+
+		This method is used by the standard implementation of
+		method [method remove] to determine if the [arg uuid]
+		is at the current location of the cursor.
+
+	[para]	The derived class has to implement it and return a
+		boolean value. [const true] if [arg uuid] is at the
+		current cursor lcoation, and [const false] otherwise.
+
+[list_end]
+
+[comment ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+[include parts/feedback.inc]
+[manpage_end]

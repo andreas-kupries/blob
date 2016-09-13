@@ -189,17 +189,26 @@ cache is sitting in front of. For information about the available
 options see section <span class="sectref"><a href="#subsection1">Options</a></span>.</p></dd>
 </dl>
 <div id="subsection1" class="subsection"><h3><a name="subsection1">Options</a></h3>
+<p>The cache constructor takes two options with which to configure the
+behaviour of the new instance. These are:</p>
 <dl class="options">
+	
 <dt><b class="option">-blob-limit</b> uint</dt>
-<dd><p>Maximal size of the blob cache, as number of entries (not amount of memory).
-The default size is <b class="const">100</b>.
-Setting an empty string as the value makes it unlimited.
-Setting it to <b class="const">0</b> disables the blob-cache part of the instance.</p></dd>
+<dd><p>Maximal size of the blob cache, as number of entries
+		(not amount of memory).
+		The default size is <b class="const">100</b>.  Setting an empty
+		string as the value makes the blob-cache part
+		unlimited.
+		Setting it to <b class="const">0</b> disables the blob-cache part
+		of the instance.</p></dd>
 <dt><b class="option">-uuid-limit</b> uint</dt>
-<dd><p>Maximal size of the uuid cache (existence information), as number of entries.
-The default size is <b class="const">10000</b>.
-Setting an empty string as the value makes it unlimited.
-Setting it to <b class="const">0</b> disables the uuid-cache part of the instance.</p></dd>
+<dd><p>Maximal size of the uuid cache (existence
+		 information), as number of entries.
+		 The default size is <b class="const">10000</b>.  Setting an empty
+		 string as the value makes the uuid-cache part
+		 unlimited.
+		 Setting it to <b class="const">0</b> disables the uuid-cache part
+		 of the instance.</p></dd>
 </dl>
 </div>
 </div>
@@ -287,7 +296,9 @@ provide the following methods to their users:</p>
 		the instance and returns that number as the result of
 		the method.</p></dd>
 <dt><a name="14"><b class="cmd">&lt;instance&gt;</b> <b class="method">names</b> <span class="opt">?<i class="arg">pattern</i>...?</span></a></dt>
-<dd></dd>
+<dd><p>This method determines the uuids of all blobs found in
+		the store which match one or more of the specified
+		glob patterns, and returns a list containing them.</p></dd>
 <dt><a name="15"><b class="cmd">&lt;instance&gt;</b> <b class="method">exists</b> <i class="arg">uuid</i></a></dt>
 <dd><p>This method returns a boolean value indicating if the
 		blob <i class="arg">uuid</i> is known to the instance
@@ -348,37 +359,45 @@ provide the following methods to their users:</p>
 </div>
 <div id="section4" class="section"><h2><a name="section4">Cache-specific API</a></h2>
 <dl class="definitions">
+	
+	
 <dt><a name="22"><b class="cmd">&lt;instance&gt;</b> <b class="method">cget</b> <i class="arg">option</i></a></dt>
-<dd><p>This method returns the value of the named <i class="arg">option</i>.  An error
-will be thrown if the <i class="arg">option</i> is not known.  For information
-about the available options see section <span class="sectref"><a href="#subsection1">Options</a></span>.</p></dd>
+<dd><p>This method returns the value of the named
+		<i class="arg">option</i>.
+		An error will be thrown if the <i class="arg">option</i> is not
+		known.  For information about the available options
+		see section <span class="sectref"><a href="#subsection1">Options</a></span>.</p></dd>
 <dt><a name="23"><b class="cmd">&lt;instance&gt;</b> <b class="method">configure</b> <span class="opt">?<i class="arg">options</i>...?</span></a></dt>
-<dd><p>This method takes a series of options and values and reconfigures the
-instance accordingly.  An error will be thrown if any of the specified
-options is not known.  For information about the available options see
-section <span class="sectref"><a href="#subsection1">Options</a></span>.</p></dd>
+<dd><p>This method takes a series of options and values and
+		reconfigures the instance accordingly.  An error will
+		be thrown if any of the specified options is not
+		known.  For information about the available options
+		see section <span class="sectref"><a href="#subsection1">Options</a></span>.</p></dd>
 <dt><a name="24"><b class="cmd">&lt;instance&gt;</b> <b class="method">blobs</b></a></dt>
-<dd><p>This methods returns the number of blobs currently loaded into the
-cache.</p></dd>
+<dd><p>This methods returns the number of blobs currently
+		loaded into the cache.</p></dd>
 <dt><a name="25"><b class="cmd">&lt;instance&gt;</b> <b class="method">blobs-loaded</b></a></dt>
-<dd><p>This method returns a list containing the uuids of the blobs currently
-loaded into the cache.</p></dd>
+<dd><p>This method returns a list containing the uuids of the
+		blobs currently loaded into the cache.</p></dd>
 <dt><a name="26"><b class="cmd">&lt;instance&gt;</b> <b class="method">blobs-lru</b></a></dt>
-<dd><p>This method returns a list containing the uuids of the blobs currently
-loaded into the cache, in order of last usage. In other words, the
-most recently used uuid is at the end of the list, and the least used
-uuid at the beginning.</p></dd>
+<dd><p>This method returns a list containing the uuids of the
+		blobs currently loaded into the cache, in order of
+		last usage. In other words, the most recently used
+		uuid is at the end of the list, and the least used
+		uuid at the beginning.</p></dd>
 <dt><a name="27"><b class="cmd">&lt;instance&gt;</b> <b class="method">uuids</b></a></dt>
-<dd><p>This methods returns the number of uuid existence flags currently
-loaded into the cache.</p></dd>
+<dd><p>This methods returns the number of uuid existence
+		flags currently loaded into the cache.</p></dd>
 <dt><a name="28"><b class="cmd">&lt;instance&gt;</b> <b class="method">uuids-loaded</b></a></dt>
-<dd><p>This method returns a list containing the uuids for which existence
-flags are currently loaded into the cache.</p></dd>
+<dd><p>This method returns a list containing the uuids for
+		which existence flags are currently loaded into the
+		cache.</p></dd>
 <dt><a name="29"><b class="cmd">&lt;instance&gt;</b> <b class="method">uuids-lru</b></a></dt>
-<dd><p>This method returns a list containing the uuids for which existence
-flags are currently loaded into the cache, in order of last usage. In
-other words, the most recently used uuid is at the end of the list,
-and the least used uuid at the beginning.</p></dd>
+<dd><p>This method returns a list containing the uuids for
+		which existence flags are currently loaded into the
+		cache, in order of last usage. In other words, the
+		most recently used uuid is at the end of the list, and
+		the least used uuid at the beginning.</p></dd>
 </dl>
 </div>
 <div id="section5" class="section"><h2><a name="section5">Bugs, Ideas, Feedback</a></h2>

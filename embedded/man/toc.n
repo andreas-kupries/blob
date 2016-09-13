@@ -297,6 +297,18 @@ doc
 \fBblob::fs\fR
 \fIfiles/blob_fs\&.n\fR: Blob - Filesystem store
 .TP
+\fBblob::iter\fR
+\fIfiles/blob_iter\&.n\fR: Blob - Iterator base class, common API
+.TP
+\fBblob::iter::fs\fR
+\fIfiles/blob_iter_fs\&.n\fR: Blob - Filesystem stored iterator
+.TP
+\fBblob::iter::memory\fR
+\fIfiles/blob_iter_memory\&.n\fR: Blob - In-memory iterator
+.TP
+\fBblob::iter::sqlite\fR
+\fIfiles/blob_iter_sqlite\&.n\fR: Blob - Sqlite stored iterator
+.TP
 \fBblob::memory\fR
 \fIfiles/blob_memory\&.n\fR: Blob - In-memory store
 .TP

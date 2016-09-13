@@ -13,6 +13,11 @@
 [vset TITLE_SQLITE        "[vset PTITLE] - Sqlite store"]
 [vset TITLE_CACHE         "[vset PTITLE] - Write-through cache"]
 
+[vset TITLE_ITER_BLOB     "[vset PTITLE] - Iterator base class, common API"]
+[vset TITLE_ITER_FS       "[vset PTITLE] - Filesystem stored iterator"]
+[vset TITLE_ITER_MEMORY   "[vset PTITLE] - In-memory iterator"]
+[vset TITLE_ITER_SQLITE   "[vset PTITLE] - Sqlite stored iterator"]
+
 [comment {- Miscellanea ............. - - -- --- ----- --------}]
 [vset LABEL_INTRO         [vset PROJECT]-introduction]
 [vset LABEL_LICENSE       [vset PROJECT]-license]
@@ -26,3 +31,8 @@
 [vset LABEL_MEMORY        [vset PROJECT]::memory]
 [vset LABEL_SQLITE        [vset PROJECT]::sqlite]
 [vset LABEL_CACHE         [vset PROJECT]::cache]
+
+[vset LABEL_ITER_BLOB     [vset PROJECT]::iter]
+[vset LABEL_ITER_FS       [vset PROJECT]::iter::fs]
+[vset LABEL_ITER_MEMORY   [vset PROJECT]::iter::memory]
+[vset LABEL_ITER_SQLITE   [vset PROJECT]::iter::sqlite]

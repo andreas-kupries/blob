@@ -10,7 +10,7 @@
 # @@ Meta Begin
 # Package blob::iter 1
 # Meta author      {Andreas Kupries}
-# Meta category    Blob storage iterator, database
+# Meta category    Blob storage iterator
 # Meta description Base class for iterators over blob stores
 # Meta location    http:/core.tcl.tk/akupries/blob
 # Meta platform    tcl

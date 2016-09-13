@@ -3,7 +3,7 @@
 [vset VERSION 1]
 [manpage_begin [vset LABEL_BLOB] [vset MAN_SECTION] [vset VERSION]]
 [include parts/module.inc]
-[require cmdr]
+[require [vset PROJECT]]
 [titledesc [vset TITLE_BLOB]]
 [description]
 [include parts/welcome.inc]

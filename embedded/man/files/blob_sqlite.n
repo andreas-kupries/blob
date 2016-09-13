@@ -453,6 +453,9 @@ the instance and returns that number as the result of
 the method\&.
 .TP
 \fB<instance>\fR \fBnames\fR ?\fIpattern\fR\&.\&.\&.?
+This method determines the uuids of all blobs found in
+the store which match one or more of the specified
+glob patterns, and returns a list containing them\&.
 .TP
 \fB<instance>\fR \fBexists\fR \fIuuid\fR
 This method returns a boolean value indicating if the

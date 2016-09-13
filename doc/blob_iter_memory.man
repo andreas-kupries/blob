@@ -1,0 +1,45 @@
+[comment {-*- tcl -*- doctools manpage}]
+[include parts/definitions.inc]
+[vset VERSION 1]
+[vset CLASS [vset PROJECT]::iter::memory]
+[manpage_begin [vset LABEL_ITER_MEMORY] [vset MAN_SECTION] [vset VERSION]]
+[include parts/module.inc]
+[require Tclx]
+[require [vset CLASS]]
+[titledesc [vset TITLE_ITER_MEMORY]]
+[description]
+[include parts/welcome.inc]
+
+This package provides a blob iterator which holds its associations in
+memory.
+
+[section {Class API}]
+
+[list_begin definitions]
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset CLASS]] [method create] [arg obj] [opt [arg sortmode]]]
+
+This constructor command creates a new instance [arg obj]
+of the class and returns the fully qualified name of that
+instance.
+
+[para] The [arg sortmode] is an option suitable for use with the
+builting command [cmd lsort], and controls the sorting order. It
+defaults to [const -ascii].
+
+[comment {- - -- --- ----- -------- -------------}]
+[call [cmd ::[vset CLASS]] [method new] [opt [arg sortmode]]]
+
+This constructor command creates a new instance of the class and
+returns the fully qualified name of that instance.
+
+[para] The [arg sortmode] is an option suitable for use with the
+builting command [cmd lsort], and controls the sorting order. It
+defaults to [const -ascii].
+
+[list_end]
+
+[include parts/iter_api.inc]
+
+[include parts/feedback.inc]
+[manpage_end]

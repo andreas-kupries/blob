@@ -1,9 +1,9 @@
 '\"
-'\" Generated from file 'blob_memory\&.man' by tcllib/doctools with format 'nroff'
+'\" Generated from file 'blob_iter_memory\&.man' by tcllib/doctools with format 'nroff'
 '\" Copyright (c) 2013-2016 Andreas Kupries
 '\" Copyright (c) 2013-2016 Documentation, Andreas Kupries
 '\"
-.TH "blob::memory" n 1 doc "Blob\&. General content storage with deduplication"
+.TH "blob::iter::memory" n 1 doc "Blob\&. General content storage with deduplication"
 .\" The -*- nroff -*- definitions below are for supplemental macros used
 .\" in Tcl/Tk manual entries.
 .\"
@@ -273,53 +273,53 @@ Database Class:	\\fB\\$3\\fR
 ..
 .BS
 .SH NAME
-blob::memory \- Blob - In-memory store
+blob::iter::memory \- Blob - In-memory iterator
 .SH SYNOPSIS
 package require \fBTclx \fR
 .sp
-package require \fBblob::memory \fR
+package require \fBblob::iter::memory \fR
 .sp
-\fB::blob::memory\fR \fBcreate\fR \fIobj\fR
+\fB::blob::iter::memory\fR \fBcreate\fR \fIobj\fR ?\fIsortmode\fR?
 .sp
-\fB::blob::memory\fR \fBnew\fR
+\fB::blob::iter::memory\fR \fBnew\fR ?\fIsortmode\fR?
 .sp
-\fB<instance>\fR \fBput-string\fR \fIblob\fR
-.sp
-\fB<instance>\fR \fBput-file\fR \fIpath\fR
-.sp
-\fB<instance>\fR \fBput-channel\fR \fIchan\fR
-.sp
-\fB<instance>\fR \fBnew\fR
-.sp
-\fB<instance>\fR \fBget-string\fR \fIuuid\fR
-.sp
-\fB<instance>\fR \fBget-channel\fR \fIuuid\fR
-.sp
-\fB<instance>\fR \fBget-file\fR \fIuuid\fR
-.sp
-\fB<instance>\fR \fBstore-to-file\fR \fIuuid\fR \fIpath\fR
+\fB<instance>\fR \fBadd\fR \fIuuid\fR \fIvalue\fR
 .sp
 \fB<instance>\fR \fBremove\fR \fIuuid\fR
 .sp
+\fB<instance>\fR \fBdata!\fR \fItuples\fR
+.sp
 \fB<instance>\fR \fBclear\fR
 .sp
-\fB<instance>\fR \fBsize\fR
+\fB<instance>\fR \fBreset\fR
 .sp
-\fB<instance>\fR \fBnames\fR ?\fIpattern\fR\&.\&.\&.?
+\fB<instance>\fR \fBreverse\fR
+.sp
+\fB<instance>\fR \fBnext\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBprevious\fR \fIn\fR
+.sp
+\fB<instance>\fR \fBto\fR \fIlocation\fR
+.sp
+\fB<instance>\fR \fBdirection!\fR \fIdir\fR
+.sp
+\fB<instance>\fR \fBget\fR \fIuuid\fR
 .sp
 \fB<instance>\fR \fBexists\fR \fIuuid\fR
 .sp
-\fB<instance>\fR \fBpush\fR \fIto\fR ?\fIuuids\fR?
+\fB<instance>\fR \fBsize\fR
 .sp
-\fB<instance>\fR \fBpush-async\fR \fIdonecmd\fR \fIto\fR ?\fIuuids\fR?
+\fB<instance>\fR \fBat\fR \fIn\fR
 .sp
-\fB<instance>\fR \fBpull\fR \fIfrom\fR ?\fIuuids\fR?
+\fB<instance>\fR \fBdirection\fR
 .sp
-\fB<instance>\fR \fBpull-async\fR \fIdonecmd\fR \fIfrom\fR ?\fIuuids\fR?
+\fB<instance>\fR \fBlocation\fR
 .sp
-\fB<instance>\fR \fBsync\fR \fIwith\fR ?\fIuuids\fR?
+\fB<instance>\fR \fBdata\fR
 .sp
-\fB<instance>\fR \fBsync-async\fR \fIdonecmd\fR \fIwith\fR ?\fIuuids\fR?
+\fB<instance>\fR \fB-->\fR \fIdst\fR
+.sp
+\fB<instance>\fR \fB:=\fR \fIsrc\fR
 .sp
 .BE
 .SH DESCRIPTION
@@ -328,186 +328,181 @@ Welcome to the Blob project, written by Andreas Kupries\&.
 .PP
 For availability please read \fIBlob - How To Get The Sources\fR\&.
 .PP
-This package provides a blob store which holds the blobs in memory\&.
+This package provides a blob iterator which holds its associations in
+memory\&.
 .SH "CLASS API"
 .TP
-\fB::blob::memory\fR \fBcreate\fR \fIobj\fR
+\fB::blob::iter::memory\fR \fBcreate\fR \fIobj\fR ?\fIsortmode\fR?
 This constructor command creates a new instance \fIobj\fR
 of the class and returns the fully qualified name of that
 instance\&.
+.sp
+The \fIsortmode\fR is an option suitable for use with the
+builting command \fBlsort\fR, and controls the sorting order\&. It
+defaults to \fB-ascii\fR\&.
 .TP
-\fB::blob::memory\fR \fBnew\fR
+\fB::blob::iter::memory\fR \fBnew\fR ?\fIsortmode\fR?
 This constructor command creates a new instance of the class and
 returns the fully qualified name of that instance\&.
+.sp
+The \fIsortmode\fR is an option suitable for use with the
+builting command \fBlsort\fR, and controls the sorting order\&. It
+defaults to \fB-ascii\fR\&.
 .PP
 .SH "STANDARD API"
-As a derived class of \fBblob\fR instances of this class
-provide the following methods to their users:
+As a derived class of \fBblob::iter\fR instances of this
+class provide the following methods to their users:
 .TP
-\fB<instance>\fR \fBput-string\fR \fIblob\fR
-This method adds the string \fIblob\fR to the instance
-and returns the blob's uuid as the result of the
-method\&. Adding the same string multiple times actually
-adds it only on the first call, and all invokations
-return the same uuid\&.
-.TP
-\fB<instance>\fR \fBput-file\fR \fIpath\fR
-This method adds the (binary) string found in the file
-at the specified \fIpath\fR to the instance and
-returns the blob's uuid as the result of the
-method\&. Adding the same content multiple times
-actually adds it only on the first call, and all
-invokations return the same uuid\&.
-.TP
-\fB<instance>\fR \fBput-channel\fR \fIchan\fR
-This method adds the (binary) string found in the
-channel \fIchan\fR to the instance and returns the
-blob's uuid as the result of the method\&. Adding the
-same content multiple times actually adds it only on
-the first call, and all invokations return the same
-uuid\&.
-.sp
-The content is read from \fIchan\fR once, starting at
-the current location\&. After the call the channel is
-positioned at EOF\&. Note that the caller has to close
-the channel\&.
-.TP
-\fB<instance>\fR \fBnew\fR
-This method returns a boolean value indicating if the
-last call to one of the \fBput-*\fR methods
-actually added a new blob (\fBtrue\fR), or not
-(\fBfalse\fR)\&.
-.TP
-\fB<instance>\fR \fBget-string\fR \fIuuid\fR
-This method locates the contents of blob \fIuuid\fR
-and returns them as the result of the method\&.
-An error is thrown if \fIuuid\fR is not known to the
-instance\&.
-.TP
-\fB<instance>\fR \fBget-channel\fR \fIuuid\fR
-This method locates the contents of blob \fIuuid\fR
-and returns a channel containing it as the result of
-the method\&.
-An error is thrown if \fIuuid\fR is not known to the
-instance\&.
-.sp
-The returned channel is read-only, binary, and
-positioned at the beginning of the blob content\&. No
-assurances are made about the ability to seek the
-channel\&. It is the responsibility of the caller to
-close the channel after use\&.
-.TP
-\fB<instance>\fR \fBget-file\fR \fIuuid\fR
-This method locates the contents of blob \fIuuid\fR
-and returns the path of a file containing it as the
-result of the method\&.
-An error is thrown if \fIuuid\fR is not known to the
-instance\&.
-.sp
-The returned file should be considered transient\&. It
-is owned by the caller and can be moved, modified, and
-deleted at will\&. It is the responsibility of the
-caller to delete the file after use\&.
-.TP
-\fB<instance>\fR \fBstore-to-file\fR \fIuuid\fR \fIpath\fR
-This method locates the contents of blob \fIuuid\fR
-and stores them into the file with the specified
-\fIpath\fR\&. Any previous content of the file is
-overwritten by this operation\&. The result of the
-method is the empty string\&.
-An error is thrown if \fIuuid\fR is not known to the
-instance\&.
+\fB<instance>\fR \fBadd\fR \fIuuid\fR \fIvalue\fR
+This method associates the \fIproperty_value\fR with
+the blob specified by its \fIuuid\fR\&. The result of
+the method is the empty string\&. An error is thrown if
+the uuid is already associated with a value\&. This
+means that each uuid can only be associated with a
+single value, although each value can have multiple
+uuids associated with it\&.
 .TP
 \fB<instance>\fR \fBremove\fR \fIuuid\fR
-This method locates the blob \fIuuid\fR and removes it
-from the instance\&. The result of the method is the
-empty string\&.
-An error is thrown if \fIuuid\fR is not known to the
-instance\&.
+This method removes the specified \fIuuid\fRs from the
+iterator\&. The result of the method is the empty
+string\&. Unknown uuids are ignored\&. If a removed uuid
+is the \fIcurrent\fR uuid the iterator is stepped
+forward to the next entry in sequence, as per the
+iterator's direction and ordering configuration\&.
+.TP
+\fB<instance>\fR \fBdata!\fR \fItuples\fR
+This method is a bulk variant of \fBadd\fR, see
+above\&. It expects a list of (uuid,value) pairs as
+argument and makes the necessary associations\&.
+.sp
+The result of the method is the empty string\&. An error
+is thrown if any of the specified uuids is already
+associated with a value, \fIbefore\fR any changes are
+made\&.
 .TP
 \fB<instance>\fR \fBclear\fR
-This method removes all blobs from the instance\&. After
+This method removes all uuid from the iterator\&. After
 the call the instance is empty\&. The result of the
 method is the empty string\&.
 .TP
-\fB<instance>\fR \fBsize\fR
-This method determines the number of blobs found in
-the instance and returns that number as the result of
-the method\&.
+\fB<instance>\fR \fBreset\fR
+This method resets the cursor of the iterator to the
+start position (as per the direction/ordering of the
+iterator)\&. The result of the method is an empty
+string\&.
 .TP
-\fB<instance>\fR \fBnames\fR ?\fIpattern\fR\&.\&.\&.?
-This method determines the uuids of all blobs found in
-the store which match one or more of the specified
-glob patterns, and returns a list containing them\&.
+\fB<instance>\fR \fBreverse\fR
+This method reverses the direction of the iterator\&.
+The result of the method is an empty string\&.
+.TP
+\fB<instance>\fR \fBnext\fR \fIn\fR
+This method moves the cursor forward by \fIn\fR
+entries, in the current direction\&. The result of the
+method is a boolean value which indicates if the step
+moved beyond the end of the iterator (\fBtrue\fR),
+or not (\fBfalse\fR)\&.
+The step-length \fIn\fR must be an integer > 0\&.
+.TP
+\fB<instance>\fR \fBprevious\fR \fIn\fR
+This method moves the cursor backward by \fIn\fR
+entries, against the current direction\&. The result of
+the method is a boolean value which indicates if the
+step moved before the start of the iterator
+(\fBtrue\fR), or not (\fBfalse\fR)\&.
+The step-length \fIn\fR must be an integer > 0\&.
+.TP
+\fB<instance>\fR \fBto\fR \fIlocation\fR
+This method moves the cursor of the iterator to the
+specified absolute \fIlocation\fR\&. See method
+\fBlocation\fR below for the method which returns
+such locations, and their format\&.
+.TP
+\fB<instance>\fR \fBdirection!\fR \fIdir\fR
+This method sets the direction of iterator relative to
+the sorting order of the values\&. The possible
+arguments are \fBincreasing\fR and
+\fBdescreasing\fR\&. The result of the method is the
+empty string\&.
+.TP
+\fB<instance>\fR \fBget\fR \fIuuid\fR
+This method locates the value associated with
+\fIuuid\fR and returns it as its result\&.
+An error is thrown if \fIuuid\fR is not known to the
+instance\&.
 .TP
 \fB<instance>\fR \fBexists\fR \fIuuid\fR
 This method returns a boolean value indicating if the
-blob \fIuuid\fR is known to the instance
-(\fBtrue\fR), or not (\fBfalse\fR)\&.
+\fIuuid\fR is known to the iterator (\fBtrue\fR), or
+not (\fBfalse\fR)\&.
 .TP
-\fB<instance>\fR \fBpush\fR \fIto\fR ?\fIuuids\fR?
+\fB<instance>\fR \fBsize\fR
+This method determines the number of uuid/value
+associations stored in the iterator and returns that
+number as the result of the method\&.
 .TP
-\fB<instance>\fR \fBpush-async\fR \fIdonecmd\fR \fIto\fR ?\fIuuids\fR?
-This method copies the blobs specified by the list of
-\fIuuids\fR from the instance to the specified peer
-\fIto\fR\&. This has to be an object exporting the same
-API as documented for \fBblob\fR\&.
+\fB<instance>\fR \fBat\fR \fIn\fR
+This method takes the \fIn\fR entries of the iterator
+starting at the cursor and going forward, and retrurns
+them as its result\&. The result is a list of entries,
+each entry represented by a (uuid,value) pair\&. The
+entries are stored in the order they were taken from
+the iterator\&.
+.sp
+The method does \fInot\fR move cursor\&. This is the
+responsibility of the methods \fBnext\fR and
+\fBprevious\fR\&.
+.TP
+\fB<instance>\fR \fBdirection\fR
+This method determines the current direction of the
+iterator relative to the sort order and returns it as
+its result\&. The two possible results are
+\fBincreasing\fR and \fBdecreasing\fR
+.TP
+\fB<instance>\fR \fBlocation\fR
+This method determines the location of the cursor and
+returns it as its result\&. The format of the result is
+a pair of values, a location code, and details, in
+this order\&. The possible location codes are
+.RS
+.TP
+\fBstart\fR
+The cursor is before the start of the content\&.
+The detail value is the empty string\&.
+.TP
+\fBend\fR
+The cursor is behind the end of the content\&.
+The detail value is the empty string\&.
+.TP
+\fBat\fR
+The cursor is at a specific entry in the
+iterator\&. The detail value specifies that
+entry\&. It is a pair denoting the current
+property value, and the uuid, in this order\&.
+.RE
+.TP
+\fB<instance>\fR \fBdata\fR
+This method retrieves the iterator content and returns
+it as a list of (uuid,value)-pairs\&. This is the same
+format as taken by method \fBdata!\fR as input\&.
+.TP
+\fB<instance>\fR \fB-->\fR \fIdst\fR
+This method copies the contents of the instance to the
+iterator instance \fIdst\fR\&. Any preexisting content
+of the destination instance is replaced with the
+information from this iterator\&.
+The targeted instance has to support the methods
+\fBreset\fR, \fBclear\fR, \fBdirection!\fR,
+\fBdata!\fR, and \fBto\fR\&.
 The result of the method is the empty string\&.
-.sp
-If no set of uuids is specified the operation will
-push all blobs found in the instance, as if
-"\fIuuids\fR == \fB*\fR had been specified"\&.
-.sp
-Note that the elements of \fIuuids\fR are interpreted
-as glob patterns\&.
-.sp
-In the \fBpush-async\fR form the execution is done
-through the event-loop, invoking the command prefix
-\fIdonecmd\fR when the operation completes, with no
-additional arguments\&.
 .TP
-\fB<instance>\fR \fBpull\fR \fIfrom\fR ?\fIuuids\fR?
-.TP
-\fB<instance>\fR \fBpull-async\fR \fIdonecmd\fR \fIfrom\fR ?\fIuuids\fR?
-This method copies the blobs specified by the list of
-\fIuuids\fR from the specified peer \fIfrom\fR to the
-instance\&. The peer has to be an object exporting the
-same API as documented for \fBblob\fR\&.
+\fB<instance>\fR \fB:=\fR \fIsrc\fR
+This method copies the contents of iterator \fIsrc\fR
+to this iterator\&. Any preexisting content of this
+iterator is replaced with the information from the
+source\&. The source instance has to support the methods
+\fBdirection\fR, \fBdata\fR, and
+\fBlocation\fR\&.
 The result of the method is the empty string\&.
-.sp
-If no set of uuids is specified the operation will
-pull all blobs found in the peer, as if
-"\fIuuids\fR == \fB*\fR had been specified"\&.
-.sp
-Note that the elements of \fIuuids\fR are interpreted
-as glob patterns\&.
-.sp
-In the \fBpull-async\fR form the execution is done
-through the event-loop, invoking the command prefix
-\fIdonecmd\fR when the operation completes, with no
-additional arguments\&.
-.TP
-\fB<instance>\fR \fBsync\fR \fIwith\fR ?\fIuuids\fR?
-.TP
-\fB<instance>\fR \fBsync-async\fR \fIdonecmd\fR \fIwith\fR ?\fIuuids\fR?
-This method exchanges the blobs specified by the list
-of \fIuuids\fR with the specified peer \fIwith\fR,
-copying from and to the instance, as needed\&. The peer
-has to be an object exporting the same API as
-documented for \fBblob\fR\&.
-The result of the method is the empty string\&.
-.sp
-If no set of uuids is specified the operation will
-exchange all blobs found in the instance and the peer,
-as if "\fIuuids\fR == \fB*\fR had been specified"\&.
-.sp
-Note that the elements of \fIuuids\fR are interpreted
-as glob patterns\&.
-.sp
-In the \fBsync-async\fR form the execution is done
-through the event-loop, invoking the command prefix
-\fIdonecmd\fR when the operation completes, with no
-additional arguments\&.
 .PP
 .SH "BUGS, IDEAS, FEEDBACK"
 Both the package(s) and this documentation will undoubtedly contain

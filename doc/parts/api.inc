@@ -126,6 +126,10 @@ provide the following methods to their users:
 	[comment {- - -- --- ----- -------- -------------}]
 	[call [cmd <instance>] [method names] [opt [arg pattern]...]]
 
+		This method determines the uuids of all blobs found in
+		the store which match one or more of the specified
+		glob patterns, and returns a list containing them.
+
 	[comment {- - -- --- ----- -------- -------------}]
 	[call [cmd <instance>] [method exists] [arg uuid]]
 

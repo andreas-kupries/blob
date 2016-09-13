@@ -367,18 +367,26 @@ cache is sitting in front of\&. For information about the available
 options see section \fBOptions\fR\&.
 .PP
 .SS OPTIONS
+The cache constructor takes two options with which to configure the
+behaviour of the new instance\&. These are:
 .TP
 \fB-blob-limit\fR uint
-Maximal size of the blob cache, as number of entries (not amount of memory)\&.
-The default size is \fB100\fR\&.
-Setting an empty string as the value makes it unlimited\&.
-Setting it to \fB0\fR disables the blob-cache part of the instance\&.
+Maximal size of the blob cache, as number of entries
+(not amount of memory)\&.
+The default size is \fB100\fR\&.  Setting an empty
+string as the value makes the blob-cache part
+unlimited\&.
+Setting it to \fB0\fR disables the blob-cache part
+of the instance\&.
 .TP
 \fB-uuid-limit\fR uint
-Maximal size of the uuid cache (existence information), as number of entries\&.
-The default size is \fB10000\fR\&.
-Setting an empty string as the value makes it unlimited\&.
-Setting it to \fB0\fR disables the uuid-cache part of the instance\&.
+Maximal size of the uuid cache (existence
+information), as number of entries\&.
+The default size is \fB10000\fR\&.  Setting an empty
+string as the value makes the uuid-cache part
+unlimited\&.
+Setting it to \fB0\fR disables the uuid-cache part
+of the instance\&.
 .PP
 .SH "STANDARD API"
 As a derived class of \fBblob\fR instances of this class
@@ -476,6 +484,9 @@ the instance and returns that number as the result of
 the method\&.
 .TP
 \fB<instance>\fR \fBnames\fR ?\fIpattern\fR\&.\&.\&.?
+This method determines the uuids of all blobs found in
+the store which match one or more of the specified
+glob patterns, and returns a list containing them\&.
 .TP
 \fB<instance>\fR \fBexists\fR \fIuuid\fR
 This method returns a boolean value indicating if the
@@ -549,43 +560,49 @@ additional arguments\&.
 .SH "CACHE-SPECIFIC API"
 .TP
 \fB<instance>\fR \fBcget\fR \fIoption\fR
-This method returns the value of the named \fIoption\fR\&.  An error
-will be thrown if the \fIoption\fR is not known\&.  For information
-about the available options see section \fBOptions\fR\&.
+This method returns the value of the named
+\fIoption\fR\&.
+An error will be thrown if the \fIoption\fR is not
+known\&.  For information about the available options
+see section \fBOptions\fR\&.
 .TP
 \fB<instance>\fR \fBconfigure\fR ?\fIoptions\fR\&.\&.\&.?
-This method takes a series of options and values and reconfigures the
-instance accordingly\&.  An error will be thrown if any of the specified
-options is not known\&.  For information about the available options see
-section \fBOptions\fR\&.
+This method takes a series of options and values and
+reconfigures the instance accordingly\&.  An error will
+be thrown if any of the specified options is not
+known\&.  For information about the available options
+see section \fBOptions\fR\&.
 .TP
 \fB<instance>\fR \fBblobs\fR
-This methods returns the number of blobs currently loaded into the
-cache\&.
-.TP
-\fB<instance>\fR \fBblobs-loaded\fR
-This method returns a list containing the uuids of the blobs currently
+This methods returns the number of blobs currently
 loaded into the cache\&.
 .TP
+\fB<instance>\fR \fBblobs-loaded\fR
+This method returns a list containing the uuids of the
+blobs currently loaded into the cache\&.
+.TP
 \fB<instance>\fR \fBblobs-lru\fR
-This method returns a list containing the uuids of the blobs currently
-loaded into the cache, in order of last usage\&. In other words, the
-most recently used uuid is at the end of the list, and the least used
+This method returns a list containing the uuids of the
+blobs currently loaded into the cache, in order of
+last usage\&. In other words, the most recently used
+uuid is at the end of the list, and the least used
 uuid at the beginning\&.
 .TP
 \fB<instance>\fR \fBuuids\fR
-This methods returns the number of uuid existence flags currently
-loaded into the cache\&.
+This methods returns the number of uuid existence
+flags currently loaded into the cache\&.
 .TP
 \fB<instance>\fR \fBuuids-loaded\fR
-This method returns a list containing the uuids for which existence
-flags are currently loaded into the cache\&.
+This method returns a list containing the uuids for
+which existence flags are currently loaded into the
+cache\&.
 .TP
 \fB<instance>\fR \fBuuids-lru\fR
-This method returns a list containing the uuids for which existence
-flags are currently loaded into the cache, in order of last usage\&. In
-other words, the most recently used uuid is at the end of the list,
-and the least used uuid at the beginning\&.
+This method returns a list containing the uuids for
+which existence flags are currently loaded into the
+cache, in order of last usage\&. In other words, the
+most recently used uuid is at the end of the list, and
+the least used uuid at the beginning\&.
 .PP
 .SH "BUGS, IDEAS, FEEDBACK"
 Both the package(s) and this documentation will undoubtedly contain
